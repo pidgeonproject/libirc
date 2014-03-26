@@ -186,7 +186,7 @@ namespace libirc
         /// Version of ircd running on this network
         /// </summary>
         public string IrcdVersion = null;
-        private bool Connected = false;
+        private bool connected = false;
         /// <summary>
         /// Specifies if you are connected to network
         /// </summary>
@@ -194,7 +194,7 @@ namespace libirc
         {
             get
             {
-                return Connected;
+                return connected;
             }
         }
         private bool isDestroyed = false;
@@ -234,8 +234,7 @@ namespace libirc
             _Protocol = protocol;
             ServerName = Server;
             Quit = Defs.DefaultQuit;
-            Nickname = Defs.DefaultQuit;
-
+            Nickname = Defs.DefaultNick;
             UserName = Defs.DefaultNick;
             Ident = "libirc";
         }
@@ -292,7 +291,7 @@ namespace libirc
         /// </summary>
         public void SetConnected()
         {
-            Connected = true;
+            connected = true;
         }
 
         /// <summary>
@@ -300,7 +299,7 @@ namespace libirc
         /// </summary>
         public void SetDisconnected()
         {
-            Connected = false;
+            connected = false;
         }
 
         /// <summary>
@@ -363,27 +362,11 @@ namespace libirc
         }
 
         /// <summary>
-        /// UNIX time to DateTime
-        /// </summary>
-        /// <param name="time">timestamp</param>
-        /// <returns></returns>
-        [Obsolete("Replaced by a field Core.ConvertFromUNIX. Will be removed in pidgeon 1.2.20")]
-        public static DateTime convertUNIX(string time)
-        {
-            double unixtimestmp = 0;
-            if (!double.TryParse(time, out unixtimestmp))
-            {
-                unixtimestmp = 0;
-            }
-            return (new DateTime(1970, 1, 1, 0, 0, 0)).AddSeconds(unixtimestmp);
-        }
-
-        /// <summary>
         /// If such a user is contained in a private message list it will be returned
         /// </summary>
         /// <param name="user">User nick</param>
         /// <returns>Instance of user or null if it doesn't exist</returns>
-        public User getUser(string user)
+        public User GetUser(string user)
         {
             foreach (User x in PrivateChat)
             {
@@ -411,12 +394,6 @@ namespace libirc
                 }
                 return null;
             }
-        }
-
-        [Obsolete("Replaced with GetChannel")]
-        public Channel getChannel(string name)
-        {
-            return GetChannel(name);
         }
 
         /// <summary>

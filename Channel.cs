@@ -352,17 +352,6 @@ namespace libirc
         }
 
         /// <summary>
-        /// Return true if channel contains the given user name
-        /// </summary>
-        /// <param name="user"></param>
-        /// <returns></returns>
-        [Obsolete("Replaced with ContainsUser, will be removed in Pidgeon 1.2.80")]
-        public bool containsUser(string user)
-        {
-            return ContainsUser(user);
-        }
-
-        /// <summary>
         /// Part this channel
         /// </summary>
         public void Part()
@@ -392,17 +381,6 @@ namespace libirc
                 }
             }
             return false;
-        }
-
-        /// <summary>
-        /// Return true if a channel is matching ban (exact, not a mask)
-        /// </summary>
-        /// <param name="host"></param>
-        /// <returns></returns>
-        [Obsolete("Replaced with ContainsBan, will be removed in Pidgeon 1.2.80")]
-        public bool containsBan(string host)
-        {
-            return ContainsBan(host);
         }
 
         /// <summary>
@@ -503,17 +481,6 @@ namespace libirc
                 }
             }
             return false;
-        }
-
-        /// <summary>
-        /// Return user object if specified user exist - replaced UserFromName(string name)
-        /// </summary>
-        /// <param name="name">User name</param>
-        /// <returns></returns>
-        [Obsolete ("Replace with UserFromName, will be removed in pidgeon 1.6")]
-        public User userFromName(string name)
-        {
-            return UserFromName(name);
         }
 
         public void RemoveUser(User user)

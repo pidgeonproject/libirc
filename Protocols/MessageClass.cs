@@ -156,19 +156,14 @@ namespace libirc.Protocols
                         }
                         catch (ThreadAbortException)
                         {
-                            //Core.KillThread(System.Threading.Thread.CurrentThread);
+							ThreadManager.RemoveThread(System.Threading.Thread.CurrentThread);
                             return;
                         }
                     }
                 }
                 catch (ThreadAbortException)
                 {
-                    //Core.KillThread(System.Threading.Thread.CurrentThread);
-                    return;
-                }
-                catch (Exception fail)
-                {
-                    //Core.HandleException(fail);
+                    ThreadManager.RemoveThread(System.Threading.Thread.CurrentThread);
                     return;
                 }
             }

@@ -166,7 +166,7 @@ namespace libirc
                         {
                             message = message.Substring(0, message.Length - 1);
                         }
-                        user = _Network.getUser(_nick);
+                        user = _Network.GetUser(_nick);
 
                         return true;
                     }

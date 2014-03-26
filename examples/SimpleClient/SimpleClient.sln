@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleClient", "SimpleClient\SimpleClient.csproj", "{4CA1F536-D25D-4CF1-8DA1-9F449A251EBF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4CA1F536-D25D-4CF1-8DA1-9F449A251EBF}.Debug|x86.ActiveCfg = Debug|x86
+		{4CA1F536-D25D-4CF1-8DA1-9F449A251EBF}.Debug|x86.Build.0 = Debug|x86
+		{4CA1F536-D25D-4CF1-8DA1-9F449A251EBF}.Release|x86.ActiveCfg = Release|x86
+		{4CA1F536-D25D-4CF1-8DA1-9F449A251EBF}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = SimpleClient\SimpleClient.csproj
+	EndGlobalSection
+EndGlobal

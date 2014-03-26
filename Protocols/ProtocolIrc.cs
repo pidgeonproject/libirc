@@ -72,7 +72,7 @@ namespace libirc.Protocols
         /// <summary>
         /// Network associated with this connection (we have only 1 network in direct connection)
         /// </summary>
-        public Network IRCNetwork;
+        public Network IRCNetwork = null;
         /// <summary>
         /// Stream writer for server
         /// </summary>
@@ -194,6 +194,10 @@ namespace libirc.Protocols
 
         public void Start()
         {
+			if (this.IRCNetwork == null)
+			{
+				IRCNetwork = new Network(this.Server, this);
+			}
             Messages.protocol = this;
             if (!SSL)
             {
@@ -210,8 +214,6 @@ namespace libirc.Protocols
                 streamWriter = new System.IO.StreamWriter(networkSsl);
                 streamReader = new System.IO.StreamReader(networkSsl, NetworkEncoding);
             }
-
-            //Hooks._Protocol.BeforeConnect(this);
 
             Connected = true;
             if (!string.IsNullOrEmpty(Password))
@@ -230,8 +232,11 @@ namespace libirc.Protocols
 
             try
             {
-                TDeliveryQueue = new System.Threading.Thread(Messages.Run);
-                TDeliveryQueue.Start();
+				if (!this.ManualThreads)
+				{
+	                TDeliveryQueue = new System.Threading.Thread(Messages.Run);
+	                TDeliveryQueue.Start();
+				}
 
                 while (!streamReader.EndOfStream && IsConnected)
                 {
@@ -319,7 +324,7 @@ namespace libirc.Protocols
         }
 
         /// <summary>
-        /// Send a message either to channel or user
+        /// Sends a message either to channel or user
         /// </summary>
         /// <param name="text"></param>
         /// <param name="to"></param>
@@ -332,6 +337,17 @@ namespace libirc.Protocols
             Transfer("PRIVMSG " + to + " :" + text, priority);
             return 0;
         }
+
+		/// <summary>
+		/// Send a message either to channel or user
+		/// </summary>
+		/// <param name="text">Text.</param>
+		/// <param name="to">To.</param>
+		/// <param name="priority">Priority.</param>
+		public void Message(string text, string to, Defs.Priority priority = Defs.Priority.Normal)
+		{
+			Message(text, to, null, priority);
+		}
 
         /// <summary>
         /// /me style
