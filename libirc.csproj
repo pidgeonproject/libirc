@@ -39,6 +39,21 @@
     <Compile Include="Channel.cs" />
     <Compile Include="User.cs" />
     <Compile Include="Defs.cs" />
+    <Compile Include="Protocols\ProtocolSv.cs" />
+    <Compile Include="Protocols\ProtocolIrc.cs" />
+    <Compile Include="Protocols\MessageClass.cs" />
+    <Compile Include="Processor\ProcessorIRC.cs" />
+    <Compile Include="Profiler.cs" />
+    <Compile Include="Configuration.cs" />
+    <Compile Include="Processor\ChannelData.cs" />
+    <Compile Include="Formatter.cs" />
+    <Compile Include="Buffer.cs" />
+    <Compile Include="Processor\NetworkData.cs" />
+    <Compile Include="ThreadManager.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <Folder Include="Protocols\" />
+    <Folder Include="Processor\" />
+  </ItemGroup>
 </Project>

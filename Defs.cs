@@ -20,8 +20,78 @@ namespace libirc
 {
 	public class Defs
 	{
-		public const string DefaultNick = "user";
-		public const string DefaultQuit = "Libirc - http://github.com/pidgeonproject/libirc";
+		/// <summary>
+		/// The default nick
+		/// 
+		/// Change this to nick you want to have as a default for every new instance
+		/// of network
+		/// </summary>
+		public static string DefaultNick = 		"user";
+		public static string DefaultQuit = 		"Libirc - http://github.com/pidgeonproject/libirc";
+		public static string DefaultVersion =   "Libirc v. 1.0.0, see http://pidgeonclient.org/ for more information about this library. ";
+		public static bool UsingProfiler =		false;
+		public const int DefaultIRCPort = 		6667;
+		public const int DefaultSSLIRCPort = 	6697;
+
+		/// <summary>
+		/// Convert a date to unix one
+		/// </summary>
+		/// <param name="time"></param>
+		/// <returns></returns>
+		public static double ConvertDateToUnix(DateTime time)
+		{
+			DateTime EPOCH = new System.DateTime(1970, 1, 1, 0, 0, 0, 0);
+			TimeSpan span = (time - EPOCH);
+			return span.TotalSeconds;
+		}
+
+		/// <summary>
+		/// Convert a unix timestamp to human readable time
+		/// </summary>
+		/// <param name="time"></param>
+		/// <returns></returns>
+		public static string ConvertFromUNIXToString(string time)
+		{
+			try
+			{
+				if (time == null)
+				{
+					return "Unable to read: NULL";
+				}
+				double unixtimestmp = double.Parse(time);
+				return (new DateTime(1970, 1, 1, 0, 0, 0)).AddSeconds(unixtimestmp).ToString();
+			}
+			catch (Exception)
+			{
+				return "Unable to read: " + time;
+			}
+		}
+
+		/// <summary>
+		/// Return a DateTime object from unix time
+		/// </summary>
+		/// <param name="time"></param>
+		/// <returns></returns>
+		public static DateTime ConvertFromUNIX(string time)
+		{
+			if (time == null)
+			{
+				throw new Exception("Provided time was NULL");
+			}
+			double unixtimestmp = double.Parse(time);
+			return new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(unixtimestmp);
+		}
+
+		/// <summary>
+		/// Return a DateTime object from unix time
+		/// </summary>
+		/// <param name="time"></param>
+		/// <returns></returns>
+		public static DateTime ConvertFromUNIX(double time)
+		{
+			return new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(time);
+		}
+
 		/// <summary>
         /// Priority of irc message
         /// </summary>

@@ -65,6 +65,7 @@ namespace libirc
             public ChannelData() {}
         }
 
+		public Configuration Config = new Configuration();
         /// <summary>
         /// Message that is shown to users when you are away
         /// </summary>
@@ -447,7 +448,7 @@ namespace libirc
         /// <param name="channel">Channel</param>
         /// <param name="nf">Don't focus this new window</param>
         /// <returns>Instance of channel object</returns>
-        public Channel Channel(string channel, bool nf = false)
+        public Channel Channel(string channel)
         {
             Channel previous = GetChannel(channel);
             if (previous == null)
@@ -472,9 +473,9 @@ namespace libirc
         /// <param name="to">Sending to</param>
         /// <param name="_priority">Priority</param>
         /// <param name="pmsg">If this is private message (so it needs to be handled in a different way)</param>
-        public void Message(string text, string to, Defs.Priority _priority = Defs.Priority.Normal, bool pmsg = false)
+        public void Message(string text, string to, Defs.Priority _priority = Defs.Priority.Normal)
         {
-            _Protocol.Message(text, to, this, _priority, pmsg);
+            _Protocol.Message(text, to, this, _priority);
         }
 
         /// <summary>

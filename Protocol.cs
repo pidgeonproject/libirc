@@ -21,6 +21,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -30,11 +31,31 @@ namespace libirc
     /// <summary>
     /// This is lowest level of protocol interface
     /// 
-    /// Every protocol is inherited from this class. Protocols are handling connections to various servers using own protocols.
+    /// Every protocol is inherited from this class. Protocols are handling connections to various servers,
+	/// these are the lowest level object you will handle in this library.
     /// </summary>
     [Serializable]
     public class IProtocol
     {
+		public class DebugLogEventArgs : EventArgs
+		{
+			public string Message = null;
+			public int Verbosity = 0;
+		}
+
+		public class RawTrafficEventArgs : EventArgs
+		{
+			public string Data = null;
+		}
+
+		public delegate void RawTrafficEventHandler(object sender, RawTrafficEventArgs e);
+		public delegate void DebugLogEventHandler(object sender, DebugLogEventArgs e);
+		public event DebugLogEventHandler DebugLogEvent;
+		/// <summary>
+		/// Occurs when raw traffic is incoming to protocol, you can alter this raw traffic as well by changing the Data
+		/// property in RawTrafficEventArgs
+		/// </summary>
+		public event RawTrafficEventHandler RawTrafficEvent;
         /// <summary>
         /// Whether this server is connected or not
         /// </summary>
@@ -51,6 +72,15 @@ namespace libirc
         /// Password for server
         /// </summary>
         public string Password = null;
+		/// <summary>
+		/// Change this to true if you want to create all threads for all subsystems
+		/// of this protocols yourself.
+		/// 
+		/// This makes it harder for you to implement the irc in your application but it
+		/// gives you bigger control over the parts of this library. If you leave this
+		/// on false the library will manage all threads itself as well as all exceptions.
+		/// </summary>
+		public bool ManualThreads = false;
         /// <summary>
         /// Server
         /// </summary>
@@ -109,6 +139,18 @@ namespace libirc
             _time = DateTime.Now;
         }
 
+		protected string RawTraffic(string traffic)
+		{
+			if (RawTrafficEvent != null)
+			{
+				RawTrafficEventArgs args = new RawTrafficEventArgs();
+				args.Data = traffic;
+				RawTrafficEvent(this, args);
+				return args.Data;
+			}
+			return traffic;
+		}
+
         /// <summary>
         /// This function get an input from user, if it return false, it is handled by core
         /// </summary>
@@ -132,10 +174,10 @@ namespace libirc
         /// This will connect this protocol
         /// </summary>
         /// <returns></returns>
-        public virtual bool Open()
+        public virtual Thread Open()
         {
-            //Core.DebugLog("Open() is not implemented");
-            return false;
+            this.DebugLog("Open() is not implemented");
+            return null;
         }
 
         /// <summary>
@@ -146,7 +188,7 @@ namespace libirc
         /// <param name="network"></param>
         public virtual void Transfer(string data, Defs.Priority priority = Defs.Priority.Normal, Network network = null)
         {
-            //Core.DebugLog("Transfer(string data, Configuration.Priority _priority = Configuration.Priority.Normal, Network network = null) is not implemented");
+            this.DebugLog("Transfer(string data, Configuration.Priority _priority = Configuration.Priority.Normal, Network network = null) is not implemented");
         }
 
         /// <summary>
@@ -155,7 +197,7 @@ namespace libirc
         /// <returns></returns>
         public virtual bool Disconnect()
         {
-            //Core.DebugLog("Disconnect() is not implemented");
+            this.DebugLog("Disconnect() is not implemented");
             return false;
         }
 
@@ -165,7 +207,7 @@ namespace libirc
         /// <returns></returns>
         public virtual bool Reconnect()
         {
-            //Core.DebugLog("Reconnect() is not implemented");
+            this.DebugLog("Reconnect() is not implemented");
             return false;
         }
 
@@ -177,11 +219,21 @@ namespace libirc
         /// <returns></returns>
         public virtual bool Command(string cm, Network network = null)
         {
-            //Core.DebugLog("Command(string cm, Network network = null) is not implemented");
+            this.DebugLog("Command(string cm, Network network = null) is not implemented");
             return false;
         }
-    }
 
+		public void DebugLog(string Text, int Verbosity = 1)
+		{
+			if (this.DebugLogEvent != null)
+			{
+				DebugLogEventArgs args = new DebugLogEventArgs();
+				args.Verbosity = Verbosity;
+				args.Message = Text;
+				this.DebugLogEvent(this, args);
+			}
+		}
+    }
 
     /// <summary>
     /// Connection
@@ -204,7 +256,7 @@ namespace libirc
         /// <param name="network">Network</param>
         public virtual void ReconnectNetwork(Network network)
         {
-            //Core.DebugLog("ReconnectNetwork(Network network) is not implemented");
+            this.DebugLog("ReconnectNetwork(Network network) is not implemented");
         }
         
         /// <summary>
@@ -227,23 +279,9 @@ namespace libirc
         /// <param name="to"></param>
         /// <param name="priority"></param>
         /// <returns></returns>
-        public virtual int Message2(string text, string to, Defs.Priority priority = Defs.Priority.Normal)
+        public virtual int Act(string text, string to, Defs.Priority priority = Defs.Priority.Normal)
         {
-            //Core.DebugLog("Message2(string text, string to, Configuration.Priority priority = Configuration.Priority.Normal) is not implemented");
-            return 2;
-        }
-
-        /// <summary>
-        /// Send a message to server (deprecated)
-        /// </summary>
-        /// <param name="text">Message</param>
-        /// <param name="to">User or a channel (needs to be prefixed with #)</param>
-        /// <param name="priority">Priority</param>
-        /// <param name="pmsg">Private</param>
-        /// <returns></returns>
-        public virtual int Message(string text, string to, Defs.Priority priority = Defs.Priority.Normal, bool pmsg = false)
-        {
-            //Core.DebugLog("Message(string text, string to, Configuration.Priority priority = Configuration.Priority.Normal, bool pmsg = false) is not implemented");
+            this.DebugLog("Message2(string text, string to, Configuration.Priority priority = Configuration.Priority.Normal) is not implemented");
             return 2;
         }
 
@@ -254,12 +292,11 @@ namespace libirc
         /// <param name="to">User or a channel (needs to be prefixed with #)</param>
         /// <param name="network"></param>
         /// <param name="priority"></param>
-        /// <param name="pmsg"></param>
         /// <returns></returns>
-        public virtual int Message(string text, string to, Network network, Defs.Priority priority = Defs.Priority.Normal, bool pmsg = false)
+        public virtual int Message(string text, string to, Network network, Defs.Priority priority = Defs.Priority.Normal)
         {
-            //Core.DebugLog("Message(string text, string to, Network network, Configuration.Priority priority = "
-            //    +"Configuration.Priority.Normal, bool pmsg = false) is not implemented");
+             this.DebugLog("Message(string text, string to, Network network, Configuration.Priority priority = "
+                           +"Configuration.Priority.Normal, bool pmsg = false) is not implemented");
             return 2;
         }
 
@@ -271,7 +308,7 @@ namespace libirc
         /// <returns></returns>
         public virtual int RequestNick(string _Nick, Network network = null)
         {
-            //Core.DebugLog("requestNick(string _Nick, Network network = null) is not implemented");
+            this.DebugLog("requestNick(string _Nick, Network network = null) is not implemented");
             return 2;
         }
 
@@ -283,7 +320,7 @@ namespace libirc
         /// <param name="network">Network</param>
         public virtual void WriteMode(NetworkMode _x, string target, Network network = null)
         {
-            //Core.DebugLog("WriteMode(NetworkMode _x, string target, Network network = null) is not implemented");
+            this.DebugLog("WriteMode(NetworkMode _x, string target, Network network = null) is not implemented");
             return;
         }
 
@@ -294,7 +331,7 @@ namespace libirc
         /// <param name="network">Network</param>
         public virtual void Join(string name, Network network = null)
         {
-            //Core.DebugLog("Join() is not implemented");
+            this.DebugLog("Join() is not implemented");
             return;
         }
 
@@ -306,7 +343,7 @@ namespace libirc
         /// <returns></returns>
         public virtual bool ConnectTo(string server, int port)
         {
-            //Core.DebugLog("Disconnect() is not implemented");
+            this.DebugLog("Disconnect() is not implemented");
             return false;
         }
 
@@ -317,7 +354,7 @@ namespace libirc
         /// <param name="network">Network</param>
         public virtual void Part(string name, Network network = null)
         {
-            //Core.DebugLog("Part(string name, Network network = null) is not implemented");
+            this.DebugLog("Part(string name, Network network = null) is not implemented");
             return;
         }
     }
