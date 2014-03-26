@@ -19,42 +19,42 @@ using System.Threading;
 
 namespace libirc
 {
-	/// <summary>
-	/// Information about all threads that are produced by this library
-	/// </summary>
-	public class ThreadManager
-	{
-		private static List<Thread> Threads = new List<Thread>();
+    /// <summary>
+    /// Information about all threads that are produced by this library
+    /// </summary>
+    public class ThreadManager
+    {
+        private static List<Thread> Threads = new List<Thread>();
 
-		public static void RegisterThread(Thread thread)
-		{
-			lock (Threads)
-			{
-				if (!Threads.Contains(thread))
-				{
-					Threads.Add(thread);
-				}
-			}
-		}
+        public static void RegisterThread(Thread thread)
+        {
+            lock (Threads)
+            {
+                if (!Threads.Contains(thread))
+                {
+                    Threads.Add(thread);
+                }
+            }
+        }
 
-		public static void KillThread(Thread thread)
-		{
-			if (Thread.CurrentThread != thread)
-			{
-				if (thread.ThreadState == ThreadState.WaitSleepJoin &&
-					thread.ThreadState == ThreadState.Running)
-				{
-					thread.Abort();
-				}
-			}
-			lock(Threads)
-			{
-				if (Threads.Contains(thread))
-				{
-					Threads.Remove(thread);
-				}
-			}
-		}
-	}
+        public static void KillThread(Thread thread)
+        {
+            if (Thread.CurrentThread != thread)
+            {
+                if (thread.ThreadState == ThreadState.WaitSleepJoin &&
+                    thread.ThreadState == ThreadState.Running)
+                {
+                    thread.Abort();
+                }
+            }
+            lock(Threads)
+            {
+                if (Threads.Contains(thread))
+                {
+                    Threads.Remove(thread);
+                }
+            }
+        }
+    }
 }
 

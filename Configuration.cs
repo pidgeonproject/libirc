@@ -17,25 +17,25 @@ using System;
 
 namespace libirc
 {
-	public class Configuration
-	{
-		public bool AggressiveMode = true;
-		public bool AggressiveExceptions = false;
-		public bool AggressiveBans = true;
-		public bool AggressiveInvites = false;
-		public bool AggressiveUsers = true;
-		public bool FirewallCTCP = false;
-		public string Nick = Defs.DefaultNick;
-		public string Nick2 = null;
-		public string GetNick2()
-		{
-			if (Nick2 == null)
-			{
-				Random rn = new Random(DateTime.Now.Millisecond);
-				return Nick + rn.Next(1, 200).ToString();
-			}
-			return Nick2;
-		}
-	}
+    public class Configuration
+    {
+        public bool AggressiveMode = true;
+        public bool AggressiveExceptions = false;
+        public bool AggressiveBans = true;
+        public bool AggressiveInvites = false;
+        public bool AggressiveUsers = true;
+        public bool FirewallCTCP = false;
+        public string Nick = Defs.DefaultNick;
+        public string Nick2 = null;
+        public string GetNick2()
+        {
+            if (Nick2 == null)
+            {
+                Random rn = new Random(DateTime.Now.Millisecond);
+                return Nick + rn.Next(1, 200).ToString();
+            }
+            return Nick2;
+        }
+    }
 }
 

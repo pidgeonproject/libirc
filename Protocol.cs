@@ -32,30 +32,30 @@ namespace libirc
     /// This is lowest level of protocol interface
     /// 
     /// Every protocol is inherited from this class. Protocols are handling connections to various servers,
-	/// these are the lowest level object you will handle in this library.
+    /// these are the lowest level object you will handle in this library.
     /// </summary>
     [Serializable]
     public class IProtocol
     {
-		public class DebugLogEventArgs : EventArgs
-		{
-			public string Message = null;
-			public int Verbosity = 0;
-		}
+        public class DebugLogEventArgs : EventArgs
+        {
+            public string Message = null;
+            public int Verbosity = 0;
+        }
 
-		public class RawTrafficEventArgs : EventArgs
-		{
-			public string Data = null;
-		}
+        public class RawTrafficEventArgs : EventArgs
+        {
+            public string Data = null;
+        }
 
-		public delegate void RawTrafficEventHandler(object sender, RawTrafficEventArgs e);
-		public delegate void DebugLogEventHandler(object sender, DebugLogEventArgs e);
-		public event DebugLogEventHandler DebugLogEvent;
-		/// <summary>
-		/// Occurs when raw traffic is incoming to protocol, you can alter this raw traffic as well by changing the Data
-		/// property in RawTrafficEventArgs
-		/// </summary>
-		public event RawTrafficEventHandler RawTrafficEvent;
+        public delegate void RawTrafficEventHandler(object sender, RawTrafficEventArgs e);
+        public delegate void DebugLogEventHandler(object sender, DebugLogEventArgs e);
+        public event DebugLogEventHandler DebugLogEvent;
+        /// <summary>
+        /// Occurs when raw traffic is incoming to protocol, you can alter this raw traffic as well by changing the Data
+        /// property in RawTrafficEventArgs
+        /// </summary>
+        public event RawTrafficEventHandler RawTrafficEvent;
         /// <summary>
         /// Whether this server is connected or not
         /// </summary>
@@ -72,15 +72,15 @@ namespace libirc
         /// Password for server
         /// </summary>
         public string Password = null;
-		/// <summary>
-		/// Change this to true if you want to create all threads for all subsystems
-		/// of this protocols yourself.
-		/// 
-		/// This makes it harder for you to implement the irc in your application but it
-		/// gives you bigger control over the parts of this library. If you leave this
-		/// on false the library will manage all threads itself as well as all exceptions.
-		/// </summary>
-		public bool ManualThreads = false;
+        /// <summary>
+        /// Change this to true if you want to create all threads for all subsystems
+        /// of this protocols yourself.
+        /// 
+        /// This makes it harder for you to implement the irc in your application but it
+        /// gives you bigger control over the parts of this library. If you leave this
+        /// on false the library will manage all threads itself as well as all exceptions.
+        /// </summary>
+        public bool ManualThreads = false;
         /// <summary>
         /// Server
         /// </summary>
@@ -139,17 +139,17 @@ namespace libirc
             _time = DateTime.Now;
         }
 
-		protected string RawTraffic(string traffic)
-		{
-			if (RawTrafficEvent != null)
-			{
-				RawTrafficEventArgs args = new RawTrafficEventArgs();
-				args.Data = traffic;
-				RawTrafficEvent(this, args);
-				return args.Data;
-			}
-			return traffic;
-		}
+        protected string RawTraffic(string traffic)
+        {
+            if (RawTrafficEvent != null)
+            {
+                RawTrafficEventArgs args = new RawTrafficEventArgs();
+                args.Data = traffic;
+                RawTrafficEvent(this, args);
+                return args.Data;
+            }
+            return traffic;
+        }
 
         /// <summary>
         /// This function get an input from user, if it return false, it is handled by core
@@ -223,16 +223,16 @@ namespace libirc
             return false;
         }
 
-		public void DebugLog(string Text, int Verbosity = 1)
-		{
-			if (this.DebugLogEvent != null)
-			{
-				DebugLogEventArgs args = new DebugLogEventArgs();
-				args.Verbosity = Verbosity;
-				args.Message = Text;
-				this.DebugLogEvent(this, args);
-			}
-		}
+        public void DebugLog(string Text, int Verbosity = 1)
+        {
+            if (this.DebugLogEvent != null)
+            {
+                DebugLogEventArgs args = new DebugLogEventArgs();
+                args.Verbosity = Verbosity;
+                args.Message = Text;
+                this.DebugLogEvent(this, args);
+            }
+        }
     }
 
     /// <summary>

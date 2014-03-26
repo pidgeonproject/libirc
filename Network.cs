@@ -65,7 +65,7 @@ namespace libirc
             public ChannelData() {}
         }
 
-		public Configuration Config = new Configuration();
+        public Configuration Config = new Configuration();
         /// <summary>
         /// Message that is shown to users when you are away
         /// </summary>

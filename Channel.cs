@@ -19,7 +19,7 @@ using System.Collections.Generic;
 
 namespace libirc
 {
-	    /// <summary>
+        /// <summary>
     /// This is a global interface for channel modes with parameters
     /// </summary>
     public class ChannelParameterMode
@@ -108,7 +108,7 @@ namespace libirc
             Time = time;
         }
     }
-	
+    
     /// <summary>
     /// Channel object
     ///

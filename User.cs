@@ -274,7 +274,7 @@ namespace libirc
             if (!user.Contains("@") || !user.Contains("!"))
             {
                 MakeUser(user, "", network, "");
-				Server = network.ServerName;
+                Server = network.ServerName;
                 return;
             }
             string name = user.Substring(0, user.IndexOf("!", StringComparison.Ordinal));

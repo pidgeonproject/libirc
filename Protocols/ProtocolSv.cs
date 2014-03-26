@@ -17,11 +17,11 @@ using System;
 
 namespace libirc.Protocols
 {
-	public class ProtocolSv : Protocol
-	{
-		public ProtocolSv()
-		{
-		}
-	}
+    public class ProtocolSv : Protocol
+    {
+        public ProtocolSv()
+        {
+        }
+    }
 }
 
