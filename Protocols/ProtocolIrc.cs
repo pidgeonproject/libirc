@@ -37,7 +37,6 @@ namespace libirc.Protocols
         }
 
         public delegate void TrafficLogEventHandler(object sender,TrafficLogEventArgs e);
-
         public event TrafficLogEventHandler TrafficLogEvent;
 
         /// <summary>

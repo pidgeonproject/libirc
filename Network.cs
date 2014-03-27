@@ -25,6 +25,21 @@ namespace libirc
     /// </summary>
     public class Network : IDisposable
     {
+		public class NetworkGenericEventArgs : EventArgs
+		{
+			public string Source = null;
+			public string Parameters = null;
+		}
+
+		public class NetworkPRIVMSGEventArgs : NetworkGenericEventArgs
+		{
+			public string Message = null;
+			public Channel Channel = null;
+		}
+
+		public delegate void NetworkPRIVMSGEventHandler(object sender, NetworkPRIVMSGEventArgs e);
+		public event NetworkPRIVMSGEventHandler On_PRIVMSG;
+
         /// <summary>
         /// Information about the channel for list
         /// 
@@ -442,6 +457,14 @@ namespace libirc
                 return previous;
             }
         }
+
+		public void __evt_PRIVMSG(NetworkPRIVMSGEventArgs args)
+		{
+			if (On_PRIVMSG != null)
+			{
+				On_PRIVMSG(this, args);
+			}
+		}
 
         /// <summary>
         /// Send a message to network

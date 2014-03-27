@@ -111,9 +111,6 @@ namespace libirc
     
     /// <summary>
     /// Channel object
-    ///
-    /// Every channel that is open in pidgeon except for list should be made of this class, it is serializable because at some
-    /// point we want to allow it to be copied to various domains
     /// </summary>
     [Serializable]
     public class Channel
@@ -195,21 +192,9 @@ namespace libirc
         [NonSerialized]
         public NetworkMode ChannelMode = null;
         /// <summary>
-        /// Whether window needs to be redrawn
-        /// </summary>
-        public bool Redraw = false;
-        /// <summary>
         /// If true the window is considered usable, in case it's false, the window is flagged as parted channel
         /// </summary>
         public bool ChannelWork = false;
-        /// <summary>
-        /// If this is true user list was changed and needs to be refreshed but it can't be refreshed as it's waiting for some lock
-        /// </summary>
-        public bool UserListRefreshWait = false;
-        /// <summary>
-        /// Text displayed in the list menu
-        /// </summary>
-        public string MenuData = null;
         /// <summary>
         /// Whether part from this channel was requested
         /// </summary>
@@ -387,7 +372,7 @@ namespace libirc
         /// Destroy this class, be careful, it can't be used in any way after you
         /// call this
         /// </summary>
-        public void Destroy()
+        public virtual void Destroy()
         {
             if (IsDestroyed)
             {
@@ -435,7 +420,7 @@ namespace libirc
         /// </summary>
         /// <param name="nick"></param>
         /// <returns></returns>
-        private static string uchr(User nick)
+        protected static string uchr(User nick)
         {
             return nick.ChannelPrefix;
         }
