@@ -30,15 +30,6 @@ namespace libirc.Protocols
     /// </summary>
     public partial class ProtocolIrc : Protocol, IDisposable
     {
-        public class TrafficLogEventArgs : EventArgs
-        {
-            public string Message = null;
-            public bool Incoming = false;
-        }
-
-        public delegate void TrafficLogEventHandler(object sender,TrafficLogEventArgs e);
-        public event TrafficLogEventHandler TrafficLogEvent;
-
         /// <summary>
         /// Thread in which the connection to server is handled
         /// </summary>
@@ -158,17 +149,6 @@ namespace libirc.Protocols
             Messages.DeliverMessage(text, priority);
         }
 
-        public void TrafficLog(string text, bool incoming)
-        {
-            TrafficLogEventArgs args = new TrafficLogEventArgs();
-            args.Message = text;
-            args.Incoming = incoming;
-            if (this.TrafficLogEvent != null)
-            {
-                this.TrafficLogEvent(this, args);
-            }
-        }
-
         private void _Ping()
         {
             try
@@ -198,21 +178,30 @@ namespace libirc.Protocols
                 IRCNetwork = new Network(this.Server, this);
             }
             Messages.protocol = this;
-            if (!SSL)
-            {
-                networkStream = new System.Net.Sockets.TcpClient(Server, Port).GetStream();
-                streamWriter = new System.IO.StreamWriter(networkStream);
-                streamReader = new System.IO.StreamReader(networkStream, NetworkEncoding);
-            }
-            if (SSL)
-            {
-                System.Net.Sockets.TcpClient client = new System.Net.Sockets.TcpClient(Server, Port);
-                networkSsl = new System.Net.Security.SslStream(client.GetStream(), true,
-                                                                new System.Net.Security.RemoteCertificateValidationCallback(Protocol.ValidateServerCertificate), null);
-                networkSsl.AuthenticateAsClient(Server);
-                streamWriter = new System.IO.StreamWriter(networkSsl);
-                streamReader = new System.IO.StreamReader(networkSsl, NetworkEncoding);
-            }
+			try
+			{
+	            if (!SSL)
+	            {
+	                networkStream = new System.Net.Sockets.TcpClient(Server, Port).GetStream();
+	                streamWriter = new System.IO.StreamWriter(networkStream);
+	                streamReader = new System.IO.StreamReader(networkStream, NetworkEncoding);
+	            }
+	            if (SSL)
+	            {
+	                System.Net.Sockets.TcpClient client = new System.Net.Sockets.TcpClient(Server, Port);
+	                networkSsl = new System.Net.Security.SslStream(client.GetStream(), true,
+	                                                                new System.Net.Security.RemoteCertificateValidationCallback(Protocol.ValidateServerCertificate), null);
+	                networkSsl.AuthenticateAsClient(Server);
+	                streamWriter = new System.IO.StreamWriter(networkSsl);
+	                streamReader = new System.IO.StreamReader(networkSsl, NetworkEncoding);
+	            }
+			} catch (SocketException fail)
+			{
+				DebugLog(fail.ToString());
+				SafeDc();
+				this.DisconnectExec(fail.Message);
+				return;
+			}
 
             Connected = true;
             if (!string.IsNullOrEmpty(Password))
@@ -250,17 +239,24 @@ namespace libirc.Protocols
                     processor.ProfiledResult();
                     LastPing = processor.pong;
                 }
-            } catch (ThreadAbortException)
+            }catch (ThreadAbortException)
             {
                 this.Connected = false;
+				this.DisconnectExec("Thread aborted");
                 return;
-            } catch (System.Net.Sockets.SocketException)
+            }catch (System.Net.Sockets.SocketException ex)
             {
-                SafeDc();
-            } catch (System.IO.IOException)
+                this.SafeDc();
+				this.DisconnectExec(ex.Message);
+            }catch (System.IO.IOException ex)
             {
-                SafeDc();
-            }
+                this.SafeDc();
+				this.DisconnectExec(ex.Message);
+			}catch (Exception ex)
+			{
+				this.SafeDc();
+				this.DisconnectExec(ex.Message, ex);
+			}
             ThreadManager.KillThread(System.Threading.Thread.CurrentThread);
             return;
         }

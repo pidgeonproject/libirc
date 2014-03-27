@@ -80,9 +80,6 @@ namespace libirc
             public ChannelData() {}
         }
         
-        public delegate void NetworkEventHandler(object sender, NetworkArgs e);
-        public event NetworkEventHandler NetworkEvent;
-
         public Configuration Config = new Configuration();
         /// <summary>
         /// Message that is shown to users when you are away
@@ -497,11 +494,6 @@ namespace libirc
                 }
             }
             return false;
-        }
-        
-        public void TriggerEvent(NetworkArgs args)
-        {
-            this.NetworkEvent(this, args);
         }
         
         /// <summary>

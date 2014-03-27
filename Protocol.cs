@@ -42,14 +42,30 @@ namespace libirc
             public string Message = null;
             public int Verbosity = 0;
         }
-
+		
+		public class ServerDcEventArgs : EventArgs
+		{
+			public Exception Exception = null;
+			public string Reason = null;
+		}
+		
+		public class TrafficLogEventArgs : EventArgs
+        {
+            public string Message = null;
+            public bool Incoming = false;
+        }
+		
         public class RawTrafficEventArgs : EventArgs
         {
             public string Data = null;
         }
-
+		
+		public delegate void ServerDisconnectEventHandler(object sender, ServerDcEventArgs e);
         public delegate void RawTrafficEventHandler(object sender, RawTrafficEventArgs e);
         public delegate void DebugLogEventHandler(object sender, DebugLogEventArgs e);
+		public delegate void TrafficLogEventHandler(object sender,TrafficLogEventArgs e);
+        public event TrafficLogEventHandler TrafficLogEvent;
+		public event ServerDisconnectEventHandler DisconnectEvent;
         public event DebugLogEventHandler DebugLogEvent;
         /// <summary>
         /// Occurs when raw traffic is incoming to protocol, you can alter this raw traffic as well by changing the Data
@@ -139,7 +155,7 @@ namespace libirc
             _time = DateTime.Now;
         }
 
-        protected string RawTraffic(string traffic)
+        protected virtual string RawTraffic(string traffic)
         {
             if (RawTrafficEvent != null)
             {
@@ -150,7 +166,18 @@ namespace libirc
             }
             return traffic;
         }
-
+		
+		protected virtual void DisconnectExec(string reason, Exception ex = null)
+		{
+			if (DisconnectEvent != null)
+			{
+				ServerDcEventArgs e = new ServerDcEventArgs();
+				e.Exception = ex;
+				e.Reason = reason;
+				DisconnectEvent(this, e);
+			}
+		}
+		
         /// <summary>
         /// This function get an input from user, if it return false, it is handled by core
         /// </summary>
@@ -200,7 +227,18 @@ namespace libirc
             this.DebugLog("Disconnect() is not implemented");
             return false;
         }
-
+		
+		public virtual void TrafficLog(string text, bool incoming)
+        {
+            TrafficLogEventArgs args = new TrafficLogEventArgs();
+            args.Message = text;
+            args.Incoming = incoming;
+            if (this.TrafficLogEvent != null)
+            {
+                this.TrafficLogEvent(this, args);
+            }
+        }
+		
         /// <summary>
         /// Reconnect
         /// </summary>
@@ -223,7 +261,7 @@ namespace libirc
             return false;
         }
 
-        public void DebugLog(string Text, int Verbosity = 1)
+        public virtual void DebugLog(string Text, int Verbosity = 1)
         {
             if (this.DebugLogEvent != null)
             {
