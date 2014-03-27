@@ -25,6 +25,24 @@ namespace libirc
     /// </summary>
     public class Network : IDisposable
     {
+		public class NetworkArgs : EventArgs
+		{
+			public Channel TargetChannel = null;
+			public Event NetworkEvent = Event.Unknown;
+			public string Message = null;
+			
+			public enum Event
+			{
+				Join,
+				Part,
+				Quit,
+				Kick,
+				Nick,
+				Talk,
+				Unknown
+			}
+		}
+		
         /// <summary>
         /// Information about the channel for list
         /// 
@@ -64,6 +82,9 @@ namespace libirc
             /// </summary>
             public ChannelData() {}
         }
+		
+		public delegate void NetworkEventHandler(object sender, NetworkArgs e);
+        public event NetworkEventHandler NetworkEvent;
 
         public Configuration Config = new Configuration();
         /// <summary>
@@ -472,7 +493,12 @@ namespace libirc
             }
             return false;
         }
-
+		
+		public void TriggerEvent(NetworkArgs args)
+		{
+			this.NetworkEvent(this, args);
+		}
+		
         /// <summary>
         /// Destroy this class, be careful, it can't be used in any way after you
         /// call this

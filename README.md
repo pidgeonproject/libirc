@@ -17,12 +17,18 @@ processed by library itself.
 You can use this irc library to design own bot or client. This library is not
 suitable in order to create IRC server.
 
+The basic philosophy is this library should allow you to extremely easily
+create a simple irc client just with few lines of code, just as it allows you
+to create very robust and huge solution.
+
 
 How to use it
 ==============
 
 There is a folder examples which contains simple irc bot and client, check their
 source code, there is also documentation at http://pidgeonclient.org/doc/libirc
+
+Also read files in folder Docs
 
 
 Where to report bugs and request new stuff

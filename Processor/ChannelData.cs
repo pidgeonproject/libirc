@@ -223,9 +223,12 @@ namespace libirc
             // petan!pidgeon@petan.staff.tm-irc.org KICK #support HelpBot :Removed from the channel
             string chan = parameters.Substring(0, parameters.IndexOf(" ", StringComparison.Ordinal));
             Channel channel = _Network.GetChannel(chan);
+			Network.NetworkArgs args = new Network.NetworkArgs();
+			args.NetworkEvent = Network.NetworkArgs.Event.Kick;
+			args.TargetChannel = channel;
+			_Network.TriggerEvent(args);
             if (channel != null)
             {
-
                     lock (channel.UserList)
                     {
                         if (updated_text && channel.ContainsUser(user))
