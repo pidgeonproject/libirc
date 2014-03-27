@@ -25,24 +25,21 @@ namespace libirc
     /// </summary>
     public class Network : IDisposable
     {
-		public class NetworkArgs : EventArgs
-		{
-			public Channel TargetChannel = null;
-			public Event NetworkEvent = Event.Unknown;
-			public string Message = null;
-			
-			public enum Event
-			{
-				Join,
-				Part,
-				Quit,
-				Kick,
-				Nick,
-				Talk,
-				Unknown
-			}
-		}
-		
+        public class NetworkGenericEventArgs : EventArgs
+        {
+            public string Source = null;
+            public string Parameters = null;
+        }
+
+        public class NetworkPRIVMSGEventArgs : NetworkGenericEventArgs
+        {
+            public string Message = null;
+            public Channel Channel = null;
+        }
+
+        public delegate void NetworkPRIVMSGEventHandler(object sender, NetworkPRIVMSGEventArgs e);
+        public event NetworkPRIVMSGEventHandler On_PRIVMSG;
+
         /// <summary>
         /// Information about the channel for list
         /// 
@@ -82,8 +79,8 @@ namespace libirc
             /// </summary>
             public ChannelData() {}
         }
-		
-		public delegate void NetworkEventHandler(object sender, NetworkArgs e);
+        
+        public delegate void NetworkEventHandler(object sender, NetworkArgs e);
         public event NetworkEventHandler NetworkEvent;
 
         public Configuration Config = new Configuration();
@@ -464,6 +461,14 @@ namespace libirc
             }
         }
 
+        public void __evt_PRIVMSG(NetworkPRIVMSGEventArgs args)
+        {
+            if (On_PRIVMSG != null)
+            {
+                On_PRIVMSG(this, args);
+            }
+        }
+
         /// <summary>
         /// Send a message to network
         /// </summary>
@@ -493,12 +498,12 @@ namespace libirc
             }
             return false;
         }
-		
-		public void TriggerEvent(NetworkArgs args)
-		{
-			this.NetworkEvent(this, args);
-		}
-		
+        
+        public void TriggerEvent(NetworkArgs args)
+        {
+            this.NetworkEvent(this, args);
+        }
+        
         /// <summary>
         /// Destroy this class, be careful, it can't be used in any way after you
         /// call this

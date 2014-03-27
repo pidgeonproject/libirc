@@ -26,16 +26,16 @@ namespace libirc
     {
         private static List<Thread> Threads = new List<Thread>();
 
-		public static void RemoveThread(Thread thread)
-		{
-			lock(Threads)
-			{
-				if (Threads.Contains(thread))
-				{
-					Threads.Remove(thread);
-				}
-			}
-		}
+        public static void RemoveThread(Thread thread)
+        {
+            lock(Threads)
+            {
+                if (Threads.Contains(thread))
+                {
+                    Threads.Remove(thread);
+                }
+            }
+        }
 
         public static void RegisterThread(Thread thread)
         {
@@ -58,7 +58,7 @@ namespace libirc
                     thread.Abort();
                 }
             }
-			RemoveThread(thread);
+            RemoveThread(thread);
         }
     }
 }

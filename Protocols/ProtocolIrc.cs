@@ -37,7 +37,6 @@ namespace libirc.Protocols
         }
 
         public delegate void TrafficLogEventHandler(object sender,TrafficLogEventArgs e);
-
         public event TrafficLogEventHandler TrafficLogEvent;
 
         /// <summary>
@@ -194,10 +193,10 @@ namespace libirc.Protocols
 
         public void Start()
         {
-			if (this.IRCNetwork == null)
-			{
-				IRCNetwork = new Network(this.Server, this);
-			}
+            if (this.IRCNetwork == null)
+            {
+                IRCNetwork = new Network(this.Server, this);
+            }
             Messages.protocol = this;
             if (!SSL)
             {
@@ -232,11 +231,11 @@ namespace libirc.Protocols
 
             try
             {
-				if (!this.ManualThreads)
-				{
-	                TDeliveryQueue = new System.Threading.Thread(Messages.Run);
-	                TDeliveryQueue.Start();
-				}
+                if (!this.ManualThreads)
+                {
+                    TDeliveryQueue = new System.Threading.Thread(Messages.Run);
+                    TDeliveryQueue.Start();
+                }
 
                 while (!streamReader.EndOfStream && IsConnected)
                 {
@@ -338,16 +337,16 @@ namespace libirc.Protocols
             return 0;
         }
 
-		/// <summary>
-		/// Send a message either to channel or user
-		/// </summary>
-		/// <param name="text">Text.</param>
-		/// <param name="to">To.</param>
-		/// <param name="priority">Priority.</param>
-		public void Message(string text, string to, Defs.Priority priority = Defs.Priority.Normal)
-		{
-			Message(text, to, null, priority);
-		}
+        /// <summary>
+        /// Send a message either to channel or user
+        /// </summary>
+        /// <param name="text">Text.</param>
+        /// <param name="to">To.</param>
+        /// <param name="priority">Priority.</param>
+        public void Message(string text, string to, Defs.Priority priority = Defs.Priority.Normal)
+        {
+            Message(text, to, null, priority);
+        }
 
         /// <summary>
         /// /me style

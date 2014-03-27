@@ -156,7 +156,7 @@ namespace libirc.Protocols
                         }
                         catch (ThreadAbortException)
                         {
-							ThreadManager.RemoveThread(System.Threading.Thread.CurrentThread);
+                            ThreadManager.RemoveThread(System.Threading.Thread.CurrentThread);
                             return;
                         }
                     }
