@@ -29,9 +29,9 @@ namespace libirc
         /// Protocol of this network
         /// </summary>
         private Protocol _Protocol = null;
-		/// <summary>
-		/// This is a text we received from server
-		/// </summary>
+        /// <summary>
+        /// This is a text we received from server
+        /// </summary>
         private string ServerLineRawText;
         private bool isServices = false;
         /// <summary>
@@ -67,127 +67,134 @@ namespace libirc
         {
             if (source.StartsWith(_Network.Nickname + "!", StringComparison.Ordinal))
             {
-				Network.NetworkSelfEventArgs data = null;
-				// we are handling a message that is affecting this user session
-				if (command == "JOIN")
-				{
-					if (IsBacklog)
-					{
-						// there is no need to update anything this is a message from bouncer and that already handled
-						// everything so we just need to emit event and ignore this
+                Network.NetworkSelfEventArgs data = null;
+                // we are handling a message that is affecting this user session
+                if (command == "JOIN")
+                {
+                    if (IsBacklog)
+                    {
+                        // there is no need to update anything this is a message from bouncer and that already handled
+                        // everything so we just need to emit event and ignore this
 
-						return true;
-					}
-					// check what channel we joined
-					string channel = null;
-					if (parameters.Count > 0)
-					{
-						channel = parameters[0];
-						if (String.IsNullOrEmpty(channel) && !String.IsNullOrEmpty(message))
-						{
-							// this is a hack for uber-fucked servers that provide name of channel in message
-							// instead as a parameter
-							channel = message;
-						}
-						Channel joined_chan = _Network.GetChannel(channel);
-						if (joined_chan == null)
-						{
-							// we aren't in this channel yet, which is expected, let's create a new instance of it
-							joined_chan = _Network.Channel(channel);
-						} else
-						{
-							// this is set for some unknown reasons and needs to be cleaned up
-							joined_chan.ChannelWork = true;
-							joined_chan.PartRequested = false;
-						}
+                        return true;
+                    }
+                    // check what channel we joined
+                    string channel = null;
+                    if (parameters.Count > 0)
+                    {
+                        channel = parameters[0];
+                    }
+                    if (String.IsNullOrEmpty(channel) && !String.IsNullOrEmpty(message))
+                    {
+                        // this is a hack for uber-fucked servers that provide name of channel in message
+                        // instead as a parameter
+                        channel = message;
+                        data = new Network.NetworkSelfEventArgs();
+                        data.ChannelName = channel;
+                        Channel joined_chan = _Network.GetChannel(channel);
+                        data.Channel = joined_chan;
+                        data.Source = source;
+                        data.Type = Network.EventType.Join;
+                        _Network.__evt_Self(data);
+                        if (joined_chan == null)
+                        {
+                            // we aren't in this channel yet, which is expected, let's create a new instance of it
+                            joined_chan = _Network.Channel(channel);
+                        }
+                        else
+                        {
+                            // this is set for some unknown reasons and needs to be cleaned up
+                            joined_chan.ChannelWork = true;
+                            joined_chan.PartRequested = false;
+                        }
 
-						// if this channel is not a backlog we need to reflect the change
-						if (!IsBacklog)
-						{
-							if (_Network.Config.AggressiveMode)
-							{
-								_Network.Transfer("MODE " + channel, Defs.Priority.Low);
-							}
+                        // if this channel is not a backlog we need to reflect the change
+                        if (!IsBacklog)
+                        {
+                            if (_Network.Config.AggressiveMode)
+                            {
+                                _Network.Transfer("MODE " + channel, Defs.Priority.Low);
+                            }
 
-							if (_Network.Config.AggressiveExceptions)
-							{
-								joined_chan.IsParsingExceptionData = true;
-								_Network.Transfer("MODE " + channel + " +e", Defs.Priority.Low);
-							}
+                            if (_Network.Config.AggressiveExceptions)
+                            {
+                                joined_chan.IsParsingExceptionData = true;
+                                _Network.Transfer("MODE " + channel + " +e", Defs.Priority.Low);
+                            }
 
-							if (_Network.Config.AggressiveBans)
-							{
-								joined_chan.IsParsingBanData = true;
-								_Network.Transfer("MODE " + channel + " +b", Defs.Priority.Low);
-							}
+                            if (_Network.Config.AggressiveBans)
+                            {
+                                joined_chan.IsParsingBanData = true;
+                                _Network.Transfer("MODE " + channel + " +b", Defs.Priority.Low);
+                            }
 
-							if (_Network.Config.AggressiveInvites)
-							{
-								joined_chan.IsParsingInviteData = true;
-								_Network.Transfer("MODE " + channel + " +I", Defs.Priority.Low);
-							}
+                            if (_Network.Config.AggressiveInvites)
+                            {
+                                joined_chan.IsParsingInviteData = true;
+                                _Network.Transfer("MODE " + channel + " +I", Defs.Priority.Low);
+                            }
 
-							if (_Network.Config.AggressiveUsers)
-							{
-								joined_chan.IsParsingWhoData = true;
-								_Network.Transfer("WHO " + channel, Defs.Priority.Low);
-							}
-						}
-						return true;
-					}
-					return false;
-				}
+                            if (_Network.Config.AggressiveUsers)
+                            {
+                                joined_chan.IsParsingWhoData = true;
+                                _Network.Transfer("WHO " + channel, Defs.Priority.Low);
+                            }
+                        }
+                        return true;
+                    }
+                    return false;
+                }
 
                 if (command == "NICK")
                 {
-					// it seems we changed the nickname
+                    // it seems we changed the nickname
                     string new_nickname = message;
-					if (string.IsNullOrEmpty(new_nickname) && parameters.Count > 0 && !string.IsNullOrEmpty(parameters[0]))
+                    if (string.IsNullOrEmpty(new_nickname) && parameters.Count > 0 && !string.IsNullOrEmpty(parameters[0]))
                     {
                         new_nickname = parameters[0];
                         if (new_nickname.Contains(" "))
                         {
-							// server is totally borked
+                            // server is totally borked
                             new_nickname = new_nickname.Substring(0, new_nickname.IndexOf(" ", StringComparison.Ordinal));
                         }
                     }
-					data = new Network.NetworkSelfEventArgs();
-					data.Source = source;
-					data.OldNick = _Network.Nickname;
-					data.NewNick = new_nickname;
-					data.Type = Network.EventType.Nick;
-					_Network.__evt_Self(data);
+                    data = new Network.NetworkSelfEventArgs();
+                    data.Source = source;
+                    data.OldNick = _Network.Nickname;
+                    data.NewNick = new_nickname;
+                    data.Type = Network.EventType.Nick;
+                    _Network.__evt_Self(data);
                     _Network.Nickname = new_nickname;
                 }
 
-				if (command == "PART")
-				{
-					// we parted the channel
-					if (parameters.Count == 0)
-					{
-						// there is no information of what channel, so server is fucked up
-						return false;
-					}
-					string channel = parameters[0];
-					Channel c = _Network.GetChannel(channel);
-					if (c != null)
-					{
-						c.ChannelWork = false;
-						data = new Network.NetworkSelfEventArgs();
-						data.Channel = c;
-						data.Source = source;
-						data.Message = message;
-						data.Type = Network.EventType.Part;
-						_Network.__evt_Self(data);
-						return true;
-					}
-					data = new Network.NetworkSelfEventArgs();
-					data.ChannelName = channel;
-					data.Source = source;
-					data.Message = message;
-					data.Type = Network.EventType.Part;
-					_Network.__evt_Self(data);
-				}
+                if (command == "PART")
+                {
+                    // we parted the channel
+                    if (parameters.Count == 0)
+                    {
+                        // there is no information of what channel, so server is fucked up
+                        return false;
+                    }
+                    string channel = parameters[0];
+                    Channel c = _Network.GetChannel(channel);
+                    if (c != null)
+                    {
+                        c.ChannelWork = false;
+                        data = new Network.NetworkSelfEventArgs();
+                        data.Channel = c;
+                        data.Source = source;
+                        data.Message = message;
+                        data.Type = Network.EventType.Part;
+                        _Network.__evt_Self(data);
+                        return true;
+                    }
+                    data = new Network.NetworkSelfEventArgs();
+                    data.ChannelName = channel;
+                    data.Source = source;
+                    data.Message = message;
+                    data.Type = Network.EventType.Part;
+                    _Network.__evt_Self(data);
+                }
             }
             return false;
         }
@@ -213,50 +220,48 @@ namespace libirc
             bool OK = false;
             if (String.IsNullOrEmpty(ServerLineRawText))
             {
-				// there is nothing to process
+                // there is nothing to process
                 return false;
             }
-			// every IRC command that is sent from server should being with colon according to RFC
+            // every IRC command that is sent from server should being with colon according to RFC
             if (ServerLineRawText.StartsWith(":", StringComparison.Ordinal))
             {
                 List<string> parameters = new List<string>();
                 string message = "";
-				string source = ServerLineRawText.Substring(1);
-				// some functions prefer parameters not to be converted to list so this is them
-				string parameters_line = "";
+                string source = ServerLineRawText.Substring(1);
+                // some functions prefer parameters not to be converted to list so this is them
+                string parameters_line = "";
                 string command = "";
-				if (source.Contains(" "))
-				{
-					// we store the value of indexof so that we don't need to call this CPU expensive
-					// method too often
-					int index = source.IndexOf(" ", StringComparison.Ordinal);
-					command = source.Substring(index + 1);
-					source = source.Substring(0, index);
-					if (command.Contains(" :"))
-					{
-						index = command.IndexOf(" :", StringComparison.Ordinal);
-						if (index < 0)
-						{
-							_Protocol.DebugLog("Malformed text, probably hacker: " + ServerLineRawText);
-							return false;
-						}
-						message = command.Substring(index + 2);
-						command = command.Substring(0, index);
-						// check if there aren't some extra parameters for this command
-						if (command.Contains(" "))
-						{
-							// we remove the command name and split all the parameters by space
-							index = command.IndexOf(" ", StringComparison.Ordinal);
-							parameters_line = command.Substring(index + 1);
-							parameters.AddRange(parameters_line.Split(' '));
-							command = command.Substring(0, index);
-						}
-					}
-					// commands are meant to be uppercase but for compatibility reasons we ensure it is
-					command = command.ToUpper();
-				}
-
-				_Protocol.DebugLog("command: " + command + " parameters: " + parameters_line + " message: " + message);
+                if (source.Contains(" "))
+                {
+                    // we store the value of indexof so that we don't need to call this CPU expensive
+                    // method too often
+                    int index = source.IndexOf(" ", StringComparison.Ordinal);
+                    command = source.Substring(index + 1);
+                    source = source.Substring(0, index);
+                    if (command.Contains(" :"))
+                    {
+                        index = command.IndexOf(" :", StringComparison.Ordinal);
+                        if (index < 0)
+                        {
+                            _Protocol.DebugLog("Malformed text, probably hacker: " + ServerLineRawText);
+                            return false;
+                        }
+                        message = command.Substring(index + 2);
+                        command = command.Substring(0, index);
+                    }
+                    // check if there aren't some extra parameters for this command
+                    if (command.Contains(" "))
+                    {
+                        // we remove the command name and split all the parameters by space
+                        index = command.IndexOf(" ", StringComparison.Ordinal);
+                        parameters_line = command.Substring(index + 1);
+                        parameters.AddRange(parameters_line.Split(' '));
+                        command = command.Substring(0, index);
+                    }
+                    // commands are meant to be uppercase but for compatibility reasons we ensure it is
+                    command = command.ToUpper();
+                }
 
                 if (ProcessSelf(source, command, parameters, message))
                 {
@@ -265,16 +270,16 @@ namespace libirc
 
                 switch (command)
                 {
-					case "001":
-					case "002":
-					case "003":
-					case "004":
-						Network.NetworkGenericDataEventArgs args004 = new  Network.NetworkGenericDataEventArgs();
-						args004.Command = command;
-						args004.ParameterLine = parameters_line;
-						args004.Parameters = parameters;
-						args004.Message = message;
-						_Network.__evt_INFO(args004);
+                    case "001":
+                    case "002":
+                    case "003":
+                    case "004":
+                        Network.NetworkGenericDataEventArgs args004 = new Network.NetworkGenericDataEventArgs();
+                        args004.Command = command;
+                        args004.ParameterLine = parameters_line;
+                        args004.Parameters = parameters;
+                        args004.Message = message;
+                        _Network.__evt_INFO(args004);
                         break;
                     case "005":
                         Info(command, parameters, parameters_line, message);
@@ -296,10 +301,10 @@ namespace libirc
                         _Network.IsAway = true;
                         break;
                     case "317":
-                            if (IdleTime(command, parameters_line, message))
-                            {
-                                return true;
-                            }
+                        if (IdleTime(command, parameters_line, message))
+                        {
+                            return true;
+                        }
                         break;
                     case "321":
                         if (_Network.SuppressData)
@@ -326,34 +331,34 @@ namespace libirc
                     case "313":
                     case "378":
                     case "671":
-                            if (WhoisText(command, parameters_line, message))
-                            {
-                                return true;
-                            }
+                        if (WhoisText(command, parameters_line, message))
+                        {
+                            return true;
+                        }
                         break;
                     case "311":
-                            if (WhoisLoad(command, parameters_line, message))
-                            {
-                                return true;
-                            }
+                        if (WhoisLoad(command, parameters_line, message))
+                        {
+                            return true;
+                        }
                         break;
                     case "312":
-                            if (WhoisSv(command, parameters_line, message))
-                            {
-                                return true;
-                            }
+                        if (WhoisSv(command, parameters_line, message))
+                        {
+                            return true;
+                        }
                         break;
                     case "318":
-                            if (WhoisFn(command, parameters_line, message))
-                            {
-                                return true;
-                            }
+                        if (WhoisFn(command, parameters_line, message))
+                        {
+                            return true;
+                        }
                         break;
                     case "319":
-                            if (WhoisCh(command, parameters_line, message))
-                            {
-                                return true;
-                            }
+                        if (WhoisCh(command, parameters_line, message))
+                        {
+                            return true;
+                        }
                         break;
                     case "433":
                         if (!_Network.UsingNick2)
@@ -380,15 +385,15 @@ namespace libirc
                         if (parameters.Contains(_Network.ChannelPrefix))
                         {
                             Channel channel = _Network.GetChannel(parameters_line);
-							Network.NetworkNOTICEEventArgs notice = new Network.NetworkNOTICEEventArgs();
-							notice.Source = source;
-							notice.Message = message;
+                            Network.NetworkNOTICEEventArgs notice = new Network.NetworkNOTICEEventArgs();
+                            notice.Source = source;
+                            notice.Message = message;
                             if (channel != null)
                             {
-								notice.Channel = channel;
+                                notice.Channel = channel;
                             }
-							notice.ChannelName = channel.Name;
-							_Network.__evt_NOTICE(notice);
+                            notice.ChannelName = channel.Name;
+                            _Network.__evt_NOTICE(notice);
                         }
                         return true;
                     case "NICK":
@@ -452,31 +457,31 @@ namespace libirc
                         }
                         break;
                     case "324":
-						if (ChannelInfo(parameters, command, source, message))
+                        if (ChannelInfo(parameters, command, source, message))
                         {
                             return true;
                         }
                         break;
                     case "332":
-						if (ChannelTopic(parameters, command, source, message))
+                        if (ChannelTopic(parameters, command, source, message))
                         {
                             return true;
                         }
                         break;
                     case "333":
-						if (TopicInfo(parameters))
+                        if (TopicInfo(parameters))
                         {
                             return true;
                         }
                         break;
                     case "352":
-						if (ParseUser(parameters, message))
+                        if (ParseUser(parameters, message))
                         {
                             return true;
                         }
                         break;
                     case "353":
-						if (ParseInfo(parameters, message))
+                        if (ParseInfo(parameters, message))
                         {
                             return true;
                         }
@@ -484,19 +489,20 @@ namespace libirc
                     case "366":
                         return true;
                     case "367":
-						if (ChannelBans(parameters))
+                        if (ChannelBans(parameters))
                         {
                             return true;
                         }
                         break;
                     case "368":
-						if (ChannelBans2(parameters))
+                        if (ChannelBans2(parameters))
                         {
                             return true;
                         }
                         break;
-                    }
-            } else
+                }
+            }
+            else
             {
                 // malformed requests this needs to exist so that it works with some broken ircd
                 string command = ServerLineRawText;
@@ -523,7 +529,7 @@ namespace libirc
             if (!OK)
             {
                 // we have no idea what we just were to parse so flag is as unknown data and let client parse that
-				_Protocol.HandleUnknownData(ServerLineRawText);
+                _Protocol.HandleUnknownData(ServerLineRawText);
             }
             return true;
         }
@@ -534,8 +540,8 @@ namespace libirc
         /// <param name="_network">_network.</param>
         /// <param name="_text">_text.</param>
         /// <param name="_pong">_pong.</param>
-		/// <param name="_date">Date of this message, if you specify 0 the current time will be used</param>
-		/// <param name="updated">If true this text will be considered as newly obtained information</param>
+        /// <param name="_date">Date of this message, if you specify 0 the current time will be used</param>
+        /// <param name="updated">If true this text will be considered as newly obtained information</param>
         public ProcessorIRC(Network _network, string _text, ref DateTime _pong, long _date = 0, bool updated = true)
         {
             _Network = _network;

@@ -22,10 +22,21 @@ namespace libirc
     {
         private bool ChannelInfo(List<string> parameters, string command, string source, string _value)
         {
-			if (parameters.Count > 0)
+			if (parameters.Count > 1)
             {
 				Channel channel = _Network.GetChannel(parameters[0]);
-
+                Network.NetworkChannelDataEventArgs args = new Network.NetworkChannelDataEventArgs();
+                args.Command = command;
+                args.Message = _value;
+                args.Parameters = parameters;
+                args.Channel = channel;
+                args.ChannelName = parameters[0];
+                _Network.__evt_ChannelInfo(args);
+                if (channel != null)
+                {
+                    channel.ChannelMode.ChangeMode(parameters[1]);
+                    return true;
+                }
             }
             return false;
         }

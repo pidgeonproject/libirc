@@ -24,7 +24,6 @@ namespace libirc
         public bool AggressiveBans = true;
         public bool AggressiveInvites = false;
         public bool AggressiveUsers = true;
-        public bool FirewallCTCP = false;
         public string Nick = Defs.DefaultNick;
         public string Nick2 = null;
         public string GetNick2()

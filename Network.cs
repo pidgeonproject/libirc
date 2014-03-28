@@ -98,11 +98,23 @@ namespace libirc
 			public Channel Channel = null;
 		}
 
+        public class NetworkChannelDataEventArgs : NetworkGenericDataEventArgs
+        {
+            public string ChannelName = null;
+            public Channel Channel = null;
+        }
+
         public class NetworkPRIVMSGEventArgs : NetworkGenericEventArgs
         {
             public string Message = null;
+            public bool IsAct = false;
             public Channel Channel = null;
 			public string ChannelName = null;
+        }
+
+        public class NetworkCTCPEventArgs : NetworkPRIVMSGEventArgs
+        {
+            public string CTCP = null;
         }
 
 		public class NetworkNOTICEEventArgs : NetworkGenericEventArgs
@@ -138,7 +150,9 @@ namespace libirc
 		public delegate void NetworkJOINEventHandler(object sender, NetworkChannelEventArgs e);
 		public delegate void NetworkPARTEventHandler(object sender, NetworkChannelEventArgs e);
 		public delegate void NetworkKICKEventHandler(object sender, NetworkChannelEventArgs e);
-		public delegate void NetworkQUITEventHandler(object sender, NetworkChannelEventArgs e);
+		public delegate void NetworkQUITEventHandler(object sender, NetworkGenericEventArgs e);
+        public delegate void NetworkChannelInfoEventHandler(object sender, NetworkChannelDataEventArgs e);
+        public delegate void NetworkCTCPEventHandler(object sender, NetworkCTCPEventArgs e);
 		/// <summary>
 		/// Occurs when some network action that is related to current user happens (for example
 		/// when this user join or change nick)
@@ -151,6 +165,8 @@ namespace libirc
 		public event NetworkInfoEventHandler On_Info;
 		public event NetworkKICKEventHandler On_KICK;
 		public event NetworkQUITEventHandler On_QUIT;
+        public event NetworkChannelInfoEventHandler On_ChannelInfo;
+        public event NetworkCTCPEventHandler On_CTCP;
         
         public Configuration Config = new Configuration();
         /// <summary>
@@ -197,10 +213,6 @@ namespace libirc
         /// Symbol prefix of channels
         /// </summary>
         public string ChannelPrefix = "#";
-        /// <summary>
-        /// List of private message windows
-        /// </summary>
-        public List<User> PrivateChat = new List<User>();
         /// <summary>
         /// Host name of server
         /// </summary>
@@ -444,23 +456,6 @@ namespace libirc
         }
 
         /// <summary>
-        /// If such a user is contained in a private message list it will be returned
-        /// </summary>
-        /// <param name="user">User nick</param>
-        /// <returns>Instance of user or null if it doesn't exist</returns>
-        public virtual User GetUser(string user)
-        {
-            foreach (User x in PrivateChat)
-            {
-                if (x.Nick.ToLower() == user.ToLower())
-                {
-                    return x;
-                }
-            }
-            return null;
-        }
-
-        /// <summary>
         /// Retrieve channel
         /// </summary>
         /// <param name="name">String</param>
@@ -581,6 +576,30 @@ namespace libirc
 			}
 		}
 
+        public virtual void __evt_CTCP(NetworkCTCPEventArgs args)
+        {
+            if (On_CTCP != null)
+            {
+                On_CTCP(this, args);
+            }
+        }
+
+        public virtual void __evt_QUIT(NetworkGenericEventArgs args)
+        {
+            if (On_QUIT != null)
+            {
+                On_QUIT(this, args);
+            }
+        }
+
+        public virtual void __evt_ChannelInfo(NetworkChannelDataEventArgs args)
+        {
+            if (On_ChannelInfo != null)
+            {
+                On_ChannelInfo(this, args);
+            }
+        }
+
         /// <summary>
         /// Send a message to network
         /// </summary>
@@ -629,16 +648,6 @@ namespace libirc
             lock (ChannelList)
             {
                 ChannelList.Clear();
-            }
-
-            lock (PrivateChat)
-            {
-                // release all windows
-                foreach (User user in PrivateChat)
-                {
-                    user.Destroy();
-                }
-                PrivateChat.Clear();
             }
 
             lock (Channels)

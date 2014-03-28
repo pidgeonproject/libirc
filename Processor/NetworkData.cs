@@ -34,22 +34,22 @@ namespace libirc
         /// <returns></returns>
         private bool Info(string command, List<string> parameters, string parameters_line, string value)
         {
-			Network.NetworkGenericDataEventArgs args004 = new  Network.NetworkGenericDataEventArgs();
-			args004.Parameters = parameters;
-			args004.Command = command;
-			args004.ParameterLine = parameters_line;
-			args004.Message = value;
-			_Network.__evt_INFO(args004);
+            Network.NetworkGenericDataEventArgs args004 = new Network.NetworkGenericDataEventArgs();
+            args004.Parameters = parameters;
+            args004.Command = command;
+            args004.ParameterLine = parameters_line;
+            args004.Message = value;
+            _Network.__evt_INFO(args004);
             if (parameters.Contains("PREFIX=("))
             {
-				string cmodes = parameters_line.Substring(parameters_line.IndexOf("PREFIX=(", StringComparison.Ordinal) + 8);
+                string cmodes = parameters_line.Substring(parameters_line.IndexOf("PREFIX=(", StringComparison.Ordinal) + 8);
                 cmodes = cmodes.Substring(0, cmodes.IndexOf(")", StringComparison.Ordinal));
                 lock (_Network.CUModes)
                 {
                     _Network.CUModes.Clear();
                     _Network.CUModes.AddRange(cmodes.ToArray<char>());
                 }
-				cmodes = parameters_line.Substring(parameters_line.IndexOf("PREFIX=(", StringComparison.Ordinal) + 8);
+                cmodes = parameters_line.Substring(parameters_line.IndexOf("PREFIX=(", StringComparison.Ordinal) + 8);
                 cmodes = cmodes.Substring(cmodes.IndexOf(")", StringComparison.Ordinal) + 1, _Network.CUModes.Count);
 
                 _Network.UChars.Clear();
@@ -57,7 +57,7 @@ namespace libirc
             }
             if (parameters.Contains("CHANMODES="))
             {
-				string xmodes = parameters_line.Substring(parameters_line.IndexOf("CHANMODES=", StringComparison.Ordinal) + 11);
+                string xmodes = parameters_line.Substring(parameters_line.IndexOf("CHANMODES=", StringComparison.Ordinal) + 11);
                 xmodes = xmodes.Substring(0, xmodes.IndexOf(" ", StringComparison.Ordinal));
                 string[] _mode = xmodes.Split(',');
                 _Network.ParsedInfo = true;
@@ -150,6 +150,8 @@ namespace libirc
             }
 
             chan = parameters.Replace(" ", "");
+            Network.NetworkPRIVMSGEventArgs ev = new Network.NetworkPRIVMSGEventArgs();
+            ev.Source = source;
             User user = null;
             string message = value;
             if (!chan.Contains(_Network.ChannelPrefix))
@@ -173,131 +175,62 @@ namespace libirc
                         {
                             message = message.Substring(0, message.Length - 1);
                         }
-                        user = _Network.GetUser(_nick);
-
+                        ev.IsAct = true;
+                        ev.Message = message;
+                        _Network.__evt_PRIVMSG(ev);
                         return true;
                     }
 
                     string reply = null;
 
-                    if (!IsBacklog)
+                    uc = message.Substring(1);
+                    if (uc.Contains(_Protocol.delimiter.ToString()))
                     {
-                        uc = message.Substring(1);
-                        if (uc.Contains(_Protocol.delimiter.ToString()))
-                        {
-                            uc = uc.Substring(0, uc.IndexOf(_Protocol.delimiter.ToString(), StringComparison.Ordinal));
-                        }
-                        if (uc.Contains(" "))
-                        {
-                            uc = uc.Substring(0, uc.IndexOf(" ", StringComparison.Ordinal));
-                        }
-                        uc = uc.ToUpper();
-                        if (!_Network.Config.FirewallCTCP)
-                        {
-                            switch (uc)
-                            {
-                                case "VERSION":
-                                    reply = "VERSION " + Defs.DefaultVersion;
-                                    _Network.Transfer("NOTICE " + _nick + " :" + _Protocol.delimiter.ToString() + reply,
-                                                      Defs.Priority.Low);
-                                    break;
-                                    case "TIME":
-                                    reply = "TIME " + DateTime.Now.ToString();
-                                    _Network.Transfer("NOTICE " + _nick + " :" + _Protocol.delimiter.ToString() + reply,
-                                                      Defs.Priority.Low);
-                                    break;
-                                    case "PING":
-                                    if (message.Length > 6)
-                                    {
-                                        string time = message.Substring(6);
-                                        if (time.Contains(_Network._Protocol.delimiter.ToString()))
-                                        {
-                                            reply = "PING " + time;
-                                            time = message.Substring(0, message.IndexOf(_Network._Protocol.delimiter));
-                                            _Network.Transfer("NOTICE " + _nick + " :" + _Protocol.delimiter.ToString() + reply,
-                                                              Defs.Priority.Low);
-                                        }
-                                    }
-                                    break;
-                                    case "DCC":
-                                    string message2 = message;
-                                    if (message.Length < 5 || !message.Contains(" "))
-                                    {
-                                        _Protocol.DebugLog("Malformed DCC " + message);
-                                        return false;
-                                    }
-                                    if (message2.EndsWith(_Protocol.delimiter.ToString(), StringComparison.Ordinal))
-                                    {
-                                        message2 = message2.Substring(0, message2.Length - 1);
-                                    }
-                                    string[] list = message2.Split(' ');
-                                    if (list.Length < 5)
-                                    {
-                                        _Protocol.DebugLog("Malformed DCC " + message);
-                                        return false;
-                                    }
-                                    string type = list[1];
-                                    int port = 0;
-                                    if (!int.TryParse(list[4], out port))
-                                    {
-                                        _Protocol.DebugLog("Malformed DCC " + message2);
-                                        return false;
-                                    }
-                                    if (port < 1)
-                                    {
-                                        _Protocol.DebugLog("Malformed DCC " + message2);
-                                        return false;
-                                    }
-                                    switch (type.ToLower())
-                                    {
-                                        case "send":
-                                            break;
-                                            case "chat":
-                                            //Core.OpenDCC(list[3], port, _nick, false, false, _Network);
-                                            return true;
-                                            case "securechat":
-                                            //Core.OpenDCC(list[3], port, _nick, false, true, _Network);
-                                            return true;
-                                    }
-                                    _Protocol.DebugLog("Malformed DCC " + message2);
-                                    return false;
-                            }
-                        }
+                        uc = uc.Substring(0, uc.IndexOf(_Protocol.delimiter.ToString(), StringComparison.Ordinal));
                     }
-
+                    if (uc.Contains(" "))
+                    {
+                        uc = uc.Substring(0, uc.IndexOf(" ", StringComparison.Ordinal));
+                    }
+                    uc = uc.ToUpper();
+                    Network.NetworkCTCPEventArgs ctcp = new Network.NetworkCTCPEventArgs();
+                    ctcp.CTCP = uc;
+                    ctcp.Message = message;
+                    _Network.__evt_CTCP(ctcp);
                     return true;
                 }
             }
             user = new User(_nick, _host, _Network, _ident);
+            ev.SourceUser = user;
             Channel channel = null;
             if (chan.StartsWith(_Network.ChannelPrefix, StringComparison.Ordinal))
             {
                 channel = _Network.GetChannel(chan);
+                ev.Channel = channel;
+                ev.ChannelName = chan;
                 if (channel != null)
                 {
-                        if (message.StartsWith(_Protocol.delimiter.ToString() + "ACTION", StringComparison.Ordinal))
+                    if (message.StartsWith(_Protocol.delimiter.ToString() + "ACTION", StringComparison.Ordinal))
+                    {
+                        message = message.Substring("xACTION".Length);
+                        if (message.Length > 1 && message.EndsWith(_Protocol.delimiter.ToString(), StringComparison.Ordinal))
                         {
-                            message = message.Substring("xACTION".Length);
-                            if (message.Length > 1 && message.EndsWith(_Protocol.delimiter.ToString(), StringComparison.Ordinal))
-                            {
-                                message = message.Substring(0, message.Length - 1);
-                            }
-                            if (isServices)
-                            {
-                                if (_nick == _Network.Nickname)
-                                {
-                                    return true;
-                                }
-                            }
-                            return true;
+                            message = message.Substring(0, message.Length - 1);
                         }
+                        ev.IsAct = true;
+                        ev.Message = message;
+                        _Network.__evt_PRIVMSG(ev);
+                        //if (isServices)
+                        //{
+                        //    if (_nick == _Network.Nickname)
+                        //    {
+                        //        return true;
+                        //    }
+                        //}
+                        return true;
+                    }
                     return true;
                 }
-                return true;
-            }
-            if (chan == _Network.Nickname)
-            {
-                chan = source.Substring(0, source.IndexOf("!", StringComparison.Ordinal));
                 return true;
             }
             return false;
