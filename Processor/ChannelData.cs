@@ -20,25 +20,25 @@ namespace libirc
 {
     public partial class ProcessorIRC
     {
-        private bool ChannelInfo(string[] code, string command, string source, string parameters, string _value)
+        private bool ChannelInfo(List<string> parameters, string command, string source, string _value)
         {
-            if (code.Length > 3)
+			if (parameters.Count > 0)
             {
-                Channel channel = _Network.GetChannel(code[3]);
+				Channel channel = _Network.GetChannel(parameters[0]);
 
             }
             return false;
         }
 
-        private bool ParseUser(string[] code, string realname)
+        private bool ParseUser(List<string> code, string realname)
         {
-            if (code.Length > 8)
+            if (code.Count > 5)
             {
-                Channel channel = _Network.GetChannel(code[3]);
-                string ident = code[4];
-                string host = code[5];
-                string nick = code[7];
-                string server = code[6];
+                Channel channel = _Network.GetChannel(code[0]);
+                string ident = code[1];
+                string host = code[2];
+                string nick = code[4];
+                string server = code[3];
                 if (realname != null & realname.Length > 2)
                 {
                     realname = realname.Substring(2);
@@ -64,7 +64,7 @@ namespace libirc
                 }
                 if (channel != null)
                 {
-                    if (updated_text)
+                    if (!IsBacklog)
                     {
                         if (!channel.ContainsUser(nick))
                         {
@@ -115,15 +115,15 @@ namespace libirc
             return false;
         }
 
-        private bool ParseInfo(string[] code, string value)
+        private bool ParseInfo(List<string> parameters, string value)
         {
-            if (code.Length > 3)
+			if (parameters.Count > 0)
             {
-                string name = code[4];
-                if (!updated_text)
+                if (IsBacklog)
                 {
                     return true;
                 }
+				string name = parameters[0];
                 Channel channel = _Network.GetChannel(name);
                 if (channel != null)
                 {
@@ -166,17 +166,13 @@ namespace libirc
             return false;
         }
 
-        private bool ChannelTopic(string[] code, string command, string source, string parameters, string value)
+        private bool ChannelTopic(List<string> parameters, string command, string source, string message)
         {
-            if (code.Length > 3)
+			if (parameters.Count > 0)
             {
-                string name = "";
-                if (parameters.Contains("#"))
-                {
-                    name = parameters.Substring(parameters.IndexOf("#", StringComparison.Ordinal)).Replace(" ", "");
-                }
-                string topic = value;
-                Channel channel = _Network.GetChannel(name);
+                string channelName_ = parameters[0];
+                string topic = message;
+                Channel channel = _Network.GetChannel(channelName_);
                 if (channel != null)
                 {
                     channel.Topic = topic;
@@ -186,11 +182,11 @@ namespace libirc
             return false;
         }
 
-        private bool FinishChan(string[] code)
+        private bool FinishChan(List<string> code)
         {
-            if (code.Length > 2)
+            if (code.Count > 0)
             {
-                Channel channel = _Network.GetChannel(code[3]);
+                Channel channel = _Network.GetChannel(code[1]);
                 if (channel != null)
                 {
 
@@ -200,13 +196,13 @@ namespace libirc
             return false;
         }
 
-        private bool TopicInfo(string[] code, string parameters)
+        private bool TopicInfo(List<string> parameters)
         {
-            if (code.Length > 5)
+			if (parameters.Count > 2)
             {
-                string name = code[3];
-                string user = code[4];
-                string time = code[5];
+				string name = parameters[0];
+				string user = parameters[1];
+				string time = parameters[2];
                 Channel channel = _Network.GetChannel(name);
                 if (channel != null)
                 {
@@ -227,7 +223,7 @@ namespace libirc
             {
                     lock (channel.UserList)
                     {
-                        if (updated_text && channel.ContainsUser(user))
+                        if (!IsBacklog && channel.ContainsUser(user))
                         {
                             User delete = null;
                             delete = channel.UserFromName(user);
@@ -261,9 +257,14 @@ namespace libirc
             _ident = source.Substring(source.IndexOf("!", StringComparison.Ordinal) + 1);
             _ident = _ident.Substring(0, _ident.IndexOf("@", StringComparison.Ordinal));
             Channel channel = _Network.GetChannel(chan);
+			Network.NetworkChannelEventArgs ed = new Network.NetworkChannelEventArgs();
+			ed.ChannelName = chan;
+			ed.Source = source;
+			ed.Parameters = parameters;
             if (channel != null)
             {
-                if (updated_text)
+				ed.Channel = channel;
+                if (!IsBacklog)
                 {
                     lock(channel.UserList)
                     {
@@ -273,16 +274,18 @@ namespace libirc
                         }
                     }
                 }
+				_Network.__evt_JOIN(ed);
                 return true;
             }
+			_Network.__evt_JOIN(ed);
             return false;
         }
 
-        private bool ChannelBans2(string[] code)
+        private bool ChannelBans2(List<string> parameters)
         {
-            if (code.Length > 4)
+            if (parameters.Count > 0)
             {
-                Channel channel = _Network.GetChannel(code[3]);
+                Channel channel = _Network.GetChannel(parameters[0]);
                 if (channel != null)
                 {
                     if (channel.IsParsingBanData)
@@ -295,20 +298,20 @@ namespace libirc
             return false;
         }
 
-        private bool ChannelBans(string[] code)
+        private bool ChannelBans(List<string> parameters)
         {
-            if (code.Length > 6)
+			if (parameters.Count > 3)
             {
-                Channel channel = _Network.GetChannel(code[3]);
+                Channel channel = _Network.GetChannel(parameters[0]);
                 if (channel != null)
                 {
                     if (channel.Bans == null)
                     {
                         channel.Bans = new List<SimpleBan>();
                     }
-                    if (!channel.ContainsBan(code[4]))
+                    if (!channel.ContainsBan(parameters[1]))
                     {
-                        channel.Bans.Add(new SimpleBan(code[5], code[4], code[6]));
+                        channel.Bans.Add(new SimpleBan(parameters[2], parameters[1], parameters[3]));
                     }
                 }
             }
@@ -329,7 +332,7 @@ namespace libirc
             if (channel != null)
             {
                 User delete = null;
-                    if (updated_text)
+                    if (!IsBacklog)
                     {
                         if (channel.ContainsUser(user))
                         {
@@ -356,7 +359,7 @@ namespace libirc
             if (channel != null)
             {
                 channel.Topic = value;
-                if (updated_text)
+                if (!IsBacklog)
                 {
                     channel.TopicDate = (int)Defs.ConvertDateToUnix(DateTime.Now);
                     channel.TopicUser = source;
@@ -389,7 +392,7 @@ namespace libirc
                         User user = channel.UserFromName (nick);
                         if (user != null)
                         {
-                            if (updated_text)
+                            if (!IsBacklog)
                             {
                                 channel.RemoveUser(user);
                                 user.SetNick(_new);
@@ -418,7 +421,7 @@ namespace libirc
                     if (channel != null)
                     {
                         string change = parameters.Substring(parameters.IndexOf(" ", StringComparison.Ordinal));
-                        if (!updated_text)
+                        if (IsBacklog)
                         {
                             return true;
                         }

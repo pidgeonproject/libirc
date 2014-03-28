@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace libirc
@@ -31,26 +32,32 @@ namespace libirc
         /// <param name="parameters">Parameters</param>
         /// <param name="value">Text</param>
         /// <returns></returns>
-        private bool Info(string command, string parameters, string value)
+        private bool Info(string command, List<string> parameters, string parameters_line, string value)
         {
+			Network.NetworkGenericDataEventArgs args004 = new  Network.NetworkGenericDataEventArgs();
+			args004.Parameters = parameters;
+			args004.Command = command;
+			args004.ParameterLine = parameters_line;
+			args004.Message = value;
+			_Network.__evt_INFO(args004);
             if (parameters.Contains("PREFIX=("))
             {
-                string cmodes = parameters.Substring(parameters.IndexOf("PREFIX=(", StringComparison.Ordinal) + 8);
+				string cmodes = parameters_line.Substring(parameters_line.IndexOf("PREFIX=(", StringComparison.Ordinal) + 8);
                 cmodes = cmodes.Substring(0, cmodes.IndexOf(")", StringComparison.Ordinal));
                 lock (_Network.CUModes)
                 {
                     _Network.CUModes.Clear();
-                    //_Network.CUModes.AddRange(cmodes.ToArray<char>());
+                    _Network.CUModes.AddRange(cmodes.ToArray<char>());
                 }
-                cmodes = parameters.Substring(parameters.IndexOf("PREFIX=(", StringComparison.Ordinal) + 8);
+				cmodes = parameters_line.Substring(parameters_line.IndexOf("PREFIX=(", StringComparison.Ordinal) + 8);
                 cmodes = cmodes.Substring(cmodes.IndexOf(")", StringComparison.Ordinal) + 1, _Network.CUModes.Count);
 
                 _Network.UChars.Clear();
-                //_Network.UChars.AddRange(cmodes.ToArray<char>());
+                _Network.UChars.AddRange(cmodes.ToArray<char>());
             }
             if (parameters.Contains("CHANMODES="))
             {
-                string xmodes = parameters.Substring(parameters.IndexOf("CHANMODES=", StringComparison.Ordinal) + 11);
+				string xmodes = parameters_line.Substring(parameters_line.IndexOf("CHANMODES=", StringComparison.Ordinal) + 11);
                 xmodes = xmodes.Substring(0, xmodes.IndexOf(" ", StringComparison.Ordinal));
                 string[] _mode = xmodes.Split(',');
                 _Network.ParsedInfo = true;
@@ -60,10 +67,10 @@ namespace libirc
                     _Network.CModes.Clear();
                     _Network.XModes.Clear();
                     _Network.SModes.Clear();
-                    //_Network.PModes.AddRange(_mode[0].ToArray<char>());
-                    //_Network.XModes.AddRange(_mode[1].ToArray<char>());
-                    //_Network.SModes.AddRange(_mode[2].ToArray<char>());
-                    //_Network.CModes.AddRange(_mode[3].ToArray<char>());
+                    _Network.PModes.AddRange(_mode[0].ToArray<char>());
+                    _Network.XModes.AddRange(_mode[1].ToArray<char>());
+                    _Network.SModes.AddRange(_mode[2].ToArray<char>());
+                    _Network.CModes.AddRange(_mode[3].ToArray<char>());
                 }
             }
             return true;
@@ -173,7 +180,7 @@ namespace libirc
 
                     string reply = null;
 
-                    if (updated_text)
+                    if (!IsBacklog)
                     {
                         uc = message.Substring(1);
                         if (uc.Contains(_Protocol.delimiter.ToString()))
@@ -300,8 +307,8 @@ namespace libirc
         {
             if (parameters.Contains(" "))
             {
-                string name = parameters.Substring(parameters.IndexOf(" ", StringComparison.Ordinal) + 1);
-                string message = value;
+                //string name = parameters.Substring(parameters.IndexOf(" ", StringComparison.Ordinal) + 1);
+                //string message = value;
 
                 return true;
             }
@@ -312,7 +319,7 @@ namespace libirc
         {
             if (parameters.Contains(" "))
             {
-                string name = parameters.Substring(parameters.IndexOf(" ", StringComparison.Ordinal) + 1);
+                //string name = parameters.Substring(parameters.IndexOf(" ", StringComparison.Ordinal) + 1);
 
                 return true;
             }
@@ -335,7 +342,7 @@ namespace libirc
             string[] user = parameters.Split(' ');
             if (user.Length > 3)
             {
-                string host = user[1] + "!" + user[2] + "@" + user[3];
+                //string host = user[1] + "!" + user[2] + "@" + user[3];
             }
             return true;
         }
@@ -363,7 +370,7 @@ namespace libirc
         {
             if (parameters.Contains(" "))
             {
-                string name = parameters.Substring(parameters.IndexOf(" ", StringComparison.Ordinal) + 1);
+                //string name = parameters.Substring(parameters.IndexOf(" ", StringComparison.Ordinal) + 1);
                 return true;
             }
             return false;
@@ -386,8 +393,8 @@ namespace libirc
                     _Protocol.DebugLog("Invalid whois record " + parameters);
                     return false;
                 }
-                string server = name.Substring(name.IndexOf(" ", StringComparison.Ordinal) + 1);
-                name = name.Substring(0, name.IndexOf(" ", StringComparison.Ordinal));
+                //string server = name.Substring(name.IndexOf(" ", StringComparison.Ordinal) + 1);
+                //name = name.Substring(0, name.IndexOf(" ", StringComparison.Ordinal));
                 return true;
             }
             return false;
@@ -416,7 +423,7 @@ namespace libirc
                 string uptime = idle.Substring(idle.IndexOf(" ", StringComparison.Ordinal) + 1);
                 name = name.Substring(0, name.IndexOf(" ", StringComparison.Ordinal));
                 idle = idle.Substring(0, idle.IndexOf(" ", StringComparison.Ordinal));
-                DateTime logintime = Defs.ConvertFromUNIX(uptime);
+                //DateTime logintime = Defs.ConvertFromUNIX(uptime);
                 //WindowText(_Network.SystemWindow, "WHOIS " + name + " is online since " + logintime.ToString() + " (" + (DateTime.Now - logintime).ToString() + " ago) idle for " + idle + " seconds", Pidgeon.ContentLine.MessageStyle.System, true, date, true);
                 return true;
             }
@@ -427,8 +434,8 @@ namespace libirc
         {
             string user = source.Substring(0, source.IndexOf("!", StringComparison.Ordinal));
             string _ident;
-            string _host;
-            _host = source.Substring(source.IndexOf("@", StringComparison.Ordinal) + 1);
+            //string _host;
+            //_host = source.Substring(source.IndexOf("@", StringComparison.Ordinal) + 1);
             _ident = source.Substring(source.IndexOf("!", StringComparison.Ordinal) + 1);
             _ident = _ident.Substring(0, _ident.IndexOf("@", StringComparison.Ordinal));
             foreach (Channel item in _Network.Channels.Values)
@@ -439,7 +446,7 @@ namespace libirc
                     if (target != null)
                     {
 
-                        if (updated_text)
+                        if (!IsBacklog)
                         {
                             lock (item.UserList)
                             {

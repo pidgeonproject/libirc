@@ -196,9 +196,9 @@ namespace libirc
         /// </summary>
         public bool ChannelWork = false;
         /// <summary>
-        /// Whether part from this channel was requested
+        /// Whether part from this channel was requested, this is used to detect if part was forced or not
         /// </summary>
-        public bool partRequested = false;
+        public bool PartRequested = false;
         /// <summary>
         /// If this is false the channel is not being used / you aren't in it or you can't access it
         /// </summary>
@@ -344,7 +344,7 @@ namespace libirc
             if (IsAlive && _Network != null)
             {
                 _Network.Part(this);
-                partRequested = true;
+                PartRequested = true;
             }
         }
 

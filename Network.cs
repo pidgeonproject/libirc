@@ -25,60 +25,132 @@ namespace libirc
     /// </summary>
     public class Network : IDisposable
     {
+		public enum EventType
+		{
+			Quit,
+			Join,
+			Part,
+			Kick,
+			Nick,
+			Message,
+			Notice,
+			Generic
+		}
+
+		/// <summary>
+		/// Information about the channel for list
+		/// 
+		/// This is not a class for channels, only the list
+		/// </summary>
+		[Serializable]
+		public class ChannelData
+		{
+			/// <summary>
+			/// Name
+			/// </summary>
+			public string ChannelName = null;
+			/// <summary>
+			/// Number of users
+			/// </summary>
+			public uint UserCount = 0;
+			/// <summary>
+			/// Topic of a channel
+			/// </summary>
+			public string ChannelTopic = null;
+
+			/// <summary>
+			/// Creates a new instance
+			/// </summary>
+			/// <param name="Users">Number of users</param>
+			/// <param name="Name"></param>
+			/// <param name="Topic"></param>
+			public ChannelData(uint Users, string Name, string Topic)
+			{
+				ChannelTopic = Topic;
+				UserCount = Users;
+				ChannelName = Name;
+			}
+
+			/// <summary>
+			/// This constructor needs to exist for xml deserialization don't remove it
+			/// </summary>
+			public ChannelData() {}
+		}
+
         public class NetworkGenericEventArgs : EventArgs
         {
             public string Source = null;
+			public User SourceUser = null;
             public string Parameters = null;
         }
+
+		public class NetworkGenericDataEventArgs : EventArgs
+		{
+			public string Command = null;
+			public string ParameterLine = null;
+			public string Message = null;
+			public List<string> Parameters = null;
+		}
+
+		public class NetworkChannelEventArgs : NetworkGenericEventArgs
+		{
+			public string ChannelName = null;
+			public Channel Channel = null;
+		}
 
         public class NetworkPRIVMSGEventArgs : NetworkGenericEventArgs
         {
             public string Message = null;
             public Channel Channel = null;
+			public string ChannelName = null;
         }
 
+		public class NetworkNOTICEEventArgs : NetworkGenericEventArgs
+		{
+			public string Message = null;
+			public Channel Channel = null;
+			public string ChannelName = null;
+		}
+
+		public class NetworkSelfEventArgs : NetworkGenericEventArgs
+		{
+			public string Message = null;
+			public Channel Channel = null;
+			/// <summary>
+			/// Name of the channel in case it wasn't recognized or known
+			/// </summary>
+			public string ChannelName = null;
+			/// <summary>
+			/// This is a new nick in case the event type was NICK
+			/// </summary>
+			public string NewNick = null;
+			/// <summary>
+			/// This is an old nickname in case the event type was NICK
+			/// </summary>
+			public string OldNick = null;
+			public EventType Type = EventType.Generic;
+		}
+
+		public delegate void NetworkInfoEventHandler(object sender,NetworkGenericDataEventArgs e);
+		public delegate void NetworkSelfEventHandler(object sender, NetworkSelfEventArgs e);
+		public delegate void NetworkNOTICEEventHandler(object sender, NetworkNOTICEEventArgs e);
         public delegate void NetworkPRIVMSGEventHandler(object sender, NetworkPRIVMSGEventArgs e);
+		public delegate void NetworkJOINEventHandler(object sender, NetworkChannelEventArgs e);
+		public delegate void NetworkPARTEventHandler(object sender, NetworkChannelEventArgs e);
+		public delegate void NetworkKICKEventHandler(object sender, NetworkChannelEventArgs e);
+		public delegate void NetworkQUITEventHandler(object sender, NetworkChannelEventArgs e);
+		/// <summary>
+		/// Occurs when some network action that is related to current user happens (for example
+		/// when this user join or change nick)
+		/// </summary>
+		public event NetworkSelfEventHandler On_Self;
+		public event NetworkNOTICEEventHandler On_NOTICE;
         public event NetworkPRIVMSGEventHandler On_PRIVMSG;
-
-        /// <summary>
-        /// Information about the channel for list
-        /// 
-        /// This is not a class for channels, only the list
-        /// </summary>
-        [Serializable]
-        public class ChannelData
-        {
-            /// <summary>
-            /// Name
-            /// </summary>
-            public string ChannelName = null;
-            /// <summary>
-            /// Number of users
-            /// </summary>
-            public uint UserCount = 0;
-            /// <summary>
-            /// Topic of a channel
-            /// </summary>
-            public string ChannelTopic = null;
-
-            /// <summary>
-            /// Creates a new instance
-            /// </summary>
-            /// <param name="Users">Number of users</param>
-            /// <param name="Name"></param>
-            /// <param name="Topic"></param>
-            public ChannelData(uint Users, string Name, string Topic)
-            {
-                ChannelTopic = Topic;
-                UserCount = Users;
-                ChannelName = Name;
-            }
-
-            /// <summary>
-            /// This constructor needs to exist for xml deserialization don't remove it
-            /// </summary>
-            public ChannelData() {}
-        }
+		public event NetworkPARTEventHandler On_PART;
+		public event NetworkJOINEventHandler On_JOIN;
+		public event NetworkInfoEventHandler On_Info;
+		public event NetworkKICKEventHandler On_KICK;
+		public event NetworkQUITEventHandler On_QUIT;
         
         public Configuration Config = new Configuration();
         /// <summary>
@@ -261,7 +333,7 @@ namespace libirc
         /// <summary>
         /// Releases all resources used by this class
         /// </summary>
-        public void Dispose()
+        public virtual void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
@@ -283,7 +355,7 @@ namespace libirc
         /// </summary>
         /// <param name="mode"></param>
         /// <param name="description"></param>
-        public void InsertSafeDescription(char mode, string description)
+        public virtual void InsertSafeDescription(char mode, string description)
         {
             lock (Descriptions)
             {
@@ -299,7 +371,7 @@ namespace libirc
         /// <summary>
         /// This will toggle the connection flag to true
         /// </summary>
-        public void SetConnected()
+        public virtual void SetConnected()
         {
             connected = true;
         }
@@ -307,7 +379,7 @@ namespace libirc
         /// <summary>
         /// This will mark the network as disconnected
         /// </summary>
-        public void SetDisconnected()
+        public virtual void SetDisconnected()
         {
             connected = false;
         }
@@ -321,7 +393,7 @@ namespace libirc
         /// <param name='username'>
         /// Username
         /// </param>
-        public string RemoveCharFromUser(string username)
+        public virtual string RemoveCharFromUser(string username)
         {
             foreach (char xx in UChars)
             {
@@ -338,7 +410,7 @@ namespace libirc
         /// </summary>
         /// <param name="channel">Channel that is about to be resolved</param>
         /// <returns></returns>
-        public ChannelData ContainsChannel(string channel)
+        public virtual ChannelData ContainsChannel(string channel)
         {
             lock (ChannelList)
             {
@@ -357,7 +429,7 @@ namespace libirc
         /// Part a given channel
         /// </summary>
         /// <param name="ChannelName">Channel name</param>
-        public void Part(string ChannelName)
+        public virtual void Part(string ChannelName)
         {
             _Protocol.Part(ChannelName, this);
         }
@@ -366,7 +438,7 @@ namespace libirc
         /// Part
         /// </summary>
         /// <param name="channel"></param>
-        public void Part(Channel channel)
+        public virtual void Part(Channel channel)
         {
             _Protocol.Part(channel.Name, this);
         }
@@ -376,7 +448,7 @@ namespace libirc
         /// </summary>
         /// <param name="user">User nick</param>
         /// <returns>Instance of user or null if it doesn't exist</returns>
-        public User GetUser(string user)
+        public virtual User GetUser(string user)
         {
             foreach (User x in PrivateChat)
             {
@@ -393,7 +465,7 @@ namespace libirc
         /// </summary>
         /// <param name="name">String</param>
         /// <returns>Channel or null if it doesn't exist</returns>
-        public Channel GetChannel(string name)
+        public virtual Channel GetChannel(string name)
         {
             lock (this.Channels)
             {
@@ -409,7 +481,7 @@ namespace libirc
         /// <summary>
         /// Reconnect a disconnected network
         /// </summary>
-        public void Reconnect()
+        public virtual void Reconnect()
         {
             if (IsDestroyed)
             {
@@ -424,7 +496,7 @@ namespace libirc
         /// </summary>
         /// <param name="channel">Channel name which is supposed to be joined</param>
         /// <returns></returns>
-        public void Join(string channel)
+        public virtual void Join(string channel)
         {
             Transfer("JOIN " + channel, Defs.Priority.Normal);
         }
@@ -435,7 +507,7 @@ namespace libirc
         /// <param name="channel">Channel</param>
         /// <param name="nf">Don't focus this new window</param>
         /// <returns>Instance of channel object</returns>
-        public Channel Channel(string channel)
+        public virtual Channel Channel(string channel)
         {
             Channel previous = GetChannel(channel);
             if (previous == null)
@@ -453,13 +525,61 @@ namespace libirc
             }
         }
 
-        public void __evt_PRIVMSG(NetworkPRIVMSGEventArgs args)
+        public virtual void __evt_NOTICE(NetworkNOTICEEventArgs args)
         {
-            if (On_PRIVMSG != null)
+            if (this.On_NOTICE != null)
             {
-                On_PRIVMSG(this, args);
+				this.On_NOTICE(this, args);
             }
         }
+
+		public virtual void __evt_Self(NetworkSelfEventArgs args)
+		{
+			if (this.On_Self != null)
+			{
+				this.On_Self(this, args);
+			}
+		}
+
+		public virtual void __evt_PRIVMSG(NetworkPRIVMSGEventArgs args)
+		{
+			if (On_PRIVMSG != null)
+			{
+				On_PRIVMSG(this, args);
+			}
+		}
+
+		public virtual void __evt_INFO(NetworkGenericDataEventArgs args)
+		{
+			if (On_Info != null)
+			{
+				On_Info(this, args);
+			}
+		}
+
+		public virtual void __evt_JOIN(NetworkChannelEventArgs args)
+		{
+			if (On_JOIN != null)
+			{
+				On_JOIN(this, args);
+			}
+		}
+
+		public virtual void __evt_PART(NetworkChannelEventArgs args)
+		{
+			if (On_PART != null)
+			{
+				On_PART(this, args);
+			}
+		}
+
+		public virtual void __evt_KICK(NetworkChannelEventArgs args)
+		{
+			if (On_KICK != null)
+			{
+				On_KICK(this, args);
+			}
+		}
 
         /// <summary>
         /// Send a message to network
@@ -468,7 +588,7 @@ namespace libirc
         /// <param name="to">Sending to</param>
         /// <param name="_priority">Priority</param>
         /// <param name="pmsg">If this is private message (so it needs to be handled in a different way)</param>
-        public void Message(string text, string to, Defs.Priority _priority = Defs.Priority.Normal)
+        public virtual void Message(string text, string to, Defs.Priority _priority = Defs.Priority.Normal)
         {
             _Protocol.Message(text, to, this, _priority);
         }
@@ -478,7 +598,7 @@ namespace libirc
         /// </summary>
         /// <param name="key">Mode</param>
         /// <returns></returns>
-        public bool UnregisterInfo(char key)
+        public virtual bool UnregisterInfo(char key)
         {
             lock (Descriptions)
             {
@@ -495,7 +615,7 @@ namespace libirc
         /// Destroy this class, be careful, it can't be used in any way after you
         /// call this
         /// </summary>
-        public void Destroy()
+        public virtual void Destroy()
         {
             if (IsDestroyed)
             {
@@ -544,7 +664,7 @@ namespace libirc
         /// <param name="key">Mode</param>
         /// <param name="text">Text</param>
         /// <returns>true on success, false if this info already exist</returns>
-        public bool RegisterInfo(char key, string text)
+        public virtual bool RegisterInfo(char key, string text)
         {
             lock (Descriptions)
             {
@@ -562,7 +682,7 @@ namespace libirc
         /// </summary>
         /// <param name="data"></param>
         /// <param name="_priority"></param>
-        public void Transfer(string data, Defs.Priority _priority = Defs.Priority.Normal)
+        public virtual void Transfer(string data, Defs.Priority _priority = Defs.Priority.Normal)
         {
             if (!string.IsNullOrEmpty(data))
             {
@@ -573,7 +693,7 @@ namespace libirc
         /// <summary>
         /// Disconnect you from network
         /// </summary>
-        public void Disconnect()
+        public virtual void Disconnect()
         {
             lock (this)
             {
