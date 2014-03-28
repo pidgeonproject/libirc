@@ -64,12 +64,29 @@ namespace libirc
         {
             public string Data = null;
         }
-		
+		public class UnknownDataEventArgs : EventArgs
+		{
+			public UnknownDataEventArgs(string data) : base()
+			{
+				this.Data = data;
+			}
+
+			/// <summary>
+			/// The data which were retrieved from network
+			/// </summary>
+			public string Data;
+		}
+
+		public delegate void UnknownDataEventHandler(object sender, UnknownDataEventArgs args);
 		public delegate void ServerDisconnectEventHandler(object sender, ServerDcEventArgs e);
         public delegate void RawTrafficEventHandler(object sender, RawTrafficEventArgs e);
         public delegate void DebugLogEventHandler(object sender, DebugLogEventArgs e);
 		public delegate void TrafficLogEventHandler(object sender,TrafficLogEventArgs e);
 		public delegate void UnhandledExceptionEventHandler(object sender,UnhandledExeption e);
+		/// <summary>
+		/// Occurs when unknown data are retrieved from server
+		/// </summary>
+		public event UnknownDataEventHandler UnknownDataRetrievedEvent;
 		public event UnhandledExceptionEventHandler UnhandledExceptionFailEvent;
         public event TrafficLogEventHandler TrafficLogEvent;
 		public event ServerDisconnectEventHandler DisconnectEvent;
@@ -169,6 +186,15 @@ namespace libirc
 				UnhandledExeption ex = new UnhandledExeption();
 				ex.exception = fail;
 				UnhandledExceptionFailEvent(this, ex);
+			}
+		}
+
+		public virtual void HandleUnknownData(string data)
+		{
+			if (this.UnknownDataRetrievedEvent != null)
+			{
+				UnknownDataEventArgs args = new UnknownDataEventArgs(data);
+				this.UnknownDataRetrievedEvent(this, args);
 			}
 		}
 

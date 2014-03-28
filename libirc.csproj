@@ -33,7 +33,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
-    <Compile Include="Protocol.cs" />
     <Compile Include="Network.cs" />
     <Compile Include="Mode.cs" />
     <Compile Include="Channel.cs" />
@@ -50,6 +49,9 @@
     <Compile Include="Buffer.cs" />
     <Compile Include="Processor\NetworkData.cs" />
     <Compile Include="ThreadManager.cs" />
+    <Compile Include="Protocols\Protocol.cs">
+      <DependentUpon>ProtocolIrc.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

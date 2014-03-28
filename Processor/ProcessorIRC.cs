@@ -519,8 +519,8 @@ namespace libirc
             }
             if (!OK)
             {
-                // we have no idea what we just were to parse, so print it to system window
-                //_Network.SystemWindow.scrollback.InsertText(text, Pidgeon.ContentLine.MessageStyle.System, true, date, true);
+                // we have no idea what we just were to parse so flag is as unknown data and let client parse that
+				_Protocol.HandleUnknownData(text);
             }
             return true;
         }
