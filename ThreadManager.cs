@@ -50,6 +50,10 @@ namespace libirc
 
         public static void KillThread(Thread thread)
         {
+			if (thread == null)
+			{
+				return;
+			}
             if (Thread.CurrentThread != thread)
             {
                 if (thread.ThreadState == ThreadState.WaitSleepJoin &&

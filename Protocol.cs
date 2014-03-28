@@ -42,6 +42,11 @@ namespace libirc
             public string Message = null;
             public int Verbosity = 0;
         }
+
+		public class UnhandledExeption : EventArgs
+		{
+			public Exception exception = null;
+		}
 		
 		public class ServerDcEventArgs : EventArgs
 		{
@@ -64,6 +69,8 @@ namespace libirc
         public delegate void RawTrafficEventHandler(object sender, RawTrafficEventArgs e);
         public delegate void DebugLogEventHandler(object sender, DebugLogEventArgs e);
 		public delegate void TrafficLogEventHandler(object sender,TrafficLogEventArgs e);
+		public delegate void UnhandledExceptionEventHandler(object sender,UnhandledExeption e);
+		public event UnhandledExceptionEventHandler UnhandledExceptionFailEvent;
         public event TrafficLogEventHandler TrafficLogEvent;
 		public event ServerDisconnectEventHandler DisconnectEvent;
         public event DebugLogEventHandler DebugLogEvent;
@@ -154,6 +161,16 @@ namespace libirc
         {
             _time = DateTime.Now;
         }
+
+		protected virtual void HandleException(Exception fail)
+		{
+			if (UnhandledExceptionFailEvent != null)
+			{
+				UnhandledExeption ex = new UnhandledExeption();
+				ex.exception = fail;
+				UnhandledExceptionFailEvent(this, ex);
+			}
+		}
 
         protected virtual string RawTraffic(string traffic)
         {

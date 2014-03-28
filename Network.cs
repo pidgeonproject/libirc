@@ -142,10 +142,6 @@ namespace libirc
         /// </summary>
         public string UserName = null;
         /// <summary>
-        /// Randomly generated ID for this network to make it unique in case some other network would share the name
-        /// </summary>
-        public string RandomuQID = null;
-        /// <summary>
         /// List of all channels on network
         /// </summary>
         public Dictionary<string, Channel> Channels = new Dictionary<string, Channel>();
@@ -232,7 +228,6 @@ namespace libirc
         /// <param name="protocol">Protocol that own this instance</param>
         public Network(string Server, Protocol protocol)
         {
-            //RandomuQID = Core.RetrieveRandom();
             lock (Descriptions)
             {
                 Descriptions.Clear();

@@ -166,6 +166,13 @@ namespace libirc.Protocols
                     ThreadManager.RemoveThread(System.Threading.Thread.CurrentThread);
                     return;
                 }
+				catch (Exception fail)
+				{
+					if (protocol != null)
+					{
+						protocol.HandleException(fail);
+					}
+				}
             }
         }
     }
