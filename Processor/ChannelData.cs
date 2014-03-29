@@ -41,15 +41,15 @@ namespace libirc
             return false;
         }
 
-        private bool ParseUser(List<string> code, string realname)
+        private bool ParseUser(List<string> parameters, string realname)
         {
-            if (code.Count > 5)
+            if (parameters.Count > 5)
             {
-                Channel channel = _Network.GetChannel(code[0]);
-                string ident = code[1];
-                string host = code[2];
-                string nick = code[4];
-                string server = code[3];
+                Channel channel = _Network.GetChannel(parameters[0]);
+                string ident = parameters[1];
+                string host = parameters[2];
+                string nick = parameters[4];
+                string server = parameters[3];
                 if (realname != null & realname.Length > 2)
                 {
                     realname = realname.Substring(2);
@@ -60,14 +60,14 @@ namespace libirc
                 }
                 char mode = '\0';
                 bool IsAway = false;
-                if (code[8].Length > 0)
+                if (parameters[5].Length > 0)
                 {
                     // if user is away we flag him
-                    if (code[8].StartsWith("G", StringComparison.Ordinal))
+                    if (parameters[5].StartsWith("G", StringComparison.Ordinal))
                     {
                         IsAway = true;
                     }
-                    mode = code[8][code[8].Length - 1];
+                    mode = parameters[5][parameters[5].Length - 1];
                     if (!_Network.UChars.Contains(mode))
                     {
                         mode = '\0';

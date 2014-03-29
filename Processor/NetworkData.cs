@@ -181,8 +181,6 @@ namespace libirc
                         return true;
                     }
 
-                    string reply = null;
-
                     uc = message.Substring(1);
                     if (uc.Contains(_Protocol.delimiter.ToString()))
                     {
@@ -212,14 +210,16 @@ namespace libirc
                 {
                     if (message.StartsWith(_Protocol.delimiter.ToString() + "ACTION", StringComparison.Ordinal))
                     {
+						ev.IsAct = true;
                         message = message.Substring("xACTION".Length);
                         if (message.Length > 1 && message.EndsWith(_Protocol.delimiter.ToString(), StringComparison.Ordinal))
                         {
                             message = message.Substring(0, message.Length - 1);
                         }
-                        ev.IsAct = true;
-                        ev.Message = message;
-                        _Network.__evt_PRIVMSG(ev);
+					}
+				}
+                ev.Message = message;
+                _Network.__evt_PRIVMSG(ev);
                         //if (isServices)
                         //{
                         //    if (_nick == _Network.Nickname)
@@ -227,13 +227,8 @@ namespace libirc
                         //        return true;
                         //    }
                         //}
-                        return true;
-                    }
-                    return true;
-                }
-                return true;
             }
-            return false;
+            return true;
         }
 
         private bool Idle2(string source, string parameters, string value)
