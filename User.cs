@@ -331,6 +331,20 @@ namespace libirc
             this.Channel = channel;
             MakeUser(nick, host, network, ident);
         }
+		
+		public User(string source)
+		{
+			if (source.Contains("!"))
+			{
+				this.nick = source.Substring(0, source.IndexOf("!", StringComparison.Ordinal));
+				this.Ident = source.Substring(source.IndexOf("!") + 1);
+				if (this.Ident.Contains("@"))
+				{
+					this.Host = this.Ident.Substring(this.Ident.IndexOf("@") + 1);
+					this.Ident = this.Ident.Substring(this.Ident.IndexOf("@"));
+				}
+			}
+		}
 
         /// <summary>
         /// Change a user level according to symbol
