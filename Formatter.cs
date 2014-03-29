@@ -20,7 +20,8 @@ using System.Text;
 namespace libirc
 {
     /// <summary>
-    /// This class allow you to format the mode to better look
+    /// This class allow you to format the mode to better look, so that
+    /// you can for example merge multiple modes to 1 line
     /// </summary>
     public class Formatter
     {

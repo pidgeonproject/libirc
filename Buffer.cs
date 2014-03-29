@@ -19,9 +19,7 @@ namespace libirc
 {
     public class Buffer
     {
-        public Buffer()
-        {
-        }
+
     }
 }
 
