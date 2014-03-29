@@ -76,15 +76,15 @@ namespace libirc
 			/// </summary>
 			public ChannelData() {}
 		}
-
-        public class NetworkGenericEventArgs : EventArgs
+		
+        public class NetworkGenericEventArgs : Protocol.ProtocolGenericEventArgs
         {
             public string Source = null;
 			public User SourceUser = null;
             public string Parameters = null;
         }
 
-		public class NetworkGenericDataEventArgs : EventArgs
+		public class NetworkGenericDataEventArgs : Protocol.ProtocolGenericEventArgs
 		{
 			public string Command = null;
 			public string ParameterLine = null;

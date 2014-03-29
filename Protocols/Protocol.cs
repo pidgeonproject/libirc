@@ -36,7 +36,7 @@ namespace libirc
     /// </summary>
     [Serializable]
     public class IProtocol
-    {
+    {	
         public class DebugLogEventArgs : EventArgs
         {
             public string Message = null;
@@ -330,7 +330,12 @@ namespace libirc
         /// If changes to windows should be suppressed (no color changes on new messages)
         /// </summary>
         public bool SuppressChanges = false;
-
+		
+		public class ProtocolGenericEventArgs : EventArgs
+		{
+			public long Date = 0;
+		}
+		
         /// <summary>
         /// Reconnect
         /// </summary>
