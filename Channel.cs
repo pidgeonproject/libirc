@@ -133,7 +133,7 @@ namespace libirc
         /// List of all users in current channel
         /// </summary>
         [NonSerialized]
-        public Dictionary<string, User> UserList = new Dictionary<string, User>();
+        protected Dictionary<string, User> UserList = new Dictionary<string, User>();
         /// <summary>
         /// Topic, if it's unknown this variable is null
         /// </summary>
@@ -202,7 +202,7 @@ namespace libirc
         /// <summary>
         /// If this is false the channel is not being used / you aren't in it or you can't access it
         /// </summary>
-        public bool IsAlive
+        public virtual bool IsAlive
         {
             get
             {
@@ -221,12 +221,21 @@ namespace libirc
                 return false;
             }
         }
+		
+		public virtual int UserCount
+		{
+			get
+			{
+				return this.UserList.Count;
+			}
+		}
+		
         private bool destroyed = false;
         /// <summary>
         /// This will return true in case object was requested to be disposed
         /// you should never work with objects that return true here
         /// </summary>
-        public bool IsDestroyed
+        public virtual bool IsDestroyed
         {
             get
             {
@@ -339,7 +348,7 @@ namespace libirc
         /// <summary>
         /// Part this channel
         /// </summary>
-        public void Part()
+        public virtual void Part()
         {
             if (IsAlive && _Network != null)
             {
@@ -348,12 +357,17 @@ namespace libirc
             }
         }
 
+		public virtual void ClearUsers()
+		{
+			this.UserList.Clear();
+		}
+		
         /// <summary>
         /// Return true if a channel is matching ban (exact, not a mask)
         /// </summary>
         /// <param name="host"></param>
         /// <returns></returns>
-        public bool ContainsBan(string host)
+        public virtual bool ContainsBan(string host)
         {
             lock (Bans)
             {
@@ -424,14 +438,26 @@ namespace libirc
         {
             return nick.ChannelPrefix;
         }
-
+		
+		public virtual void InsertUser(User user)
+		{
+			lock (this.UserList)
+			{
+				string ln = user.Nick.ToLower();
+				if (!this.UserList.ContainsKey(ln))
+				{
+					this.UserList.Add(ln, user);
+				}
+			}
+		}
+		
         /// <summary>
         /// Insert ban to a ban list, this will not set a ban to channel, this will only set it into memory of pidgeon
         /// </summary>
         /// <param name="ban">Host</param>
         /// <param name="user">User who set</param>
         /// <param name="time">Time when it was set</param>
-        public void InsertBan(string ban, string user, string time = "0")
+        public virtual void InsertBan(string ban, string user, string time = "0")
         {
             SimpleBan br = new SimpleBan(user, ban, time);
             lock (Bans)
@@ -445,7 +471,7 @@ namespace libirc
         /// </summary>
         /// <param name="ban"></param>
         /// <returns></returns>
-        public bool RemoveBan(string ban)
+        public virtual bool RemoveBan(string ban)
         {
             SimpleBan br = null;
             lock (Bans)
@@ -468,7 +494,7 @@ namespace libirc
             return false;
         }
 
-        public void RemoveUser(User user)
+        public virtual void RemoveUser(User user)
         {
             lock (this.UserList)
             {
@@ -479,8 +505,20 @@ namespace libirc
                 }
             }
         }
+		
+		public virtual void RemoveUser(string nick)
+		{
+			nick = nick.ToLower();
+			lock (this.UserList)
+			{
+				if (this.UserList.ContainsKey(nick))
+				{
+					this.UserList.Remove(nick);
+				}
+			}
+		}
 
-        public User GetSelf()
+        public virtual User GetSelf()
         {
             if (this._Network != null)
             {
@@ -488,13 +526,13 @@ namespace libirc
             }
             return null;
         }
-
+		
         /// <summary>
         /// Return user object if specified user exist
         /// </summary>
         /// <param name="name">User name</param>
         /// <returns></returns>
-        public User UserFromName(string name)
+        public virtual User UserFromName(string name)
         {
             if (name == null)
             {

@@ -79,9 +79,27 @@ namespace libirc
 		
         public class NetworkGenericEventArgs : Protocol.ProtocolGenericEventArgs
         {
+			/// <summary>
+			/// user!ident@host
+			/// </summary>
             public string Source = null;
+			/// <summary>
+			/// If user object had to be fetch during the processing (which is CPU expensive) it's provided
+			/// here as well so that you don't need to fetch it again in case you need to use it.
+			/// 
+			/// This is NULL most of time, don't rely on it
+			/// </summary>
 			public User SourceUser = null;
             public string Parameters = null;
+			/// <summary>
+			/// Text of this event as sent by server, for example :user!xx@bla NOTICE kokos :hello
+			/// </summary>
+			public string ServerLine;
+			
+			public NetworkGenericEventArgs(string line)
+			{
+				this.ServerLine = line;
+			}
         }
 
 		public class NetworkGenericDataEventArgs : Protocol.ProtocolGenericEventArgs
@@ -96,6 +114,8 @@ namespace libirc
 		{
 			public string ChannelName = null;
 			public Channel Channel = null;
+			
+			public NetworkChannelEventArgs(string line) : base(line) {}
 		}
 
         public class NetworkChannelDataEventArgs : NetworkGenericDataEventArgs
@@ -103,25 +123,46 @@ namespace libirc
             public string ChannelName = null;
             public Channel Channel = null;
         }
-
+		
+		public class NetworkParseUserEventArgs : NetworkChannelEventArgs
+		{
+			public bool IsAway = true;
+			public string Server = null;
+			public UserInfo User = null;
+			
+			public NetworkParseUserEventArgs(string line) : base(line) {}
+		}
+		
+		public class ChannelUserListEventArgs : NetworkChannelEventArgs
+		{
+			public List<string> UserNicknames = new List<string>();
+			public List<User> Users = new List<User>();
+			
+			public ChannelUserListEventArgs(string line) : base(line) {}
+		}
+		
         public class NetworkPRIVMSGEventArgs : NetworkGenericEventArgs
         {
             public string Message = null;
             public bool IsAct = false;
             public Channel Channel = null;
 			public string ChannelName = null;
+			
+			public NetworkPRIVMSGEventArgs(string line) : base(line) {}
         }
 
         public class NetworkCTCPEventArgs : NetworkPRIVMSGEventArgs
         {
             public string CTCP = null;
+			
+			public NetworkCTCPEventArgs(string line) : base(line) {}
         }
 
 		public class NetworkNOTICEEventArgs : NetworkGenericEventArgs
 		{
 			public string Message = null;
-			public Channel Channel = null;
-			public string ChannelName = null;
+			
+			public NetworkNOTICEEventArgs(string line) : base(line) {}
 		}
 
 		public class NetworkSelfEventArgs : NetworkGenericEventArgs
@@ -141,6 +182,8 @@ namespace libirc
 			/// </summary>
 			public string OldNick = null;
 			public EventType Type = EventType.Generic;
+			
+			public NetworkSelfEventArgs(string line) : base(line) {}
 		}
 
 		public delegate void NetworkInfoEventHandler(object sender,NetworkGenericDataEventArgs e);
@@ -148,17 +191,20 @@ namespace libirc
 		public delegate void NetworkNOTICEEventHandler(object sender, NetworkNOTICEEventArgs e);
         public delegate void NetworkPRIVMSGEventHandler(object sender, NetworkPRIVMSGEventArgs e);
 		public delegate void NetworkJOINEventHandler(object sender, NetworkChannelEventArgs e);
+		public delegate void NetworkParseUserEventHandler(object sender, NetworkParseUserEventArgs e);
 		public delegate void NetworkPARTEventHandler(object sender, NetworkChannelEventArgs e);
 		public delegate void NetworkKICKEventHandler(object sender, NetworkChannelEventArgs e);
 		public delegate void NetworkQUITEventHandler(object sender, NetworkGenericEventArgs e);
         public delegate void NetworkChannelInfoEventHandler(object sender, NetworkChannelDataEventArgs e);
         public delegate void NetworkCTCPEventHandler(object sender, NetworkCTCPEventArgs e);
+		public delegate void NetworkChannelUserListHandler(object sender, ChannelUserListEventArgs e);
 		/// <summary>
 		/// Occurs when some network action that is related to current user happens (for example
 		/// when this user join or change nick)
 		/// </summary>
 		public event NetworkSelfEventHandler On_Self;
 		public event NetworkNOTICEEventHandler On_NOTICE;
+		public event NetworkParseUserEventHandler On_ParseUser;
         public event NetworkPRIVMSGEventHandler On_PRIVMSG;
 		public event NetworkPARTEventHandler On_PART;
 		public event NetworkJOINEventHandler On_JOIN;
@@ -167,6 +213,7 @@ namespace libirc
 		public event NetworkQUITEventHandler On_QUIT;
         public event NetworkChannelInfoEventHandler On_ChannelInfo;
         public event NetworkCTCPEventHandler On_CTCP;
+		public event NetworkChannelUserListHandler On_ChannelUserList;
         
         public Configuration Config = new Configuration();
         /// <summary>
@@ -538,67 +585,83 @@ namespace libirc
 
 		public virtual void __evt_PRIVMSG(NetworkPRIVMSGEventArgs args)
 		{
-			if (On_PRIVMSG != null)
+			if (this.On_PRIVMSG != null)
 			{
-				On_PRIVMSG(this, args);
+				this.On_PRIVMSG(this, args);
 			}
 		}
 
 		public virtual void __evt_INFO(NetworkGenericDataEventArgs args)
 		{
-			if (On_Info != null)
+			if (this.On_Info != null)
 			{
-				On_Info(this, args);
+				this.On_Info(this, args);
+			}
+		}
+		
+		public virtual void __evt_ParseUser(NetworkParseUserEventArgs args)
+		{
+			if (this.On_ParseUser != null)
+			{
+				this.On_ParseUser(this, args);
 			}
 		}
 
 		public virtual void __evt_JOIN(NetworkChannelEventArgs args)
 		{
-			if (On_JOIN != null)
+			if (this.On_JOIN != null)
 			{
-				On_JOIN(this, args);
+				this.On_JOIN(this, args);
 			}
 		}
 
 		public virtual void __evt_PART(NetworkChannelEventArgs args)
 		{
-			if (On_PART != null)
+			if (this.On_PART != null)
 			{
-				On_PART(this, args);
+				this.On_PART(this, args);
 			}
 		}
 
 		public virtual void __evt_KICK(NetworkChannelEventArgs args)
 		{
-			if (On_KICK != null)
+			if (this.On_KICK != null)
 			{
-				On_KICK(this, args);
+				this.On_KICK(this, args);
 			}
 		}
 
         public virtual void __evt_CTCP(NetworkCTCPEventArgs args)
         {
-            if (On_CTCP != null)
+            if (this.On_CTCP != null)
             {
-                On_CTCP(this, args);
+                this.On_CTCP(this, args);
             }
         }
 
         public virtual void __evt_QUIT(NetworkGenericEventArgs args)
         {
-            if (On_QUIT != null)
+            if (this.On_QUIT != null)
             {
-                On_QUIT(this, args);
+                this.On_QUIT(this, args);
             }
         }
 
         public virtual void __evt_ChannelInfo(NetworkChannelDataEventArgs args)
         {
-            if (On_ChannelInfo != null)
+            if (this.On_ChannelInfo != null)
             {
-                On_ChannelInfo(this, args);
+                this.On_ChannelInfo(this, args);
             }
         }
+		
+		public virtual void __evt_ChannelUserList(ChannelUserListEventArgs args)
+		{
+			if (this.On_ChannelUserList != null)
+			{
+				this.On_ChannelUserList(this, args);
+			}
+		}
 
         /// <summary>
         /// Send a message to network

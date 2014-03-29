@@ -129,30 +129,11 @@ namespace libirc
         /// <returns></returns>
         private bool ProcessPM(string source, string parameters, string value)
         {
-            string _nick = "{unknown nick}";
-            string _ident = "{unknown ident}";
-            string _host = "{unknown host}";
             string chan = null;
-            if (source.Contains("!"))
-            {
-                _nick = source.Substring(0, source.IndexOf("!", StringComparison.Ordinal));
-                _ident = source.Substring(source.IndexOf("!", StringComparison.Ordinal) + 1);
-                _ident = _ident.Substring(0, _ident.IndexOf("@", StringComparison.Ordinal));
-            }
-            else
-            {
-                _Protocol.DebugLog("Parser error: " + source);
-            }
-
-            if (source.Contains("@"))
-            {
-                _host = source.Substring(source.IndexOf("@", StringComparison.Ordinal) + 1);
-            }
-
+			//UserInfo user = new UserInfo(source);
             chan = parameters.Replace(" ", "");
-            Network.NetworkPRIVMSGEventArgs ev = new Network.NetworkPRIVMSGEventArgs();
+            Network.NetworkPRIVMSGEventArgs ev = new Network.NetworkPRIVMSGEventArgs(ServerLineRawText);
             ev.Source = source;
-            User user = null;
             string message = value;
             if (!chan.Contains(_Network.ChannelPrefix))
             {
@@ -191,15 +172,13 @@ namespace libirc
                         uc = uc.Substring(0, uc.IndexOf(" ", StringComparison.Ordinal));
                     }
                     uc = uc.ToUpper();
-                    Network.NetworkCTCPEventArgs ctcp = new Network.NetworkCTCPEventArgs();
+                    Network.NetworkCTCPEventArgs ctcp = new Network.NetworkCTCPEventArgs(ServerLineRawText);
                     ctcp.CTCP = uc;
                     ctcp.Message = message;
                     _Network.__evt_CTCP(ctcp);
                     return true;
                 }
             }
-            user = new User(_nick, _host, _Network, _ident);
-            ev.SourceUser = user;
             Channel channel = null;
             if (chan.StartsWith(_Network.ChannelPrefix, StringComparison.Ordinal))
             {
@@ -360,27 +339,14 @@ namespace libirc
 
         private bool Quit(string source, string parameters, string value)
         {
-            string user = source.Substring(0, source.IndexOf("!", StringComparison.Ordinal));
-            string _ident;
-            //string _host;
-            //_host = source.Substring(source.IndexOf("@", StringComparison.Ordinal) + 1);
-            _ident = source.Substring(source.IndexOf("!", StringComparison.Ordinal) + 1);
-            _ident = _ident.Substring(0, _ident.IndexOf("@", StringComparison.Ordinal));
+            UserInfo user = new UserInfo(source);
             foreach (Channel item in _Network.Channels.Values)
             {
                 if (item.ChannelWork)
                 {
-                    User target = item.UserFromName(user);
-                    if (target != null)
+                    if (!IsBacklog)
                     {
-
-                        if (!IsBacklog)
-                        {
-                            lock (item.UserList)
-                            {
-                                item.RemoveUser(target);
-                            }
-                        }
+                        item.RemoveUser(user.Nick);
                     }
                 }
             }

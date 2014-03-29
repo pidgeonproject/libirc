@@ -33,7 +33,6 @@ namespace libirc
         /// This is a text we received from server
         /// </summary>
         private string ServerLineRawText;
-        private bool isServices = false;
         /// <summary>
         /// If true the information is considered to be a backlog from irc bouncer and will not be processed
         /// in some special parts of irc protocol like part or join
@@ -89,7 +88,7 @@ namespace libirc
                         // this is a hack for uber-fucked servers that provide name of channel in message
                         // instead as a parameter
                         channel = message;
-                        data = new Network.NetworkSelfEventArgs();
+                        data = new Network.NetworkSelfEventArgs(ServerLineRawText);
                         data.ChannelName = channel;
                         Channel joined_chan = _Network.GetChannel(channel);
                         data.Channel = joined_chan;
@@ -158,7 +157,7 @@ namespace libirc
                             new_nickname = new_nickname.Substring(0, new_nickname.IndexOf(" ", StringComparison.Ordinal));
                         }
                     }
-                    data = new Network.NetworkSelfEventArgs();
+                    data = new Network.NetworkSelfEventArgs(ServerLineRawText);
                     data.Source = source;
                     data.OldNick = _Network.Nickname;
                     data.NewNick = new_nickname;
@@ -180,7 +179,7 @@ namespace libirc
                     if (c != null)
                     {
                         c.ChannelWork = false;
-                        data = new Network.NetworkSelfEventArgs();
+                        data = new Network.NetworkSelfEventArgs(ServerLineRawText);
                         data.Channel = c;
                         data.Source = source;
                         data.Message = message;
@@ -188,7 +187,7 @@ namespace libirc
                         _Network.__evt_Self(data);
                         return true;
                     }
-                    data = new Network.NetworkSelfEventArgs();
+                    data = new Network.NetworkSelfEventArgs(ServerLineRawText);
                     data.ChannelName = channel;
                     data.Source = source;
                     data.Message = message;
@@ -382,19 +381,11 @@ namespace libirc
                         //_Network.SystemWindow.scrollback.InsertText(text.Substring(text.IndexOf("INFO", StringComparison.Ordinal) + 5), Pidgeon.ContentLine.MessageStyle.User,                                                                     true, date, !updated_text);
                         return true;
                     case "NOTICE":
-                        if (parameters.Contains(_Network.ChannelPrefix))
-                        {
-                            Channel channel = _Network.GetChannel(parameters_line);
-                            Network.NetworkNOTICEEventArgs notice = new Network.NetworkNOTICEEventArgs();
-                            notice.Source = source;
-                            notice.Message = message;
-                            if (channel != null)
-                            {
-                                notice.Channel = channel;
-                            }
-                            notice.ChannelName = channel.Name;
-                            _Network.__evt_NOTICE(notice);
-                        }
+                        Network.NetworkNOTICEEventArgs notice = new Network.NetworkNOTICEEventArgs(ServerLineRawText);
+                        notice.Source = source;
+                        notice.Message = message;
+						notice.Parameters = parameters_line;
+                        _Network.__evt_NOTICE(notice);
                         return true;
                     case "NICK":
                         if (ProcessNick(source, parameters_line, message))
@@ -549,10 +540,6 @@ namespace libirc
             ServerLineRawText = _text;
             pong = _pong;
             IsBacklog = !updated;
-            if (_network._Protocol.GetType() == typeof(Protocols.ProtocolSv))
-            {
-                isServices = true;
-            }
         }
     }
 }

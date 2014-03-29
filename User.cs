@@ -19,6 +19,40 @@ using System.Text;
 
 namespace libirc
 {
+	/// <summary>
+	/// Low level object with basic IRC user info
+	/// </summary>
+	public class UserInfo
+	{
+		public string Nick;
+		public string Ident;
+		public string Host;
+		
+		public UserInfo()
+		{
+			this.Nick = null;
+			this.Ident = null;
+			this.Host = null;
+		}
+		
+		public UserInfo(string source)
+		{
+			if (source.Contains("!"))
+			{
+				this.Nick = source.Substring(0, source.IndexOf("!", StringComparison.Ordinal));
+				this.Ident = source.Substring(source.IndexOf("!") + 1);
+				if (this.Ident.Contains("@"))
+				{
+					this.Host = this.Ident.Substring(this.Ident.IndexOf("@") + 1);
+					this.Ident = this.Ident.Substring(this.Ident.IndexOf("@"));
+				}
+			} else
+			{
+				this.Nick = source;
+			}
+		}
+	}
+	
     /// <summary>
     /// User, Every user on irc has instance of this class for every channel they are in
     /// </summary>
@@ -248,42 +282,20 @@ namespace libirc
         }
 
         /// <summary>
-        /// Sets the nick.
-        /// </summary>
-        /// <param name="name">Name.</param>
-        public void SetNick(string name)
-        {
-            this.nick = name;
-        }
-
-        /// <summary>
-        /// Reset the user mode back to none
-        /// </summary>
-        public void ResetMode()
-        {
-            ChannelSymbol = '\0';
-        }
-
-        /// <summary>
         /// Creates a new user
         /// </summary>
         /// <param name="user">user!ident@hostname</param>
         /// <param name="network">Network this class belongs to</param>
-        public User(string user, Network network)
+        public User(string source, Network network)
         {
-            if (!user.Contains("@") || !user.Contains("!"))
-            {
-                MakeUser(user, "", network, "");
-                Server = network.ServerName;
-                return;
-            }
-            string name = user.Substring(0, user.IndexOf("!", StringComparison.Ordinal));
-            string ident = user.Substring(user.IndexOf("!", StringComparison.Ordinal) + 1);
-            string host = ident.Substring(ident.IndexOf("@", StringComparison.Ordinal) + 1);
-            ident = ident.Substring(0, ident.IndexOf("@", StringComparison.Ordinal));
-            MakeUser(name, host, network, ident);
-            Server = network.ServerName;
+            UserInfo info = new UserInfo(source);
+			MakeUser(info.Nick, info.Host, network, info.Ident);
         }
+		
+		public User(UserInfo info, Network network)
+		{
+			MakeUser(info.Nick, info.Host, network, info.Ident);
+		}
 
         /// <summary>
         /// Creates a new user
@@ -292,28 +304,13 @@ namespace libirc
         /// <param name="host"></param>
         /// <param name="network"></param>
         /// <param name="ident"></param>
-        public User(string nick, string host, Network network, string ident)
+        public User(string nick, string host, string ident, Network network)
         {
             if (network == null)
             {
                 throw new Exception("Network can't be null in here");
             }
             MakeUser(nick, host, network, ident);
-            Server = network.ServerName;
-        }
-
-        /// <summary>
-        /// Creates a new user
-        /// </summary>
-        /// <param name="nick"></param>
-        /// <param name="host"></param>
-        /// <param name="network"></param>
-        /// <param name="ident"></param>
-        /// <param name="server"></param>
-        public User(string nick, string host, Network network, string ident, string server)
-        {
-            MakeUser(nick, host, network, ident);
-            Server = server;
         }
 
         /// <summary>
@@ -325,9 +322,8 @@ namespace libirc
         /// <param name="ident">Ident</param>
         /// <param name="server">Server</param>
         /// <param name="channel">Channel</param>
-        public User(string nick, string host, Network network, string ident, string server, Channel channel)
+        public User(string nick, string host, string ident, Network network, Channel channel)
         {
-            this.Server = server;
             this.Channel = channel;
             MakeUser(nick, host, network, ident);
         }
@@ -343,8 +339,28 @@ namespace libirc
 					this.Host = this.Ident.Substring(this.Ident.IndexOf("@") + 1);
 					this.Ident = this.Ident.Substring(this.Ident.IndexOf("@"));
 				}
+			} else
+			{
+				this.nick = source;
 			}
 		}
+		
+		/// <summary>
+        /// Sets the nick.
+        /// </summary>
+        /// <param name="name">Name.</param>
+        public void SetNick(string name)
+        {
+            this.nick = name;
+        }
+
+        /// <summary>
+        /// Reset the user mode back to none
+        /// </summary>
+        public void ResetMode()
+        {
+            ChannelSymbol = '\0';
+        }
 
         /// <summary>
         /// Change a user level according to symbol
@@ -385,6 +401,7 @@ namespace libirc
             this.nick = nick;
             this.Ident = ident;
             this.Host = host;
+			this.Server = network.ServerName;
         }
 
         /// <summary>
