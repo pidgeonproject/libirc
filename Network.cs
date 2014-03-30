@@ -90,7 +90,18 @@ namespace libirc
 			/// This is NULL most of time, don't rely on it
 			/// </summary>
 			public User SourceUser = null;
-            public string Parameters = null;
+			private UserInfo sourceInfo = null;
+			public UserInfo SourceInfo
+			{
+				get
+				{
+					if (this.Source == null) return null;
+					if (this.sourceInfo == null) sourceInfo = new UserInfo(this.Source);
+					return sourceInfo;
+				}
+			}
+            public string ParameterLine = null;
+			public List<string> Parameters = null;
 			/// <summary>
 			/// Text of this event as sent by server, for example :user!xx@bla NOTICE kokos :hello
 			/// </summary>
@@ -102,12 +113,12 @@ namespace libirc
 			}
         }
 
-		public class NetworkGenericDataEventArgs : Protocol.ProtocolGenericEventArgs
+		public class NetworkGenericDataEventArgs : NetworkGenericEventArgs
 		{
 			public string Command = null;
-			public string ParameterLine = null;
 			public string Message = null;
-			public List<string> Parameters = null;
+			
+			public NetworkGenericDataEventArgs(string line) : base(line) {}
 		}
 
 		public class NetworkChannelEventArgs : NetworkGenericEventArgs
@@ -122,6 +133,8 @@ namespace libirc
         {
             public string ChannelName = null;
             public Channel Channel = null;
+			
+			public NetworkChannelDataEventArgs(string line) : base(line) {}
         }
 		
 		public class NetworkParseUserEventArgs : NetworkChannelEventArgs
@@ -129,8 +142,17 @@ namespace libirc
 			public bool IsAway = true;
 			public string Server = null;
 			public UserInfo User = null;
+			public string RealName;
 			
 			public NetworkParseUserEventArgs(string line) : base(line) {}
+		}
+		
+		public class NetworkKickEventArgs : NetworkChannelEventArgs
+		{
+			public string Target;
+			public string Message;
+			
+			public NetworkKickEventArgs(string line) : base(line) {}
 		}
 		
 		public class ChannelUserListEventArgs : NetworkChannelEventArgs
@@ -150,6 +172,21 @@ namespace libirc
 			
 			public NetworkPRIVMSGEventArgs(string line) : base(line) {}
         }
+		
+		public class NetworkMODEEventArgs : NetworkChannelDataEventArgs
+		{
+			public Formatter FormattedMode = null;
+			
+			public NetworkMODEEventArgs(string line) : base(line) {}
+		}
+		
+		public class NetworkNICKEventArgs : NetworkChannelDataEventArgs
+		{
+			public string NewNick = null;
+			public string OldNick = null;
+			
+			public NetworkNICKEventArgs(string line) : base(line) {}
+		}
 
         public class NetworkCTCPEventArgs : NetworkPRIVMSGEventArgs
         {
@@ -193,11 +230,14 @@ namespace libirc
 		public delegate void NetworkJOINEventHandler(object sender, NetworkChannelEventArgs e);
 		public delegate void NetworkParseUserEventHandler(object sender, NetworkParseUserEventArgs e);
 		public delegate void NetworkPARTEventHandler(object sender, NetworkChannelEventArgs e);
-		public delegate void NetworkKICKEventHandler(object sender, NetworkChannelEventArgs e);
+		public delegate void NetworkKICKEventHandler(object sender, NetworkKickEventArgs e);
+		public delegate void NetworkNICKEventHandler(object sender, NetworkNICKEventArgs e);
 		public delegate void NetworkQUITEventHandler(object sender, NetworkGenericEventArgs e);
         public delegate void NetworkChannelInfoEventHandler(object sender, NetworkChannelDataEventArgs e);
         public delegate void NetworkCTCPEventHandler(object sender, NetworkCTCPEventArgs e);
 		public delegate void NetworkChannelUserListHandler(object sender, ChannelUserListEventArgs e);
+		public delegate void FinishParseUserEventHandler(object sender, NetworkChannelDataEventArgs e);
+		public delegate void NetworkMODEEventHandler(object sender, NetworkMODEEventArgs e);
 		/// <summary>
 		/// Occurs when some network action that is related to current user happens (for example
 		/// when this user join or change nick)
@@ -210,10 +250,13 @@ namespace libirc
 		public event NetworkJOINEventHandler On_JOIN;
 		public event NetworkInfoEventHandler On_Info;
 		public event NetworkKICKEventHandler On_KICK;
+		public event NetworkNICKEventHandler On_NICK;
 		public event NetworkQUITEventHandler On_QUIT;
         public event NetworkChannelInfoEventHandler On_ChannelInfo;
         public event NetworkCTCPEventHandler On_CTCP;
 		public event NetworkChannelUserListHandler On_ChannelUserList;
+		public event FinishParseUserEventHandler On_FinishChannelParseUser;
+		public event NetworkMODEEventHandler On_MODE;
         
         public Configuration Config = new Configuration();
         /// <summary>
@@ -623,7 +666,7 @@ namespace libirc
 			}
 		}
 
-		public virtual void __evt_KICK(NetworkChannelEventArgs args)
+		public virtual void __evt_KICK(NetworkKickEventArgs args)
 		{
 			if (this.On_KICK != null)
 			{
@@ -639,7 +682,7 @@ namespace libirc
             }
         }
 
-        public virtual void __evt_QUIT(NetworkGenericEventArgs args)
+        public virtual void __evt_QUIT(NetworkGenericDataEventArgs args)
         {
             if (this.On_QUIT != null)
             {
@@ -660,6 +703,30 @@ namespace libirc
 			if (this.On_ChannelUserList != null)
 			{
 				this.On_ChannelUserList(this, args);
+			}
+		}
+		
+		public virtual void __evt_FinishChannelParseUser(NetworkChannelDataEventArgs args)
+		{
+			if (this.On_FinishChannelParseUser != null)
+			{
+				this.On_FinishChannelParseUser(this, args);
+			}
+		}
+		
+		public virtual void __evt_NICK(NetworkNICKEventArgs args)
+		{
+			if (this.On_NICK != null)
+			{
+				this.On_NICK(this, args);
+			}
+		}
+		
+		public virtual void __evt_MODE(NetworkMODEEventArgs args)
+		{
+			if (this.On_MODE != null)
+			{
+				this.On_MODE(this, args);
 			}
 		}
 

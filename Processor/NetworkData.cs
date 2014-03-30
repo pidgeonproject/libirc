@@ -32,15 +32,15 @@ namespace libirc
         /// <param name="parameters">Parameters</param>
         /// <param name="value">Text</param>
         /// <returns></returns>
-        private bool Info(string command, List<string> parameters, string parameters_line, string value)
+        private bool Info(string command, List<string> parameters_, string parameters_line, string value)
         {
-            Network.NetworkGenericDataEventArgs args004 = new Network.NetworkGenericDataEventArgs();
-            args004.Parameters = parameters;
+            Network.NetworkGenericDataEventArgs args004 = new Network.NetworkGenericDataEventArgs(this.ServerLineRawText);
+            args004.Parameters = parameters_;
             args004.Command = command;
             args004.ParameterLine = parameters_line;
             args004.Message = value;
             _Network.__evt_INFO(args004);
-            if (parameters.Contains("PREFIX=("))
+            if (parameters_line.Contains("PREFIX=("))
             {
                 string cmodes = parameters_line.Substring(parameters_line.IndexOf("PREFIX=(", StringComparison.Ordinal) + 8);
                 cmodes = cmodes.Substring(0, cmodes.IndexOf(")", StringComparison.Ordinal));
@@ -55,7 +55,7 @@ namespace libirc
                 _Network.UChars.Clear();
                 _Network.UChars.AddRange(cmodes.ToArray<char>());
             }
-            if (parameters.Contains("CHANMODES="))
+            if (parameters_line.Contains("CHANMODES="))
             {
                 string xmodes = parameters_line.Substring(parameters_line.IndexOf("CHANMODES=", StringComparison.Ordinal) + 11);
                 xmodes = xmodes.Substring(0, xmodes.IndexOf(" ", StringComparison.Ordinal));
@@ -327,7 +327,7 @@ namespace libirc
                 {
                     return false;
                 }
-                string uptime = idle.Substring(idle.IndexOf(" ", StringComparison.Ordinal) + 1);
+                //string uptime = idle.Substring(idle.IndexOf(" ", StringComparison.Ordinal) + 1);
                 name = name.Substring(0, name.IndexOf(" ", StringComparison.Ordinal));
                 idle = idle.Substring(0, idle.IndexOf(" ", StringComparison.Ordinal));
                 //DateTime logintime = Defs.ConvertFromUNIX(uptime);
@@ -350,6 +350,11 @@ namespace libirc
                     }
                 }
             }
+			Network.NetworkGenericDataEventArgs ev = new Network.NetworkGenericDataEventArgs(this.ServerLineRawText);
+			ev.Message = value;
+			ev.ParameterLine = parameters;
+			ev.Source = source;
+			_Network.__evt_QUIT(ev);
             return true;
         }
     }

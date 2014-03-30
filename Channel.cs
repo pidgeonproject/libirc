@@ -382,6 +382,14 @@ namespace libirc
             return false;
         }
 
+		public virtual Dictionary<string, User> RetrieveUL()
+		{
+			lock (this.UserList)
+			{
+				return new Dictionary<string, User>(this.UserList);
+			}
+		}
+		
         /// <summary>
         /// Destroy this class, be careful, it can't be used in any way after you
         /// call this
@@ -443,7 +451,9 @@ namespace libirc
 		{
 			lock (this.UserList)
 			{
-				string ln = user.Nick.ToLower();
+				// don't use LowNick directly it can change between these 2 instructions
+				string ln = user.LowNick;
+				user.Channel = this;
 				if (!this.UserList.ContainsKey(ln))
 				{
 					this.UserList.Add(ln, user);

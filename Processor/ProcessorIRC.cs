@@ -273,7 +273,7 @@ namespace libirc
                     case "002":
                     case "003":
                     case "004":
-                        Network.NetworkGenericDataEventArgs args004 = new Network.NetworkGenericDataEventArgs();
+                        Network.NetworkGenericDataEventArgs args004 = new Network.NetworkGenericDataEventArgs(this.ServerLineRawText);
                         args004.Command = command;
                         args004.ParameterLine = parameters_line;
                         args004.Parameters = parameters;
@@ -384,7 +384,7 @@ namespace libirc
                         Network.NetworkNOTICEEventArgs notice = new Network.NetworkNOTICEEventArgs(ServerLineRawText);
                         notice.Source = source;
                         notice.Message = message;
-						notice.Parameters = parameters_line;
+						notice.ParameterLine = parameters_line;
                         _Network.__evt_NOTICE(notice);
                         return true;
                     case "NICK":
@@ -436,7 +436,7 @@ namespace libirc
                         }
                         break;
                     case "KICK":
-                        if (Kick(source, parameters_line, message))
+                        if (Kick(source, parameters, parameters_line, message))
                         {
                             return true;
                         }

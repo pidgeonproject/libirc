@@ -44,7 +44,7 @@ namespace libirc
 				if (this.Ident.Contains("@"))
 				{
 					this.Host = this.Ident.Substring(this.Ident.IndexOf("@") + 1);
-					this.Ident = this.Ident.Substring(this.Ident.IndexOf("@"));
+					this.Ident = this.Ident.Substring(0, this.Ident.IndexOf("@"));
 				}
 			} else
 			{
@@ -80,17 +80,47 @@ namespace libirc
         /// Status
         /// </summary>
         public ChannelStatus Status = ChannelStatus.Regular;
-        private string nick = null;
+        protected string nick = null;
+		protected string lnick = null;
         /// <summary>
         /// Nick
         /// </summary>
-        public string Nick
+        public virtual string Nick
         {
+			set
+			{
+				if (this.Nick != value)
+				{
+					if (this.Channel != null)
+					{
+						// rename the key in dictionary
+						this.Channel.RemoveUser(this);
+						// store again this exactly same user
+						this.lnick = value.ToLower();
+						this.nick = value;
+						this.Channel.InsertUser(this);
+						return;
+					}
+					this.lnick = value.ToLower();
+					this.nick = value;
+				}
+			}
             get
             {
                 return nick;
             }
         }
+		public virtual string LowNick
+		{
+			get
+			{
+				if (this.lnick == null)
+				{
+					this.lnick = this.Nick.ToLower();
+				}
+				return this.lnick;
+			}
+		}
         /// <summary>
         /// Name
         /// </summary>
@@ -118,7 +148,7 @@ namespace libirc
         /// <summary>
         /// Return true if user is owner of a channel
         /// </summary>
-        public bool IsOwner
+        public virtual bool IsOwner
         {
             get
             {
@@ -132,7 +162,7 @@ namespace libirc
         /// <summary>
         /// Return true if user is admin of a channel
         /// </summary>
-        public bool IsAdmin
+        public virtual bool IsAdmin
         {
             get
             {
@@ -146,7 +176,7 @@ namespace libirc
         /// <summary>
         /// Return true if user is op of a channel
         /// </summary>
-        public bool IsOp
+        public virtual bool IsOp
         {
             get
             {
@@ -160,7 +190,7 @@ namespace libirc
         /// <summary>
         /// Return true if user is half_operator of a channel
         /// </summary>
-        public bool IsHalfop
+        public virtual bool IsHalfop
         {
             get
             {
@@ -174,7 +204,7 @@ namespace libirc
         /// <summary>
         /// Return true if user is voiced in this channel
         /// </summary>
-        public bool IsVoiced
+        public virtual bool IsVoiced
         {
             get
             {
@@ -195,7 +225,7 @@ namespace libirc
         /// This will return true in case object was requested to be disposed
         /// you should never work with objects that return true here
         /// </summary>
-        public bool IsDestroyed
+        public virtual bool IsDestroyed
         {
             get
             {
@@ -206,7 +236,7 @@ namespace libirc
         /// <summary>
         /// This return true if we are looking at current user
         /// </summary>
-        public bool IsPidgeon
+        public virtual bool IsPidgeon
         {
             get
             {
@@ -217,7 +247,7 @@ namespace libirc
         /// <summary>
         /// Get a list of all channels this user is in
         /// </summary>
-        public List<Channel> ChannelList
+        public virtual List<Channel> ChannelList
         {
             get
             {
@@ -240,12 +270,12 @@ namespace libirc
             }
         }
 
-        private char ChannelSymbol = '\0';
+        protected char ChannelSymbol = '\0';
 
         /// <summary>
         /// This is a symbol that user has before his name in a channel (for example voiced user would have + on most networks)
         /// </summary>
-        public string ChannelPrefix
+        public virtual string ChannelPrefix
         {
             get
             {
@@ -344,15 +374,6 @@ namespace libirc
 				this.nick = source;
 			}
 		}
-		
-		/// <summary>
-        /// Sets the nick.
-        /// </summary>
-        /// <param name="name">Name.</param>
-        public void SetNick(string name)
-        {
-            this.nick = name;
-        }
 
         /// <summary>
         /// Reset the user mode back to none
@@ -366,7 +387,7 @@ namespace libirc
         /// Change a user level according to symbol
         /// </summary>
         /// <param name="symbol"></param>
-        public void SymbolMode(char symbol)
+        public virtual void SymbolMode(char symbol)
         {
             if (_Network == null)
             {
@@ -386,7 +407,7 @@ namespace libirc
             }
         }
         
-        private void MakeUser(string nick, string host, Network network, string ident)
+        protected virtual void MakeUser(string nick, string host, Network network, string ident)
         {
             _Network = network;
             if (!string.IsNullOrEmpty(nick))
@@ -407,7 +428,7 @@ namespace libirc
         /// <summary>
         /// Destroy
         /// </summary>
-        public void Destroy()
+        public virtual void Destroy()
         {
             if (IsDestroyed)
             {
@@ -431,7 +452,7 @@ namespace libirc
         /// Generate full string
         /// </summary>
         /// <returns></returns>
-        public string ConvertToInfoString()
+        public virtual string ConvertToInfoString()
         {
             if (!string.IsNullOrEmpty(RealName))
             {
@@ -445,7 +466,7 @@ namespace libirc
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public int CompareTo(object obj)
+        public virtual int CompareTo(object obj)
         {
             if (obj is User)
             {
