@@ -88,60 +88,59 @@ namespace libirc
                         // this is a hack for uber-fucked servers that provide name of channel in message
                         // instead as a parameter
                         channel = message;
-                        data = new Network.NetworkSelfEventArgs(ServerLineRawText);
-                        data.ChannelName = channel;
-                        Channel joined_chan = _Network.GetChannel(channel);
-                        data.Channel = joined_chan;
-                        data.Source = source;
-                        data.Type = Network.EventType.Join;
-                        _Network.__evt_Self(data);
-                        if (joined_chan == null)
-                        {
-                            // we aren't in this channel yet, which is expected, let's create a new instance of it
-                            joined_chan = _Network.Channel(channel);
-                        }
-                        else
-                        {
-                            // this is set for some unknown reasons and needs to be cleaned up
-                            joined_chan.ChannelWork = true;
-                            joined_chan.PartRequested = false;
-                        }
-
-                        // if this channel is not a backlog we need to reflect the change
-                        if (!IsBacklog)
-                        {
-                            if (_Network.Config.AggressiveMode)
-                            {
-                                _Network.Transfer("MODE " + channel, Defs.Priority.Low);
-                            }
-
-                            if (_Network.Config.AggressiveExceptions)
-                            {
-                                joined_chan.IsParsingExceptionData = true;
-                                _Network.Transfer("MODE " + channel + " +e", Defs.Priority.Low);
-                            }
-
-                            if (_Network.Config.AggressiveBans)
-                            {
-                                joined_chan.IsParsingBanData = true;
-                                _Network.Transfer("MODE " + channel + " +b", Defs.Priority.Low);
-                            }
-
-                            if (_Network.Config.AggressiveInvites)
-                            {
-                                joined_chan.IsParsingInviteData = true;
-                                _Network.Transfer("MODE " + channel + " +I", Defs.Priority.Low);
-                            }
-
-                            if (_Network.Config.AggressiveUsers)
-                            {
-                                joined_chan.IsParsingWhoData = true;
-                                _Network.Transfer("WHO " + channel, Defs.Priority.Low);
-                            }
-                        }
-                        return true;
                     }
-                    return false;
+                    data = new Network.NetworkSelfEventArgs(ServerLineRawText);
+                    data.ChannelName = channel;
+                    Channel joined_chan = _Network.GetChannel(channel);
+                    data.Channel = joined_chan;
+                    data.Source = source;
+                    data.Type = Network.EventType.Join;
+                    _Network.__evt_Self(data);
+                    if (joined_chan == null)
+                    {
+                        // we aren't in this channel yet, which is expected, let's create a new instance of it
+                        joined_chan = _Network.Channel(channel);
+                    }
+                    else
+                    {
+                        // this is set for some unknown reasons and needs to be cleaned up
+                        joined_chan.ChannelWork = true;
+                        joined_chan.PartRequested = false;
+                    }
+
+                    // if this channel is not a backlog we need to reflect the change
+                    if (!IsBacklog)
+                    {
+                        if (_Network.Config.AggressiveMode)
+                        {
+                            _Network.Transfer("MODE " + channel, Defs.Priority.Low);
+                        }
+
+                        if (_Network.Config.AggressiveExceptions)
+                        {
+                            joined_chan.IsParsingExceptionData = true;
+                            _Network.Transfer("MODE " + channel + " +e", Defs.Priority.Low);
+                        }
+
+                        if (_Network.Config.AggressiveBans)
+                        {
+                            joined_chan.IsParsingBanData = true;
+                            _Network.Transfer("MODE " + channel + " +b", Defs.Priority.Low);
+                        }
+
+                        if (_Network.Config.AggressiveInvites)
+                        {
+                            joined_chan.IsParsingInviteData = true;
+                            _Network.Transfer("MODE " + channel + " +I", Defs.Priority.Low);
+                        }
+
+                        if (_Network.Config.AggressiveUsers)
+                        {
+                            joined_chan.IsParsingWhoData = true;
+                            _Network.Transfer("WHO " + channel, Defs.Priority.Low);
+                        }
+                    }
+                    return true;
                 }
 
                 if (command == "NICK")
@@ -384,7 +383,7 @@ namespace libirc
                         Network.NetworkNOTICEEventArgs notice = new Network.NetworkNOTICEEventArgs(ServerLineRawText);
                         notice.Source = source;
                         notice.Message = message;
-						notice.ParameterLine = parameters_line;
+                        notice.ParameterLine = parameters_line;
                         _Network.__evt_NOTICE(notice);
                         return true;
                     case "NICK":

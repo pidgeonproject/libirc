@@ -220,16 +220,6 @@ namespace libirc
 				DisconnectEvent(this, e);
 			}
 		}
-		
-        /// <summary>
-        /// This function get an input from user, if it return false, it is handled by core
-        /// </summary>
-        /// <param name="input"></param>
-        /// <returns></returns>
-        public virtual bool ParseInput(string input)
-        {
-            return false;
-        }
 
         /// <summary>
         /// Release all memory associated with this object and destroy it
@@ -256,19 +246,20 @@ namespace libirc
         /// <param name="data"></param>
         /// <param name="priority"></param>
         /// <param name="network"></param>
-        public virtual void Transfer(string data, Defs.Priority priority = Defs.Priority.Normal, Network network = null)
+        public virtual Result Transfer(string data, Defs.Priority priority = Defs.Priority.Normal, Network network = null)
         {
             this.DebugLog("Transfer(string data, Configuration.Priority _priority = Configuration.Priority.Normal, Network network = null) is not implemented");
+            return Result.NotImplemented;
         }
 
         /// <summary>
         /// This will disconnect the protocol but leave it in memory
         /// </summary>
         /// <returns></returns>
-        public virtual bool Disconnect()
+        public virtual Result Disconnect()
         {
             this.DebugLog("Disconnect() is not implemented");
-            return false;
+            return Result.NotImplemented;
         }
 		
 		public virtual void TrafficLog(string text, bool incoming)
@@ -286,10 +277,10 @@ namespace libirc
         /// Reconnect
         /// </summary>
         /// <returns></returns>
-        public virtual bool Reconnect()
+        public virtual Result Reconnect()
         {
             this.DebugLog("Reconnect() is not implemented");
-            return false;
+            return Result.NotImplemented;
         }
 
         /// <summary>
@@ -298,10 +289,10 @@ namespace libirc
         /// <param name="cm"></param>
         /// <param name="network"></param>
         /// <returns></returns>
-        public virtual bool Command(string cm, Network network = null)
+        public virtual Result Command(string cm, Network network = null)
         {
             this.DebugLog("Command(string cm, Network network = null) is not implemented");
-            return false;
+            return Result.NotImplemented;
         }
 
         public virtual void DebugLog(string Text, int Verbosity = 1)
@@ -313,6 +304,14 @@ namespace libirc
                 args.Message = Text;
                 this.DebugLogEvent(this, args);
             }
+        }
+
+        public enum Result
+        {
+            Failure,
+            Done,
+            NotImplemented,
+            Queued
         }
     }
 
@@ -340,9 +339,10 @@ namespace libirc
         /// Reconnect
         /// </summary>
         /// <param name="network">Network</param>
-        public virtual void ReconnectNetwork(Network network)
+        public virtual Result ReconnectNetwork(Network network)
         {
             this.DebugLog("ReconnectNetwork(Network network) is not implemented");
+            return Result.NotImplemented;
         }
         
         /// <summary>
@@ -365,10 +365,10 @@ namespace libirc
         /// <param name="to"></param>
         /// <param name="priority"></param>
         /// <returns></returns>
-        public virtual int Act(string text, string to, Defs.Priority priority = Defs.Priority.Normal)
+        public virtual Result Act(string text, string to, Network network, Defs.Priority priority = Defs.Priority.Normal)
         {
             this.DebugLog("Message2(string text, string to, Configuration.Priority priority = Configuration.Priority.Normal) is not implemented");
-            return 2;
+            return Result.NotImplemented;
         }
 
         /// <summary>
@@ -379,11 +379,11 @@ namespace libirc
         /// <param name="network"></param>
         /// <param name="priority"></param>
         /// <returns></returns>
-        public virtual int Message(string text, string to, Network network, Defs.Priority priority = Defs.Priority.Normal)
+        public virtual Result Message(string text, string to, Network network, Defs.Priority priority = Defs.Priority.Normal)
         {
              this.DebugLog("Message(string text, string to, Network network, Configuration.Priority priority = "
                            +"Configuration.Priority.Normal, bool pmsg = false) is not implemented");
-            return 2;
+             return Result.NotImplemented;
         }
 
         /// <summary>
@@ -392,10 +392,10 @@ namespace libirc
         /// <param name="_Nick"></param>
         /// <param name="network"></param>
         /// <returns></returns>
-        public virtual int RequestNick(string _Nick, Network network = null)
+        public virtual Result RequestNick(string _Nick, Network network = null)
         {
             this.DebugLog("requestNick(string _Nick, Network network = null) is not implemented");
-            return 2;
+            return Result.NotImplemented;
         }
 
         /// <summary>
@@ -404,10 +404,10 @@ namespace libirc
         /// <param name="_x">Mode</param>
         /// <param name="target">Channel or user</param>
         /// <param name="network">Network</param>
-        public virtual void WriteMode(NetworkMode _x, string target, Network network = null)
+        public virtual Result WriteMode(NetworkMode _x, string target, Network network = null)
         {
             this.DebugLog("WriteMode(NetworkMode _x, string target, Network network = null) is not implemented");
-            return;
+            return Result.NotImplemented;
         }
 
         /// <summary>
@@ -415,10 +415,10 @@ namespace libirc
         /// </summary>
         /// <param name="name">Channel</param>
         /// <param name="network">Network</param>
-        public virtual void Join(string name, Network network = null)
+        public virtual Result Join(string name, Network network = null)
         {
             this.DebugLog("Join() is not implemented");
-            return;
+            return Result.NotImplemented;
         }
 
         /// <summary>
@@ -427,10 +427,10 @@ namespace libirc
         /// <param name="server">Server</param>
         /// <param name="port">Port</param>
         /// <returns></returns>
-        public virtual bool ConnectTo(string server, int port)
+        public virtual Result ConnectTo(string server, int port)
         {
             this.DebugLog("Disconnect() is not implemented");
-            return false;
+            return Result.NotImplemented;
         }
 
         /// <summary>
@@ -438,10 +438,10 @@ namespace libirc
         /// </summary>
         /// <param name="name">Channel</param>
         /// <param name="network">Network</param>
-        public virtual void Part(string name, Network network = null)
+        public virtual Result Part(string name, Network network = null)
         {
             this.DebugLog("Part(string name, Network network = null) is not implemented");
-            return;
+            return Result.NotImplemented;
         }
     }
 }

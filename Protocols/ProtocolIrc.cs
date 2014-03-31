@@ -133,9 +133,10 @@ namespace libirc.Protocols
         /// </summary>
         /// <param name="name">Channel</param>
         /// <param name="network"></param>
-        public override void Part(string name, Network network = null)
+        public override Result Part(string name, Network network = null)
         {
             Transfer("PART " + name, Defs.Priority.High, network);
+            return Result.Done;
         }
 
         /// <summary>
@@ -144,9 +145,10 @@ namespace libirc.Protocols
         /// <param name="text"></param>
         /// <param name="priority"></param>
         /// <param name="network"></param>
-        public override void Transfer(string text, Defs.Priority priority = Defs.Priority.Normal, Network network = null)
+        public override Result Transfer(string text, Defs.Priority priority = Defs.Priority.Normal, Network network = null)
         {
             Messages.DeliverMessage(text, priority);
+            return Result.Done;
         }
 
         private void _Ping()
@@ -302,7 +304,7 @@ namespace libirc.Protocols
         /// <param name="cm"></param>
         /// <param name="network"></param>
         /// <returns></returns>
-        public override bool Command(string cm, Network network = null)
+        public override Result Command(string cm, Network network = null)
         {
             if (cm.StartsWith(" ", StringComparison.Ordinal) != true && cm.Contains(" "))
             {
@@ -310,10 +312,10 @@ namespace libirc.Protocols
                 string first_word = cm.Substring(0, cm.IndexOf(" ", StringComparison.Ordinal)).ToUpper();
                 string rest = cm.Substring(first_word.Length);
                 Transfer(first_word + rest);
-                return true;
+                return Result.Done;
             }
             Transfer(cm.ToUpper());
-            return false;
+            return Result.Done;
         }
 
         private void Send(string ms)
@@ -340,10 +342,10 @@ namespace libirc.Protocols
         /// <param name="priority"></param>
         /// <param name="pmsg"></param>
         /// <returns></returns>
-        public override int Message(string text, string to, Network network, Defs.Priority priority = Defs.Priority.Normal)
+        public override Result Message(string text, string to, Network network, Defs.Priority priority = Defs.Priority.Normal)
         {
             Transfer("PRIVMSG " + to + " :" + text, priority);
-            return 0;
+            return Result.Done;
         }
 
         /// <summary>
@@ -352,7 +354,7 @@ namespace libirc.Protocols
         /// <param name="text">Text.</param>
         /// <param name="to">To.</param>
         /// <param name="priority">Priority.</param>
-        public void Message(string text, string to, Defs.Priority priority = Defs.Priority.Normal)
+        public virtual void Message(string text, string to, Defs.Priority priority = Defs.Priority.Normal)
         {
             Message(text, to, null, priority);
         }
@@ -364,24 +366,24 @@ namespace libirc.Protocols
         /// <param name="to"></param>
         /// <param name="priority"></param>
         /// <returns></returns>
-        public override int Act(string text, string to, Defs.Priority priority = Defs.Priority.Normal)
+        public override Result Act(string text, string to, Network network, Defs.Priority priority = Defs.Priority.Normal)
         {
             Transfer("PRIVMSG " + to + " :" + delimiter.ToString() + "ACTION " + text + delimiter.ToString(), priority);
-            return 0;
+            return Result.Done;
         }
 
         /// <summary>
         /// Disconnect
         /// </summary>
         /// <returns></returns>
-        public override bool Disconnect()
+        public override Result Disconnect()
         {
             // we lock the function so that it can't be called in same time in different thread
             lock(this)
             {
                 if (!IsConnected || IRCNetwork == null)
                 {
-                    return false;
+                    return Result.Failure;
                 }
                 try
                 {
@@ -403,7 +405,7 @@ namespace libirc.Protocols
                     Connected = false;
                 }
             }
-            return true;
+            return Result.Done;
         }
 
         /// <summary>
@@ -411,9 +413,10 @@ namespace libirc.Protocols
         /// </summary>
         /// <param name="name">Channel</param>
         /// <param name="network"></param>
-        public override void Join(string name, Network network = null)
+        public override Result Join(string name, Network network = null)
         {
             Transfer("JOIN " + name);
+            return Result.Done;
         }
 
         /// <summary>
@@ -422,17 +425,17 @@ namespace libirc.Protocols
         /// <param name="_Nick"></param>
         /// <param name="network"></param>
         /// <returns></returns>
-        public override int RequestNick(string _Nick, Network network = null)
+        public override Result RequestNick(string _Nick, Network network = null)
         {
             Transfer("NICK " + _Nick);
-            return 0;
+            return Result.Done;
         }
 
         /// <summary>
         /// Reconnect network
         /// </summary>
         /// <param name="network"></param>
-        public override void ReconnectNetwork(Network network)
+        public override Result ReconnectNetwork(Network network)
         {
             if (this.ManualThreads)
             {
@@ -452,6 +455,7 @@ namespace libirc.Protocols
                 TMain.Start();
                 ThreadManager.RegisterThread(TMain);
             }
+            return Result.Done;
         }
 
         /// <summary>

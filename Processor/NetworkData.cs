@@ -76,13 +76,6 @@ namespace libirc
             return true;
         }
 
-        /// <summary>
-        /// This command is sent by IRC server when you join a channel, it contains some basic information including list of users
-        /// </summary>
-        /// <param name="command"></param>
-        /// <param name="parameters"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
         private bool ChannelData(string command, string parameters, string value)
         {
             string channel_name = parameters.Substring(parameters.IndexOf(" ", StringComparison.Ordinal) + 1);
@@ -212,13 +205,12 @@ namespace libirc
 
         private bool Idle2(string source, string parameters, string value)
         {
-            if (parameters.Contains(" "))
-            {
+            //if (parameters.Contains(" "))
+            //{
                 //string name = parameters.Substring(parameters.IndexOf(" ", StringComparison.Ordinal) + 1);
                 //string message = value;
 
-                return true;
-            }
+            //}
             return false;
         }
 

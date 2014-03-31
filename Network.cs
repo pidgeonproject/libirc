@@ -176,6 +176,7 @@ namespace libirc
 		public class NetworkMODEEventArgs : NetworkChannelDataEventArgs
 		{
 			public Formatter FormattedMode = null;
+            public string SimpleMode = null;
 			
 			public NetworkMODEEventArgs(string line) : base(line) {}
 		}
@@ -202,6 +203,14 @@ namespace libirc
 			public NetworkNOTICEEventArgs(string line) : base(line) {}
 		}
 
+        public class NetworkTOPICEventArgs : NetworkChannelDataEventArgs
+        {
+            public string Topic;
+            public double TopicDate;
+
+            public NetworkTOPICEventArgs(string line) : base(line) {}
+        }
+
 		public class NetworkSelfEventArgs : NetworkGenericEventArgs
 		{
 			public string Message = null;
@@ -223,6 +232,7 @@ namespace libirc
 			public NetworkSelfEventArgs(string line) : base(line) {}
 		}
 
+        public delegate void NetworkTopicDataEventHandler(object sender, NetworkTOPICEventArgs e);
 		public delegate void NetworkInfoEventHandler(object sender,NetworkGenericDataEventArgs e);
 		public delegate void NetworkSelfEventHandler(object sender, NetworkSelfEventArgs e);
 		public delegate void NetworkNOTICEEventHandler(object sender, NetworkNOTICEEventArgs e);
@@ -232,12 +242,14 @@ namespace libirc
 		public delegate void NetworkPARTEventHandler(object sender, NetworkChannelEventArgs e);
 		public delegate void NetworkKICKEventHandler(object sender, NetworkKickEventArgs e);
 		public delegate void NetworkNICKEventHandler(object sender, NetworkNICKEventArgs e);
+        public delegate void NetworkTopicInfoEventHandler(object sender, NetworkTOPICEventArgs e);
 		public delegate void NetworkQUITEventHandler(object sender, NetworkGenericEventArgs e);
         public delegate void NetworkChannelInfoEventHandler(object sender, NetworkChannelDataEventArgs e);
         public delegate void NetworkCTCPEventHandler(object sender, NetworkCTCPEventArgs e);
 		public delegate void NetworkChannelUserListHandler(object sender, ChannelUserListEventArgs e);
 		public delegate void FinishParseUserEventHandler(object sender, NetworkChannelDataEventArgs e);
 		public delegate void NetworkMODEEventHandler(object sender, NetworkMODEEventArgs e);
+        public delegate void NetworkTOPICEventHandler(object sender, NetworkTOPICEventArgs e);
 		/// <summary>
 		/// Occurs when some network action that is related to current user happens (for example
 		/// when this user join or change nick)
@@ -257,6 +269,9 @@ namespace libirc
 		public event NetworkChannelUserListHandler On_ChannelUserList;
 		public event FinishParseUserEventHandler On_FinishChannelParseUser;
 		public event NetworkMODEEventHandler On_MODE;
+        public event NetworkTOPICEventHandler On_TOPIC;
+        public event NetworkTopicDataEventHandler On_TopicData;
+        public event NetworkTopicInfoEventHandler On_TopicInfo;
         
         public Configuration Config = new Configuration();
         /// <summary>
@@ -697,7 +712,39 @@ namespace libirc
                 this.On_ChannelInfo(this, args);
             }
         }
-		
+
+        /// <summary>
+        /// Command 333 is handled by this
+        /// </summary>
+        /// <param name="args"></param>
+        public virtual void __evt_TopicInfo(NetworkTOPICEventArgs args)
+        {
+            if (On_TopicInfo != null)
+            {
+                this.On_TopicInfo(this, args);
+            }
+        }
+
+        /// <summary>
+        /// Called when server send us 332 command with some topic information
+        /// </summary>
+        /// <param name="args"></param>
+        public virtual void __evt_TopicData(NetworkTOPICEventArgs args)
+        {
+            if (On_TopicData != null)
+            {
+                this.On_TopicData(this, args);
+            }
+        }
+
+        public virtual void __evt_TOPIC(NetworkTOPICEventArgs args)
+        {
+            if (this.On_TOPIC != null)
+            {
+                this.On_TOPIC(this, args);
+            }
+        }
+
 		public virtual void __evt_ChannelUserList(ChannelUserListEventArgs args)
 		{
 			if (this.On_ChannelUserList != null)
@@ -758,6 +805,18 @@ namespace libirc
                 }
             }
             return false;
+        }
+
+        /// <summary>
+        /// Send a message to network
+        /// </summary>
+        /// <param name="text">Text of message</param>
+        /// <param name="to">Sending to</param>
+        /// <param name="_priority">Priority</param>
+        /// <param name="pmsg">If this is private message (so it needs to be handled in a different way)</param>
+        public virtual void Act(string text, string to, Defs.Priority _priority = Defs.Priority.Normal)
+        {
+            _Protocol.Act(text, to, this, _priority);
         }
         
         /// <summary>
