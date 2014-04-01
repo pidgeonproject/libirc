@@ -286,14 +286,18 @@ namespace libirc
         {
             if (parameters.Contains(" "))
             {
+                Network.NetworkWHOISEventArgs ev = new Network.NetworkWHOISEventArgs(this.ServerLineRawText);
+                ev.ParameterLine = parameters;
+                ev.WhoisType = Network.NetworkWHOISEventArgs.Mode.Server;
                 string name = parameters.Substring(parameters.IndexOf(" ", StringComparison.Ordinal) + 1);
                 if (!name.Contains(" "))
                 {
                     _Protocol.DebugLog("Invalid whois record " + parameters);
                     return false;
                 }
-                //string server = name.Substring(name.IndexOf(" ", StringComparison.Ordinal) + 1);
-                //name = name.Substring(0, name.IndexOf(" ", StringComparison.Ordinal));
+                ev.WhoisLine = name.Substring(name.IndexOf(" ", StringComparison.Ordinal) + 1);
+                ev.Source = name.Substring(0, name.IndexOf(" ", StringComparison.Ordinal));
+                _Network.__evt_WHOIS(ev);
                 return true;
             }
             return false;
@@ -301,7 +305,10 @@ namespace libirc
 
         private bool Invite(string source, string parameters, string value)
         {
-            //Core.DisplayNote(source + " invites you to join " + value, "Invitation");
+            Network.NetworkChannelDataEventArgs ev = new Network.NetworkChannelDataEventArgs(this.ServerLineRawText);
+            ev.Source = source;
+            ev.ChannelName = parameters;
+            _Network.__evt_INVITE(ev);
             return true;
         }
 

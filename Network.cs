@@ -196,6 +196,21 @@ namespace libirc
 			public NetworkCTCPEventArgs(string line) : base(line) {}
         }
 
+        public class NetworkWHOISEventArgs : NetworkGenericDataEventArgs
+        {
+            public string WhoisLine = null;
+            public Mode WhoisType = Mode.Info;
+
+            public NetworkWHOISEventArgs(string line) : base(line) {  }
+
+            public enum Mode
+            {
+                Server,
+                Channels,
+                Info
+            }
+        }
+
 		public class NetworkNOTICEEventArgs : NetworkGenericEventArgs
 		{
 			public string Message = null;
@@ -232,6 +247,8 @@ namespace libirc
 			public NetworkSelfEventArgs(string line) : base(line) {}
 		}
 
+        public delegate void NetworkWHOISEventHandler(object sender, NetworkWHOISEventArgs e);
+        public delegate void NetworkINVITEEventHandler(object sender, NetworkChannelDataEventArgs e);
         public delegate void NetworkTopicDataEventHandler(object sender, NetworkTOPICEventArgs e);
 		public delegate void NetworkInfoEventHandler(object sender,NetworkGenericDataEventArgs e);
 		public delegate void NetworkSelfEventHandler(object sender, NetworkSelfEventArgs e);
@@ -250,6 +267,7 @@ namespace libirc
 		public delegate void FinishParseUserEventHandler(object sender, NetworkChannelDataEventArgs e);
 		public delegate void NetworkMODEEventHandler(object sender, NetworkMODEEventArgs e);
         public delegate void NetworkTOPICEventHandler(object sender, NetworkTOPICEventArgs e);
+        public delegate void NetworkFinishBanEventHandler(object sender, NetworkChannelEventArgs e);
 		/// <summary>
 		/// Occurs when some network action that is related to current user happens (for example
 		/// when this user join or change nick)
@@ -272,6 +290,9 @@ namespace libirc
         public event NetworkTOPICEventHandler On_TOPIC;
         public event NetworkTopicDataEventHandler On_TopicData;
         public event NetworkTopicInfoEventHandler On_TopicInfo;
+        public event NetworkFinishBanEventHandler On_ChannelFinishBan;
+        public event NetworkWHOISEventHandler On_WHOIS;
+        public event NetworkINVITEEventHandler On_INVITE;
         
         public Configuration Config = new Configuration();
         /// <summary>
@@ -306,10 +327,6 @@ namespace libirc
         /// Special channel user modes with parameters as a string
         /// </summary>
         public List<char> PModes = new List<char> { 'b', 'I', 'e' };
-        /// <summary>
-        /// Descriptions for channel and user modes
-        /// </summary>
-        public Dictionary<char, string> Descriptions = new Dictionary<char, string>();
         /// <summary>
         /// Check if the info is parsed
         /// </summary>
@@ -390,11 +407,15 @@ namespace libirc
         /// <summary>
         /// Specifies if you are connected to network
         /// </summary>
-        public bool IsConnected
+        public virtual bool IsConnected
         {
             get
             {
                 return connected;
+            }
+            set
+            {
+                this.connected = value;
             }
         }
         private bool isDestroyed = false;
@@ -402,7 +423,7 @@ namespace libirc
         /// This will return true in case object was requested to be disposed
         /// you should never work with objects that return true here
         /// </summary>
-        public bool IsDestroyed
+        public virtual bool IsDestroyed
         {
             get
             {
@@ -417,19 +438,6 @@ namespace libirc
         /// <param name="protocol">Protocol that own this instance</param>
         public Network(string Server, Protocol protocol)
         {
-            lock (Descriptions)
-            {
-                Descriptions.Clear();
-                Descriptions.Add('n', "no /knock is allowed on channel");
-                Descriptions.Add('r', "registered channel");
-                Descriptions.Add('m', "talking is restricted");
-                Descriptions.Add('i', "users need to be invited to join");
-                Descriptions.Add('s', "channel is secret (doesn't appear on list)");
-                Descriptions.Add('p', "channel is private");
-                Descriptions.Add('A', "admins only");
-                Descriptions.Add('O', "opers chan");
-                Descriptions.Add('t', "topic changes can be done only by operators");
-            }
             _Protocol = protocol;
             ServerName = Server;
             Quit = Defs.DefaultQuit;
@@ -465,40 +473,6 @@ namespace libirc
             {
                 Destroy();
             }
-        }
-        
-        /// <summary>
-        /// Insert a description to list
-        /// </summary>
-        /// <param name="mode"></param>
-        /// <param name="description"></param>
-        public virtual void InsertSafeDescription(char mode, string description)
-        {
-            lock (Descriptions)
-            {
-                if (Descriptions.ContainsKey(mode))
-                {
-                    Descriptions.Remove(mode);
-                }
-
-                Descriptions.Add(mode, description);
-            }
-        }
-
-        /// <summary>
-        /// This will toggle the connection flag to true
-        /// </summary>
-        public virtual void SetConnected()
-        {
-            connected = true;
-        }
-
-        /// <summary>
-        /// This will mark the network as disconnected
-        /// </summary>
-        public virtual void SetDisconnected()
-        {
-            connected = false;
         }
 
         /// <summary>
@@ -622,6 +596,22 @@ namespace libirc
             else
             {
                 return previous;
+            }
+        }
+
+        public virtual void __evt_INVITE(NetworkChannelDataEventArgs args)
+        {
+            if (this.On_INVITE != null)
+            {
+                this.On_INVITE(this, args);
+            }
+        }
+
+        public virtual void __evt_WHOIS(NetworkWHOISEventArgs args)
+        {
+            if (this.On_WHOIS != null)
+            {
+                this.On_WHOIS(this, args);
             }
         }
 
@@ -777,6 +767,14 @@ namespace libirc
 			}
 		}
 
+        public virtual void __evt_ChannelFinishBan(NetworkChannelEventArgs args)
+        {
+            if (this.On_ChannelFinishBan != null)
+            {
+                this.On_ChannelFinishBan(this, args);
+            }
+        }
+
         /// <summary>
         /// Send a message to network
         /// </summary>
@@ -787,24 +785,6 @@ namespace libirc
         public virtual void Message(string text, string to, Defs.Priority _priority = Defs.Priority.Normal)
         {
             _Protocol.Message(text, to, this, _priority);
-        }
-
-        /// <summary>
-        /// Unregister info for user and channel modes
-        /// </summary>
-        /// <param name="key">Mode</param>
-        /// <returns></returns>
-        public virtual bool UnregisterInfo(char key)
-        {
-            lock (Descriptions)
-            {
-                if (Descriptions.ContainsKey(key))
-                {
-                    Descriptions.Remove(key);
-                    return true;
-                }
-            }
-            return false;
         }
 
         /// <summary>
@@ -828,7 +808,6 @@ namespace libirc
             if (IsDestroyed)
             {
                 // avoid calling this function multiple times, otherwise it could crash
-                //Core.DebugLog("Destroy() called multiple times on " + ServerName);
                 return;
             }
 
@@ -849,30 +828,6 @@ namespace libirc
             }
 
             _Protocol = null;
-
-            lock (Descriptions)
-            {
-                Descriptions.Clear();
-            }
-        }
-
-        /// <summary>
-        /// Register info for channel info
-        /// </summary>
-        /// <param name="key">Mode</param>
-        /// <param name="text">Text</param>
-        /// <returns>true on success, false if this info already exist</returns>
-        public virtual bool RegisterInfo(char key, string text)
-        {
-            lock (Descriptions)
-            {
-                if (Descriptions.ContainsKey(key))
-                {
-                    return false;
-                }
-                Descriptions.Add(key, text);
-                return true;
-            }
         }
 
         /// <summary>
@@ -896,7 +851,7 @@ namespace libirc
             lock (this)
             {
                 Transfer("QUIT :" + Quit);
-                SetDisconnected();
+                IsConnected = false;
             }
         }
     }

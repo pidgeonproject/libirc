@@ -239,9 +239,11 @@ namespace libirc.Protocols
 
 	                while (!streamReader.EndOfStream && IsConnected)
 	                {
+                        // this check here is to avoid calling IsConnected = true multiple time, which isn't just assigning bool somewhere
+                        // but actually call expensive functions, so call it just once
 	                    if (!IRCNetwork.IsConnected)
 	                    {
-	                        IRCNetwork.SetConnected();
+                            IRCNetwork.IsConnected = true;
 	                    }
 	                    string text = streamReader.ReadLine();
 	                    text = this.RawTraffic(text);
@@ -280,7 +282,7 @@ namespace libirc.Protocols
         {
             if (IRCNetwork != null)
             {
-                IRCNetwork.SetDisconnected();
+                IRCNetwork.IsConnected = false;
             }
             if (SSL)
             {
@@ -388,7 +390,7 @@ namespace libirc.Protocols
                 try
                 {
                     Send("QUIT :" + IRCNetwork.Quit);
-                    IRCNetwork.SetDisconnected();
+                    IRCNetwork.IsConnected = false;
                     if (SSL)
                     {
                         networkSsl.Close();
@@ -477,6 +479,10 @@ namespace libirc.Protocols
             if (!this.ManualThreads)
             {
                 ThreadManager.KillThread(TMain);
+            }
+            if (IRCNetwork.IsConnected)
+            {
+                IRCNetwork.Disconnect();
             }
             IRCNetwork.Destroy();
             Connected = false;

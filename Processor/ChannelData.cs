@@ -81,6 +81,7 @@ namespace libirc
                     }
                 }
 				ev.IsAway = IsAway;
+                ev.RealName = realname;
                 if (channel != null)
                 {
                     if (!IsBacklog)
@@ -96,7 +97,6 @@ namespace libirc
                             {
                                 _user = new User(ui, _Network);
                             }
-							ev.RealName = realname;
 							_user.LastAwayCheck = DateTime.Now;
                             _user.RealName = realname;
                             if (IsAway)
@@ -238,6 +238,7 @@ namespace libirc
                     channel.TopicUser = user;
                 }
                 _Network.__evt_TopicInfo(ev);
+                return true;
             }
             return false;
         }
@@ -277,6 +278,7 @@ namespace libirc
                     channel.IsParsingWhoData = false;
                 }
 				_Network.__evt_FinishChannelParseUser(ev);
+                return true;
             }
             return false;
         }
@@ -344,17 +346,23 @@ namespace libirc
 
         private bool ChannelBans2(List<string> parameters)
         {
-            if (parameters.Count > 0)
+            if (parameters.Count > 1)
             {
-                Channel channel = _Network.GetChannel(parameters[0]);
+                Network.NetworkChannelEventArgs ev = new Network.NetworkChannelEventArgs(this.ServerLineRawText);
+                ev.ChannelName = parameters[1];
+                Channel channel = _Network.GetChannel(parameters[1]);
+                ev.Parameters = parameters;
+                ev.Channel = channel;
                 if (channel != null)
                 {
                     if (channel.IsParsingBanData)
                     {
                         channel.IsParsingBanData = false;
+                        _Network.__evt_ChannelFinishBan(ev);
                         return true;
                     }
                 }
+                _Network.__evt_ChannelFinishBan(ev);
             }
             return false;
         }
@@ -363,16 +371,20 @@ namespace libirc
         {
 			if (parameters.Count > 3)
             {
-                Channel channel = _Network.GetChannel(parameters[0]);
+                Channel channel = _Network.GetChannel(parameters[1]);
                 if (channel != null)
                 {
                     if (channel.Bans == null)
                     {
                         channel.Bans = new List<SimpleBan>();
                     }
-                    if (!channel.ContainsBan(parameters[1]))
+                    if (!channel.ContainsBan(parameters[2]))
                     {
-                        channel.Bans.Add(new SimpleBan(parameters[2], parameters[1], parameters[3]));
+                        channel.Bans.Add(new SimpleBan(parameters[3], parameters[2], parameters[4]));
+                    }
+                    if (channel.IsParsingBanData)
+                    {
+                        return true;
                     }
                 }
             }
