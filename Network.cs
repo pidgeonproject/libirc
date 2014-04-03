@@ -405,6 +405,11 @@ namespace libirc
         public string IrcdVersion = null;
         private bool connected = false;
         /// <summary>
+        /// When you switch network to this mode, most of server side changes will not be reflected, as it's expected that bouncer has
+        /// provided you the current situation. PART and JOIN events and such will be propagated but not reflected.
+        /// </summary>
+        public bool IsDownloadingBouncerBacklog = false;
+        /// <summary>
         /// Specifies if you are connected to network
         /// </summary>
         public virtual bool IsConnected

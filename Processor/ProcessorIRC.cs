@@ -532,13 +532,13 @@ namespace libirc
         /// <param name="_pong">_pong.</param>
         /// <param name="_date">Date of this message, if you specify 0 the current time will be used</param>
         /// <param name="updated">If true this text will be considered as newly obtained information</param>
-        public ProcessorIRC(Network _network, string _text, ref DateTime _pong, long _date = 0, bool updated = true)
+        public ProcessorIRC(Network _network, string _text, ref DateTime _pong, long _date = 0, bool isBacklog = false)
         {
             _Network = _network;
             _Protocol = _network._Protocol;
             ServerLineRawText = _text;
             pong = _pong;
-            IsBacklog = !updated;
+            IsBacklog = isBacklog;
         }
     }
 }
