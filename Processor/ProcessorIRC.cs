@@ -42,6 +42,7 @@ namespace libirc
         /// Time
         /// </summary>
         public DateTime pong;
+        private long Date;
 
         private void Ping()
         {
@@ -89,7 +90,7 @@ namespace libirc
                         // instead as a parameter
                         channel = message;
                     }
-                    data = new Network.NetworkSelfEventArgs(ServerLineRawText);
+                    data = new Network.NetworkSelfEventArgs(ServerLineRawText, this.Date);
                     data.ChannelName = channel;
                     Channel joined_chan = _Network.GetChannel(channel);
                     data.Channel = joined_chan;
@@ -156,7 +157,7 @@ namespace libirc
                             new_nickname = new_nickname.Substring(0, new_nickname.IndexOf(" ", StringComparison.Ordinal));
                         }
                     }
-                    data = new Network.NetworkSelfEventArgs(ServerLineRawText);
+                    data = new Network.NetworkSelfEventArgs(ServerLineRawText, this.Date);
                     data.Source = source;
                     data.OldNick = _Network.Nickname;
                     data.NewNick = new_nickname;
@@ -178,7 +179,7 @@ namespace libirc
                     if (c != null)
                     {
                         c.ChannelWork = false;
-                        data = new Network.NetworkSelfEventArgs(ServerLineRawText);
+                        data = new Network.NetworkSelfEventArgs(ServerLineRawText, this.Date);
                         data.Channel = c;
                         data.Source = source;
                         data.Message = message;
@@ -186,7 +187,7 @@ namespace libirc
                         _Network.__evt_Self(data);
                         return true;
                     }
-                    data = new Network.NetworkSelfEventArgs(ServerLineRawText);
+                    data = new Network.NetworkSelfEventArgs(ServerLineRawText, this.Date);
                     data.ChannelName = channel;
                     data.Source = source;
                     data.Message = message;
@@ -272,7 +273,7 @@ namespace libirc
                     case "002":
                     case "003":
                     case "004":
-                        Network.NetworkGenericDataEventArgs args004 = new Network.NetworkGenericDataEventArgs(this.ServerLineRawText);
+                        Network.NetworkGenericDataEventArgs args004 = new Network.NetworkGenericDataEventArgs(this.ServerLineRawText, this.Date);
                         args004.Command = command;
                         args004.ParameterLine = parameters_line;
                         args004.Parameters = parameters;
@@ -359,7 +360,7 @@ namespace libirc
                         }
                         break;
                     case "433":
-                        if (!_Network.UsingNick2)
+                        if (!IsBacklog && !_Network.UsingNick2)
                         {
                             string nick = _Network.Config.GetNick2();
                             _Network.UsingNick2 = true;
@@ -380,7 +381,7 @@ namespace libirc
                         //_Network.SystemWindow.scrollback.InsertText(text.Substring(text.IndexOf("INFO", StringComparison.Ordinal) + 5), Pidgeon.ContentLine.MessageStyle.User,                                                                     true, date, !updated_text);
                         return true;
                     case "NOTICE":
-                        Network.NetworkNOTICEEventArgs notice = new Network.NetworkNOTICEEventArgs(ServerLineRawText);
+                        Network.NetworkNOTICEEventArgs notice = new Network.NetworkNOTICEEventArgs(ServerLineRawText, this.Date);
                         notice.Source = source;
                         notice.Message = message;
                         notice.ParameterLine = parameters_line;
@@ -519,7 +520,9 @@ namespace libirc
             if (!OK)
             {
                 // we have no idea what we just were to parse so flag is as unknown data and let client parse that
-                _Protocol.HandleUnknownData(ServerLineRawText);
+                Network.UnknownDataEventArgs ev = new Network.UnknownDataEventArgs(this.ServerLineRawText);
+                ev.Date = this.Date;
+                _Network.HandleUnknownData(ev);
             }
             return true;
         }
@@ -537,6 +540,7 @@ namespace libirc
             _Network = _network;
             _Protocol = _network._Protocol;
             ServerLineRawText = _text;
+            Date = _date;
             pong = _pong;
             IsBacklog = isBacklog;
         }

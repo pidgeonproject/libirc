@@ -34,7 +34,7 @@ namespace libirc
         /// <returns></returns>
         private bool Info(string command, List<string> parameters_, string parameters_line, string value)
         {
-            Network.NetworkGenericDataEventArgs args004 = new Network.NetworkGenericDataEventArgs(this.ServerLineRawText);
+            Network.NetworkGenericDataEventArgs args004 = new Network.NetworkGenericDataEventArgs(this.ServerLineRawText, this.Date);
             args004.Parameters = parameters_;
             args004.Command = command;
             args004.ParameterLine = parameters_line;
@@ -125,7 +125,7 @@ namespace libirc
             string chan = null;
 			//UserInfo user = new UserInfo(source);
             chan = parameters.Replace(" ", "");
-            Network.NetworkPRIVMSGEventArgs ev = new Network.NetworkPRIVMSGEventArgs(ServerLineRawText);
+            Network.NetworkPRIVMSGEventArgs ev = new Network.NetworkPRIVMSGEventArgs(ServerLineRawText, this.Date);
             ev.Source = source;
             string message = value;
             if (!chan.Contains(_Network.ChannelPrefix))
@@ -165,7 +165,7 @@ namespace libirc
                         uc = uc.Substring(0, uc.IndexOf(" ", StringComparison.Ordinal));
                     }
                     uc = uc.ToUpper();
-                    Network.NetworkCTCPEventArgs ctcp = new Network.NetworkCTCPEventArgs(ServerLineRawText);
+                    Network.NetworkCTCPEventArgs ctcp = new Network.NetworkCTCPEventArgs(ServerLineRawText, this.Date);
                     ctcp.CTCP = uc;
                     ctcp.Message = message;
                     _Network.__evt_CTCP(ctcp);
@@ -286,7 +286,7 @@ namespace libirc
         {
             if (parameters.Contains(" "))
             {
-                Network.NetworkWHOISEventArgs ev = new Network.NetworkWHOISEventArgs(this.ServerLineRawText);
+                Network.NetworkWHOISEventArgs ev = new Network.NetworkWHOISEventArgs(this.ServerLineRawText, this.Date);
                 ev.ParameterLine = parameters;
                 ev.WhoisType = Network.NetworkWHOISEventArgs.Mode.Server;
                 string name = parameters.Substring(parameters.IndexOf(" ", StringComparison.Ordinal) + 1);
@@ -305,7 +305,7 @@ namespace libirc
 
         private bool Invite(string source, string parameters, string value)
         {
-            Network.NetworkChannelDataEventArgs ev = new Network.NetworkChannelDataEventArgs(this.ServerLineRawText);
+            Network.NetworkChannelDataEventArgs ev = new Network.NetworkChannelDataEventArgs(this.ServerLineRawText, this.Date);
             ev.Source = source;
             ev.ChannelName = parameters;
             _Network.__evt_INVITE(ev);
@@ -349,7 +349,7 @@ namespace libirc
                     }
                 }
             }
-			Network.NetworkGenericDataEventArgs ev = new Network.NetworkGenericDataEventArgs(this.ServerLineRawText);
+			Network.NetworkGenericDataEventArgs ev = new Network.NetworkGenericDataEventArgs(this.ServerLineRawText, this.Date);
 			ev.Message = value;
 			ev.ParameterLine = parameters;
 			ev.Source = source;

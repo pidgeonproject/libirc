@@ -107,8 +107,9 @@ namespace libirc
 			/// </summary>
 			public string ServerLine;
 			
-			public NetworkGenericEventArgs(string line)
+			public NetworkGenericEventArgs(string line, long date)
 			{
+                this.Date = date;
 				this.ServerLine = line;
 			}
         }
@@ -118,7 +119,7 @@ namespace libirc
 			public string Command = null;
 			public string Message = null;
 			
-			public NetworkGenericDataEventArgs(string line) : base(line) {}
+			public NetworkGenericDataEventArgs(string line, long date) : base(line, date) {}
 		}
 
 		public class NetworkChannelEventArgs : NetworkGenericEventArgs
@@ -126,15 +127,15 @@ namespace libirc
 			public string ChannelName = null;
 			public Channel Channel = null;
 			
-			public NetworkChannelEventArgs(string line) : base(line) {}
+			public NetworkChannelEventArgs(string line, long date) : base(line, date) {}
 		}
 
         public class NetworkChannelDataEventArgs : NetworkGenericDataEventArgs
         {
             public string ChannelName = null;
             public Channel Channel = null;
-			
-			public NetworkChannelDataEventArgs(string line) : base(line) {}
+
+            public NetworkChannelDataEventArgs(string line, long date) : base(line, date) { }
         }
 		
 		public class NetworkParseUserEventArgs : NetworkChannelEventArgs
@@ -143,24 +144,24 @@ namespace libirc
 			public string Server = null;
 			public UserInfo User = null;
 			public string RealName;
-			
-			public NetworkParseUserEventArgs(string line) : base(line) {}
+
+            public NetworkParseUserEventArgs(string line, long date) : base(line, date) { }
 		}
 		
 		public class NetworkKickEventArgs : NetworkChannelEventArgs
 		{
 			public string Target;
 			public string Message;
-			
-			public NetworkKickEventArgs(string line) : base(line) {}
+
+            public NetworkKickEventArgs(string line, long date) : base(line, date) { }
 		}
 		
 		public class ChannelUserListEventArgs : NetworkChannelEventArgs
 		{
 			public List<string> UserNicknames = new List<string>();
 			public List<User> Users = new List<User>();
-			
-			public ChannelUserListEventArgs(string line) : base(line) {}
+
+            public ChannelUserListEventArgs(string line, long date) : base(line, date) { }
 		}
 		
         public class NetworkPRIVMSGEventArgs : NetworkGenericEventArgs
@@ -169,31 +170,31 @@ namespace libirc
             public bool IsAct = false;
             public Channel Channel = null;
 			public string ChannelName = null;
-			
-			public NetworkPRIVMSGEventArgs(string line) : base(line) {}
+
+            public NetworkPRIVMSGEventArgs(string line, long date) : base(line, date) { }
         }
 		
 		public class NetworkMODEEventArgs : NetworkChannelDataEventArgs
 		{
 			public Formatter FormattedMode = null;
             public string SimpleMode = null;
-			
-			public NetworkMODEEventArgs(string line) : base(line) {}
+
+            public NetworkMODEEventArgs(string line, long date) : base(line, date) { }
 		}
 		
 		public class NetworkNICKEventArgs : NetworkChannelDataEventArgs
 		{
 			public string NewNick = null;
 			public string OldNick = null;
-			
-			public NetworkNICKEventArgs(string line) : base(line) {}
+
+            public NetworkNICKEventArgs(string line, long date) : base(line, date) { }
 		}
 
         public class NetworkCTCPEventArgs : NetworkPRIVMSGEventArgs
         {
             public string CTCP = null;
-			
-			public NetworkCTCPEventArgs(string line) : base(line) {}
+
+            public NetworkCTCPEventArgs(string line, long date) : base(line, date) { }
         }
 
         public class NetworkWHOISEventArgs : NetworkGenericDataEventArgs
@@ -201,7 +202,7 @@ namespace libirc
             public string WhoisLine = null;
             public Mode WhoisType = Mode.Info;
 
-            public NetworkWHOISEventArgs(string line) : base(line) {  }
+            public NetworkWHOISEventArgs(string line, long date) : base(line, date) { }
 
             public enum Mode
             {
@@ -214,8 +215,8 @@ namespace libirc
 		public class NetworkNOTICEEventArgs : NetworkGenericEventArgs
 		{
 			public string Message = null;
-			
-			public NetworkNOTICEEventArgs(string line) : base(line) {}
+
+            public NetworkNOTICEEventArgs(string line, long date) : base(line, date) { }
 		}
 
         public class NetworkTOPICEventArgs : NetworkChannelDataEventArgs
@@ -223,7 +224,7 @@ namespace libirc
             public string Topic;
             public double TopicDate;
 
-            public NetworkTOPICEventArgs(string line) : base(line) {}
+            public NetworkTOPICEventArgs(string line, long date) : base(line, date) {}
         }
 
 		public class NetworkSelfEventArgs : NetworkGenericEventArgs
@@ -243,9 +244,23 @@ namespace libirc
 			/// </summary>
 			public string OldNick = null;
 			public EventType Type = EventType.Generic;
-			
-			public NetworkSelfEventArgs(string line) : base(line) {}
+
+            public NetworkSelfEventArgs(string line, long date) : base(line, date) { }
 		}
+
+        public class UnknownDataEventArgs : EventArgs
+        {
+            public UnknownDataEventArgs(string data) : base()
+            {
+                this.Data = data;
+            }
+
+            /// <summary>
+            /// The data which were retrieved from network
+            /// </summary>
+            public string Data;
+            public long Date;
+        }
 
         public delegate void NetworkWHOISEventHandler(object sender, NetworkWHOISEventArgs e);
         public delegate void NetworkINVITEEventHandler(object sender, NetworkChannelDataEventArgs e);
@@ -266,6 +281,7 @@ namespace libirc
 		public delegate void NetworkChannelUserListHandler(object sender, ChannelUserListEventArgs e);
 		public delegate void FinishParseUserEventHandler(object sender, NetworkChannelDataEventArgs e);
 		public delegate void NetworkMODEEventHandler(object sender, NetworkMODEEventArgs e);
+        public delegate void UnknownDataEventHandler(object sender, UnknownDataEventArgs args);
         public delegate void NetworkTOPICEventHandler(object sender, NetworkTOPICEventArgs e);
         public delegate void NetworkFinishBanEventHandler(object sender, NetworkChannelEventArgs e);
 		/// <summary>
@@ -277,6 +293,10 @@ namespace libirc
 		public event NetworkParseUserEventHandler On_ParseUser;
         public event NetworkPRIVMSGEventHandler On_PRIVMSG;
 		public event NetworkPARTEventHandler On_PART;
+        /// <summary>
+        /// Occurs when unknown data are retrieved from server
+        /// </summary>
+        public event UnknownDataEventHandler UnknownDataRetrievedEvent;
 		public event NetworkJOINEventHandler On_JOIN;
 		public event NetworkInfoEventHandler On_Info;
 		public event NetworkKICKEventHandler On_KICK;
@@ -477,6 +497,14 @@ namespace libirc
             if (!IsDestroyed)
             {
                 Destroy();
+            }
+        }
+
+        public virtual void HandleUnknownData(Network.UnknownDataEventArgs args)
+        {
+            if (this.UnknownDataRetrievedEvent != null)
+            {
+                this.UnknownDataRetrievedEvent(this, args);
             }
         }
 

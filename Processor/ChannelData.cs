@@ -25,7 +25,7 @@ namespace libirc
 			if (parameters.Count > 2)
             {
 				Channel channel = _Network.GetChannel(parameters[1]);
-                Network.NetworkChannelDataEventArgs args = new Network.NetworkChannelDataEventArgs(this.ServerLineRawText);
+                Network.NetworkChannelDataEventArgs args = new Network.NetworkChannelDataEventArgs(this.ServerLineRawText, this.Date);
                 args.Command = command;
                 args.Message = _value;
                 args.Parameters = parameters;
@@ -39,7 +39,7 @@ namespace libirc
                 }
                 _Network.__evt_ChannelInfo(args);
             }
-            return false;
+            return IsBacklog;
         }
 
         private bool ParseUser(List<string> parameters, string realname)
@@ -61,7 +61,7 @@ namespace libirc
                 {
                     realname = "";
                 }
-				Network.NetworkParseUserEventArgs ev = new Network.NetworkParseUserEventArgs(ServerLineRawText);
+				Network.NetworkParseUserEventArgs ev = new Network.NetworkParseUserEventArgs(ServerLineRawText, this.Date);
 				ev.Channel = channel;
 				ev.ChannelName = parameters[1];
 				ev.User = ui;
@@ -130,7 +130,7 @@ namespace libirc
                 }
 				_Network.__evt_ParseUser(ev);
             }
-            return false;
+            return IsBacklog;
         }
 
         private bool ParseInfo(List<string> parameters, string value)
@@ -142,7 +142,7 @@ namespace libirc
                 {
                     return true;
                 }
-				Network.ChannelUserListEventArgs ev = new Network.ChannelUserListEventArgs(ServerLineRawText);
+				Network.ChannelUserListEventArgs ev = new Network.ChannelUserListEventArgs(ServerLineRawText, this.Date);
 				ev.UserNicknames.AddRange(value.Split(' '));
 				ev.ChannelName = parameters[2];
                 Channel channel = _Network.GetChannel(parameters[2]);
@@ -186,7 +186,7 @@ namespace libirc
                 }
 				_Network.__evt_ChannelUserList(ev);
             }
-            return false;
+            return IsBacklog;
         }
 		
 		private bool Topic(string source, string parameters, string value)
@@ -194,7 +194,7 @@ namespace libirc
             string chan = parameters;
             chan = chan.Replace(" ", "");
             Channel channel = _Network.GetChannel(chan);
-            Network.NetworkTOPICEventArgs ev = new Network.NetworkTOPICEventArgs(this.ServerLineRawText);
+            Network.NetworkTOPICEventArgs ev = new Network.NetworkTOPICEventArgs(this.ServerLineRawText, this.Date);
             ev.Source = source;
             ev.ChannelName = chan;
             ev.Topic = value;
@@ -212,14 +212,14 @@ namespace libirc
                 return true;
             }
             _Network.__evt_TOPIC(ev);
-            return false;
+            return IsBacklog;
         }
 		
 		private bool TopicInfo(List<string> parameters)
         {
 			if (parameters.Count > 3)
             {
-                Network.NetworkTOPICEventArgs ev = new Network.NetworkTOPICEventArgs(this.ServerLineRawText);
+                Network.NetworkTOPICEventArgs ev = new Network.NetworkTOPICEventArgs(this.ServerLineRawText, this.Date);
                 ev.Parameters = parameters;
                 ev.ChannelName = parameters[1];
 				string user = parameters[2];
@@ -240,14 +240,14 @@ namespace libirc
                 _Network.__evt_TopicInfo(ev);
                 return true;
             }
-            return false;
+            return IsBacklog;
         }
 
         private bool ChannelTopic(List<string> parameters, string command, string source, string message)
         {
 			if (parameters.Count > 1)
             {
-                Network.NetworkTOPICEventArgs ev = new Network.NetworkTOPICEventArgs(this.ServerLineRawText);
+                Network.NetworkTOPICEventArgs ev = new Network.NetworkTOPICEventArgs(this.ServerLineRawText, this.Date);
                 ev.Parameters = parameters;
                 ev.Topic = message;
                 ev.ChannelName = parameters[1];
@@ -261,16 +261,17 @@ namespace libirc
                     return true;
                 }
             }
-            return false;
+            return IsBacklog;
         }
 
         private bool FinishChan(List<string> code)
         {
             if (code.Count > 0)
             {
-				Network.NetworkChannelDataEventArgs ev = new Network.NetworkChannelDataEventArgs(this.ServerLineRawText);
+				Network.NetworkChannelDataEventArgs ev = new Network.NetworkChannelDataEventArgs(this.ServerLineRawText, this.Date);
 				ev.ChannelName = code[1];
 				ev.Parameters = code;
+                
                 Channel channel = _Network.GetChannel(code[1]);
                 if (channel != null)
                 {
@@ -280,22 +281,23 @@ namespace libirc
 				_Network.__evt_FinishChannelParseUser(ev);
                 return true;
             }
-            return false;
+            return IsBacklog;
         }
 
         private bool Kick(string source, List<string> parameters, string parameter_line, string value)
         {
             // petan!pidgeon@petan.staff.tm-irc.org KICK #support HelpBot :Removed from the channel
             string chan = parameters[0];
-			Network.NetworkKickEventArgs ev = new Network.NetworkKickEventArgs(this.ServerLineRawText);
+			Network.NetworkKickEventArgs ev = new Network.NetworkKickEventArgs(this.ServerLineRawText, this.Date);
 			ev.Source = source;
 			ev.Parameters = parameters;
+            ev.ChannelName = chan;
 			ev.Message = value;
+            ev.Target = parameters[1];
 			ev.ParameterLine = parameter_line;
             Channel channel = _Network.GetChannel(chan);
             if (channel != null)
             {
-				ev.Target = parameters[1];
 				ev.Channel = channel;
                 if (!IsBacklog)
                 {
@@ -313,7 +315,7 @@ namespace libirc
                 return true;
             }
 			_Network.__evt_KICK(ev);
-            return false;
+            return IsBacklog;
         }
 
         private bool Join(string source, string parameters, string value)
@@ -326,7 +328,7 @@ namespace libirc
             }
             UserInfo user = new UserInfo(source);
             Channel channel = _Network.GetChannel(chan);
-			Network.NetworkChannelEventArgs ed = new Network.NetworkChannelEventArgs(ServerLineRawText);
+			Network.NetworkChannelEventArgs ed = new Network.NetworkChannelEventArgs(ServerLineRawText, this.Date);
 			ed.ChannelName = chan;
 			ed.Source = source;
 			ed.ParameterLine = parameters;
@@ -341,14 +343,14 @@ namespace libirc
                 return true;
             }
 			_Network.__evt_JOIN(ed);
-            return false;
+            return IsBacklog;
         }
 
         private bool ChannelBans2(List<string> parameters)
         {
             if (parameters.Count > 1)
             {
-                Network.NetworkChannelEventArgs ev = new Network.NetworkChannelEventArgs(this.ServerLineRawText);
+                Network.NetworkChannelEventArgs ev = new Network.NetworkChannelEventArgs(this.ServerLineRawText, this.Date);
                 ev.ChannelName = parameters[1];
                 Channel channel = _Network.GetChannel(parameters[1]);
                 ev.Parameters = parameters;
@@ -364,7 +366,7 @@ namespace libirc
                 }
                 _Network.__evt_ChannelFinishBan(ev);
             }
-            return false;
+            return IsBacklog;
         }
 
         private bool ChannelBans(List<string> parameters)
@@ -388,7 +390,7 @@ namespace libirc
                     }
                 }
             }
-            return false;
+            return IsBacklog;
         }
 
         private bool Part(string source, string parameters, string value)
@@ -397,7 +399,7 @@ namespace libirc
             chan = chan.Replace(" ", "");
             UserInfo ui = new UserInfo(source);
             Channel channel = _Network.GetChannel(chan);
-			Network.NetworkChannelEventArgs ev = new Network.NetworkChannelEventArgs(this.ServerLineRawText);
+			Network.NetworkChannelEventArgs ev = new Network.NetworkChannelEventArgs(this.ServerLineRawText, this.Date);
 			ev.ChannelName = chan;
 			ev.Source = source;
 			ev.ParameterLine = parameters;
@@ -411,13 +413,13 @@ namespace libirc
                 return true;
             }
 			_Network.__evt_PART(ev);
-            return false;
+            return IsBacklog;
         }
 
         private bool ProcessNick(string source, string parameters, string value)
         {
             string _new = value;
-			Network.NetworkNICKEventArgs ev = new Network.NetworkNICKEventArgs(this.ServerLineRawText);
+			Network.NetworkNICKEventArgs ev = new Network.NetworkNICKEventArgs(this.ServerLineRawText, this.Date);
             ev.Source = source;
             if (string.IsNullOrEmpty(value) && !string.IsNullOrEmpty(parameters))
             {
@@ -463,11 +465,11 @@ namespace libirc
                 if (chan.StartsWith(_Network.ChannelPrefix, StringComparison.Ordinal))
                 {
                     Channel channel = _Network.GetChannel(chan);
-					Network.NetworkMODEEventArgs ev = new Network.NetworkMODEEventArgs(this.ServerLineRawText);
-					ev.ChannelName = chan;
-					ev.Channel = channel;
-					ev.Source = source;
-					ev.ParameterLine = parameters;
+                    Network.NetworkMODEEventArgs ev = new Network.NetworkMODEEventArgs(this.ServerLineRawText, this.Date);
+                    ev.ChannelName = chan;
+                    ev.Channel = channel;
+                    ev.Source = source;
+                    ev.ParameterLine = parameters;
                     if (channel != null)
                     {
                         string change = parameters.Substring(parameters.IndexOf(" ", StringComparison.Ordinal));
@@ -491,7 +493,7 @@ namespace libirc
 
                         // we get all the mode changes for this channel
                         formatter.RewriteBuffer(change, _Network);
-						ev.FormattedMode = formatter;
+                        ev.FormattedMode = formatter;
                         channel.ChannelMode.ChangeMode("+" + formatter.channelModes);
 
                         foreach (SimpleMode m in formatter.getMode)
@@ -523,8 +525,8 @@ namespace libirc
                                 }
                             }
                         }
-						
-						_Network.__evt_MODE(ev);
+
+                        _Network.__evt_MODE(ev);
 
                         foreach (SimpleMode m in formatter.getRemovingMode)
                         {
@@ -552,9 +554,13 @@ namespace libirc
                                 }
                             }
                         }
-                        return true;
                     }
                 }
+                else
+                {
+                    return true;
+                }
+                return IsBacklog;
             }
             return false;
         }
