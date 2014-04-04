@@ -33,15 +33,15 @@ namespace libirc.Protocols
         /// <summary>
         /// Thread in which the connection to server is handled
         /// </summary>
-        public Thread TMain = null;
+        protected Thread TMain = null;
         /// <summary>
         /// Thread which is handling the delivery of data
         /// </summary>
-        public Thread TDeliveryQueue = null;
+        protected Thread TDeliveryQueue = null;
         /// <summary>
         /// Thread which is keeping the connection online
         /// </summary>
-        public Thread TKeep = null;
+        protected Thread TKeep = null;
         /// <summary>
         /// Time of last ping
         /// </summary>
@@ -370,7 +370,7 @@ namespace libirc.Protocols
         /// <returns></returns>
         public override Result Act(string text, string to, Network network, Defs.Priority priority = Defs.Priority.Normal)
         {
-            Transfer("PRIVMSG " + to + " :" + delimiter.ToString() + "ACTION " + text + delimiter.ToString(), priority);
+            Transfer("PRIVMSG " + to + " :" + Separator.ToString() + "ACTION " + text + Separator.ToString(), priority);
             return Result.Done;
         }
 

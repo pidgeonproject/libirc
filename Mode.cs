@@ -31,7 +31,7 @@ namespace libirc
         /// Character of this mode
         /// </summary>
         private char _char;
-        private string _Parameter = null;
+        private string _parameter = null;
         /// <summary>
         /// Character of this mode
         /// </summary>
@@ -49,7 +49,7 @@ namespace libirc
         {
             get
             {
-                return _Parameter;
+                return _parameter;
             }
         }
 
@@ -60,7 +60,7 @@ namespace libirc
         {
             get
             {
-                return !(_Parameter == null);
+                return !(_parameter == null);
             }
         }
 
@@ -72,7 +72,7 @@ namespace libirc
         public SimpleMode(char mode, string parameter)
         {
             _char = mode;
-            _Parameter = parameter;
+            _parameter = parameter;
         }
 
         /// <summary>

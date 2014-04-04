@@ -26,6 +26,17 @@ namespace libirc
     {
         private static List<Thread> Threads = new List<Thread>();
 
+        /// <summary>
+        /// List of all threads that were created by this library, this list can't be modified
+        /// </summary>
+        public static List<Thread> ThreadList
+        {
+            get
+            {
+                return new List<Thread>(Threads);
+            }
+        }
+
         public static void RemoveThread(Thread thread)
         {
             lock(Threads)

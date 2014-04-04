@@ -5,10 +5,10 @@ using System.Runtime.CompilerServices;
 // Change them to the values specific to your project.
 
 [assembly: AssemblyTitle("libirc")]
-[assembly: AssemblyDescription("IRC")]
+[assembly: AssemblyDescription("IRC library for multipurpose use")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("")]
+[assembly: AssemblyProduct("libirc")]
 [assembly: AssemblyCopyright("Petr Bena")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

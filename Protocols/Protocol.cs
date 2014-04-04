@@ -46,6 +46,10 @@ namespace libirc
 		public class UnhandledExeption : EventArgs
 		{
 			public Exception exception = null;
+            public UnhandledExeption(Exception ex)
+            {
+                this.exception = ex;
+            }
 		}
 		
 		public class ServerDcEventArgs : EventArgs
@@ -62,7 +66,11 @@ namespace libirc
 		
         public class RawTrafficEventArgs : EventArgs
         {
-            public string Data = null;
+            public string Data;
+            public RawTrafficEventArgs(string data)
+            {
+                this.Data = data;
+            }
         }
 		
 		public delegate void ServerDisconnectEventHandler(object sender, ServerDcEventArgs e);
@@ -166,22 +174,20 @@ namespace libirc
 		{
 			if (UnhandledExceptionFailEvent != null)
 			{
-				UnhandledExeption ex = new UnhandledExeption();
-				ex.exception = fail;
+				UnhandledExeption ex = new UnhandledExeption(fail);
 				UnhandledExceptionFailEvent(this, ex);
 			}
 		}
 
-        protected virtual string RawTraffic(string traffic)
+        protected virtual string RawTraffic(string text)
         {
             if (RawTrafficEvent != null)
             {
-                RawTrafficEventArgs args = new RawTrafficEventArgs();
-                args.Data = traffic;
+                RawTrafficEventArgs args = new RawTrafficEventArgs(text);
                 RawTrafficEvent(this, args);
                 return args.Data;
             }
-            return traffic;
+            return text;
         }
 		
 		protected virtual void DisconnectExec(string reason, Exception ex = null)
@@ -196,13 +202,9 @@ namespace libirc
 		}
 
         /// <summary>
-        /// Release all memory associated with this object and destroy it
+        /// This is used to permanently release this object
         /// </summary>
-        public virtual void Exit()
-        {
-            // we removed lot of memory now, let's clean it
-            System.GC.Collect();
-        }
+        public virtual void Exit() { }
 
         /// <summary>
         /// This will connect this protocol
@@ -298,7 +300,7 @@ namespace libirc
         /// <summary>
         /// Character which is separating the special commands (such as CTCP part)
         /// </summary>
-        public char delimiter = (char)001;
+        public char Separator = (char)001;
         /// <summary>
         /// If changes to windows should be suppressed (no color changes on new messages)
         /// </summary>

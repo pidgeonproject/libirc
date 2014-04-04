@@ -131,21 +131,21 @@ namespace libirc
             if (!chan.Contains(_Network.ChannelPrefix))
             {
                 string uc;
-                if (message.StartsWith(_Protocol.delimiter.ToString(), StringComparison.Ordinal))
+                if (message.StartsWith(_Protocol.Separator.ToString(), StringComparison.Ordinal))
                 {
                     string trimmed = message;
-                    if (trimmed.StartsWith(_Protocol.delimiter.ToString(), StringComparison.Ordinal))
+                    if (trimmed.StartsWith(_Protocol.Separator.ToString(), StringComparison.Ordinal))
                     {
                         trimmed = trimmed.Substring(1);
                     }
-                    if (trimmed.Length > 1 && trimmed[trimmed.Length - 1] == _Protocol.delimiter)
+                    if (trimmed.Length > 1 && trimmed[trimmed.Length - 1] == _Protocol.Separator)
                     {
                         trimmed = trimmed.Substring(0, trimmed.Length - 1);
                     }
-                    if (message.StartsWith(_Protocol.delimiter.ToString() + "ACTION", StringComparison.Ordinal))
+                    if (message.StartsWith(_Protocol.Separator.ToString() + "ACTION", StringComparison.Ordinal))
                     {
                         message = message.Substring("xACTION".Length);
-                        if (message.Length > 1 && message.EndsWith(_Protocol.delimiter.ToString(), StringComparison.Ordinal))
+                        if (message.Length > 1 && message.EndsWith(_Protocol.Separator.ToString(), StringComparison.Ordinal))
                         {
                             message = message.Substring(0, message.Length - 1);
                         }
@@ -156,9 +156,9 @@ namespace libirc
                     }
 
                     uc = message.Substring(1);
-                    if (uc.Contains(_Protocol.delimiter.ToString()))
+                    if (uc.Contains(_Protocol.Separator.ToString()))
                     {
-                        uc = uc.Substring(0, uc.IndexOf(_Protocol.delimiter.ToString(), StringComparison.Ordinal));
+                        uc = uc.Substring(0, uc.IndexOf(_Protocol.Separator.ToString(), StringComparison.Ordinal));
                     }
                     if (uc.Contains(" "))
                     {
@@ -172,19 +172,19 @@ namespace libirc
                     return true;
                 }
             }
-            Channel channel = null;
-            if (chan.StartsWith(_Network.ChannelPrefix, StringComparison.Ordinal))
+            else
             {
+                Channel channel = null;
                 channel = _Network.GetChannel(chan);
                 ev.Channel = channel;
                 ev.ChannelName = chan;
                 if (channel != null)
                 {
-                    if (message.StartsWith(_Protocol.delimiter.ToString() + "ACTION", StringComparison.Ordinal))
+                    if (message.StartsWith(_Protocol.Separator.ToString() + "ACTION", StringComparison.Ordinal))
                     {
 						ev.IsAct = true;
                         message = message.Substring("xACTION".Length);
-                        if (message.Length > 1 && message.EndsWith(_Protocol.delimiter.ToString(), StringComparison.Ordinal))
+                        if (message.Length > 1 && message.EndsWith(_Protocol.Separator.ToString(), StringComparison.Ordinal))
                         {
                             message = message.Substring(0, message.Length - 1);
                         }
@@ -192,8 +192,9 @@ namespace libirc
 				}
                 ev.Message = message;
                 _Network.__evt_PRIVMSG(ev);
+                return true;
             }
-            return true;
+            return false;
         }
 
         private bool Idle2(string source, string parameters, string value)
