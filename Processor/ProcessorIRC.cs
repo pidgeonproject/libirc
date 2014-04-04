@@ -100,7 +100,7 @@ namespace libirc
                     if (joined_chan == null)
                     {
                         // we aren't in this channel yet, which is expected, let's create a new instance of it
-                        joined_chan = _Network.Channel(channel);
+                        joined_chan = _Network.MakeChannel(channel);
                     }
                     else
                     {
@@ -262,6 +262,19 @@ namespace libirc
                     command = command.ToUpper();
                 }
 
+                Network.IncomingDataEventArgs info = new Network.IncomingDataEventArgs();
+                info.Message = message;
+                info.Date = this.Date;
+                info.ParameterLine = parameters_line;
+                info.Source = source;
+                info.ServerLine = ServerLineRawText;
+                info.Command = command;
+                info.Parameters = parameters;
+                if (_Network.__evt__IncomingData(info))
+                {
+                    return true;
+                }
+
                 if (ProcessSelf(source, command, parameters, message))
                 {
                     OK = true;
@@ -294,13 +307,49 @@ namespace libirc
                         }
                         break;
                     case "305":
-                        _Network.IsAway = false;
+                        if (!IsBacklog)
+                        {
+                            _Network.IsAway = false;
+                        }
                         break;
                     case "306":
-                        _Network.IsAway = true;
+                        if (!IsBacklog)
+                        {
+                            _Network.IsAway = true;
+                        }
+                        break;
+                    case "311":
+                        if (WhoisLoad(command, parameters_line, message))
+                        {
+                            return true;
+                        }
+                        break;
+                    case "312":
+                        if (WhoisSv(command, parameters_line, message))
+                        {
+                            return true;
+                        }
+                        break;
+                    case "315":
+                        if (FinishChan(parameters))
+                        {
+                            return true;
+                        }
                         break;
                     case "317":
-                        if (IdleTime(command, parameters_line, message))
+                        if (IdleTime(command, parameters_line))
+                        {
+                            return true;
+                        }
+                        break;
+                    case "318":
+                        if (WhoisFn(command, parameters_line, message))
+                        {
+                            return true;
+                        }
+                        break;
+                    case "319":
+                        if (WhoisCh(command, parameters_line, message))
                         {
                             return true;
                         }
@@ -318,6 +367,10 @@ namespace libirc
                         }
                         break;
                     case "323":
+                        if (IsBacklog)
+                        {
+                            return true;
+                        }
                         if (_Network.SuppressData)
                         {
                             _Network.SuppressData = false;
@@ -325,36 +378,46 @@ namespace libirc
                         }
                         _Network.DownloadingList = false;
                         break;
-                    case "307":
-                    case "310":
-                    case "313":
-                    case "378":
-                    case "671":
-                        if (WhoisText(command, parameters_line, message))
+                    case "324":
+                        if (ChannelInfo(parameters, command, source, message))
                         {
                             return true;
                         }
                         break;
-                    case "311":
-                        if (WhoisLoad(command, parameters_line, message))
+                    case "332":
+                        if (ChannelTopic(parameters, command, source, message))
                         {
                             return true;
                         }
                         break;
-                    case "312":
-                        if (WhoisSv(command, parameters_line, message))
+                    case "333":
+                        if (TopicInfo(parameters))
                         {
                             return true;
                         }
                         break;
-                    case "318":
-                        if (WhoisFn(command, parameters_line, message))
+                    case "352":
+                        if (ParseUser(parameters, message))
                         {
                             return true;
                         }
                         break;
-                    case "319":
-                        if (WhoisCh(command, parameters_line, message))
+                    case "353":
+                        if (ParseInfo(parameters, message))
+                        {
+                            return true;
+                        }
+                        break;
+                    case "366":
+                        return true;
+                    case "367":
+                        if (ChannelBans(parameters))
+                        {
+                            return true;
+                        }
+                        break;
+                    case "368":
+                        if (ChannelBans2(parameters))
                         {
                             return true;
                         }
@@ -366,6 +429,16 @@ namespace libirc
                             _Network.UsingNick2 = true;
                             _Network.Transfer("NICK " + nick, Defs.Priority.High);
                             _Network.Nickname = nick;
+                        }
+                        break;
+                    case "307":
+                    case "310":
+                    case "313":
+                    case "378":
+                    case "671":
+                        if (WhoisText(command, parameters_line, message))
+                        {
+                            return true;
                         }
                         break;
                     case "PING":
@@ -437,56 +510,6 @@ namespace libirc
                         break;
                     case "KICK":
                         if (Kick(source, parameters, parameters_line, message))
-                        {
-                            return true;
-                        }
-                        break;
-                    case "315":
-                        if (FinishChan(parameters))
-                        {
-                            return true;
-                        }
-                        break;
-                    case "324":
-                        if (ChannelInfo(parameters, command, source, message))
-                        {
-                            return true;
-                        }
-                        break;
-                    case "332":
-                        if (ChannelTopic(parameters, command, source, message))
-                        {
-                            return true;
-                        }
-                        break;
-                    case "333":
-                        if (TopicInfo(parameters))
-                        {
-                            return true;
-                        }
-                        break;
-                    case "352":
-                        if (ParseUser(parameters, message))
-                        {
-                            return true;
-                        }
-                        break;
-                    case "353":
-                        if (ParseInfo(parameters, message))
-                        {
-                            return true;
-                        }
-                        break;
-                    case "366":
-                        return true;
-                    case "367":
-                        if (ChannelBans(parameters))
-                        {
-                            return true;
-                        }
-                        break;
-                    case "368":
-                        if (ChannelBans2(parameters))
                         {
                             return true;
                         }

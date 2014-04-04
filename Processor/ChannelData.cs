@@ -62,6 +62,7 @@ namespace libirc
                     realname = "";
                 }
 				Network.NetworkParseUserEventArgs ev = new Network.NetworkParseUserEventArgs(ServerLineRawText, this.Date);
+                ev.Parameters = parameters;
 				ev.Channel = channel;
 				ev.ChannelName = parameters[1];
 				ev.User = ui;
@@ -79,6 +80,7 @@ namespace libirc
                     {
                         mode = '\0';
                     }
+                    ev.StringMode = mode.ToString();
                 }
 				ev.IsAway = IsAway;
                 ev.RealName = realname;

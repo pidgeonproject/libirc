@@ -192,34 +192,28 @@ namespace libirc
 				}
                 ev.Message = message;
                 _Network.__evt_PRIVMSG(ev);
-                        //if (isServices)
-                        //{
-                        //    if (_nick == _Network.Nickname)
-                        //    {
-                        //        return true;
-                        //    }
-                        //}
             }
             return true;
         }
 
         private bool Idle2(string source, string parameters, string value)
         {
-            //if (parameters.Contains(" "))
-            //{
-                //string name = parameters.Substring(parameters.IndexOf(" ", StringComparison.Ordinal) + 1);
-                //string message = value;
-
-            //}
-            return false;
+            Network.NetworkWHOISEventArgs ev = new Network.NetworkWHOISEventArgs(this.ServerLineRawText, this.Date);
+            ev.ParameterLine = parameters;
+            ev.WhoisType = Network.NetworkWHOISEventArgs.Mode.Uptime;
+            _Network.__evt_WHOIS(ev);
+            return true;
         }
 
         private bool WhoisText(string source, string parameters, string value)
         {
             if (parameters.Contains(" "))
             {
-                //string name = parameters.Substring(parameters.IndexOf(" ", StringComparison.Ordinal) + 1);
-
+                Network.NetworkWHOISEventArgs ev = new Network.NetworkWHOISEventArgs(this.ServerLineRawText, this.Date);
+                ev.WhoisType = Network.NetworkWHOISEventArgs.Mode.Info;
+                ev.Message = value;
+                ev.ParameterLine = parameters;
+                _Network.__evt_WHOIS(ev);
                 return true;
             }
             return false;
@@ -238,11 +232,10 @@ namespace libirc
             {
                 return false;
             }
-            string[] user = parameters.Split(' ');
-            if (user.Length > 3)
-            {
-                //string host = user[1] + "!" + user[2] + "@" + user[3];
-            }
+            Network.NetworkWHOISEventArgs ev = new Network.NetworkWHOISEventArgs(this.ServerLineRawText, this.Date);
+            ev.WhoisType = Network.NetworkWHOISEventArgs.Mode.Header;
+            ev.ParameterLine = parameters;
+            _Network.__evt_WHOIS(ev);
             return true;
         }
 
@@ -255,6 +248,11 @@ namespace libirc
         /// <returns></returns>
         private bool WhoisFn(string source, string parameters, string value)
         {
+            Network.NetworkWHOISEventArgs ev = new Network.NetworkWHOISEventArgs(this.ServerLineRawText, this.Date);
+            ev.WhoisType = Network.NetworkWHOISEventArgs.Mode.Footer;
+            ev.ParameterLine = parameters;
+            ev.Source = source;
+            _Network.__evt_WHOIS(ev);
             return true;
         }
 
@@ -269,7 +267,12 @@ namespace libirc
         {
             if (parameters.Contains(" "))
             {
-                //string name = parameters.Substring(parameters.IndexOf(" ", StringComparison.Ordinal) + 1);
+                Network.NetworkWHOISEventArgs ev = new Network.NetworkWHOISEventArgs(this.ServerLineRawText, this.Date);
+                ev.WhoisType = Network.NetworkWHOISEventArgs.Mode.Channels;
+                ev.Source = source;
+                ev.Message = value;
+                ev.ParameterLine = parameters;
+                _Network.__evt_WHOIS(ev);
                 return true;
             }
             return false;
@@ -312,25 +315,15 @@ namespace libirc
             return true;
         }
 
-        private bool IdleTime(string source, string parameters, string value)
+        private bool IdleTime(string source, string parameters)
         {
             if (parameters.Contains(" "))
             {
-                string name = parameters.Substring(parameters.IndexOf(" ", StringComparison.Ordinal) + 1);
-                if (name.Contains(" ") != true)
-                {
-                    return false;
-                }
-                string idle = name.Substring(name.IndexOf(" ", StringComparison.Ordinal) + 1);
-                if (idle.Contains(" ") != true)
-                {
-                    return false;
-                }
-                //string uptime = idle.Substring(idle.IndexOf(" ", StringComparison.Ordinal) + 1);
-                name = name.Substring(0, name.IndexOf(" ", StringComparison.Ordinal));
-                idle = idle.Substring(0, idle.IndexOf(" ", StringComparison.Ordinal));
-                //DateTime logintime = Defs.ConvertFromUNIX(uptime);
-                //WindowText(_Network.SystemWindow, "WHOIS " + name + " is online since " + logintime.ToString() + " (" + (DateTime.Now - logintime).ToString() + " ago) idle for " + idle + " seconds", Pidgeon.ContentLine.MessageStyle.System, true, date, true);
+                Network.NetworkWHOISEventArgs ev = new Network.NetworkWHOISEventArgs(this.ServerLineRawText, this.Date);
+                ev.Source = source;
+                ev.ParameterLine = parameters;
+                ev.WhoisType = Network.NetworkWHOISEventArgs.Mode.Uptime;
+                _Network.__evt_WHOIS(ev);
                 return true;
             }
             return false;

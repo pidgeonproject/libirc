@@ -76,7 +76,19 @@ namespace libirc
 			/// </summary>
 			public ChannelData() {}
 		}
-		
+
+        public class IncomingDataEventArgs : EventArgs
+        {
+            public string Source;
+            public string Command;
+            public string ParameterLine;
+            public List<string> Parameters;
+            public string Message;
+            public string ServerLine;
+            public long Date = 0;
+            public bool Processed = false;
+        }
+
         public class NetworkGenericEventArgs : Protocol.ProtocolGenericEventArgs
         {
 			/// <summary>
@@ -143,6 +155,7 @@ namespace libirc
 			public bool IsAway = true;
 			public string Server = null;
 			public UserInfo User = null;
+            public string StringMode = null;
 			public string RealName;
 
             public NetworkParseUserEventArgs(string line, long date) : base(line, date) { }
@@ -208,7 +221,10 @@ namespace libirc
             {
                 Server,
                 Channels,
-                Info
+                Info,
+                Uptime,
+                Header,
+                Footer,
             }
         }
 
@@ -262,6 +278,7 @@ namespace libirc
             public long Date;
         }
 
+        public delegate void IncomingDataEventHandler(object sender, IncomingDataEventArgs e);
         public delegate void NetworkWHOISEventHandler(object sender, NetworkWHOISEventArgs e);
         public delegate void NetworkINVITEEventHandler(object sender, NetworkChannelDataEventArgs e);
         public delegate void NetworkTopicDataEventHandler(object sender, NetworkTOPICEventArgs e);
@@ -284,6 +301,7 @@ namespace libirc
         public delegate void UnknownDataEventHandler(object sender, UnknownDataEventArgs args);
         public delegate void NetworkTOPICEventHandler(object sender, NetworkTOPICEventArgs e);
         public delegate void NetworkFinishBanEventHandler(object sender, NetworkChannelEventArgs e);
+        public event IncomingDataEventHandler IncomingData;
 		/// <summary>
 		/// Occurs when some network action that is related to current user happens (for example
 		/// when this user join or change nick)
@@ -371,10 +389,6 @@ namespace libirc
         /// List of all channels on network
         /// </summary>
         public Dictionary<string, Channel> Channels = new Dictionary<string, Channel>();
-        /// <summary>
-        /// Currently rendered channel on main window
-        /// </summary>
-        public Channel RenderedChannel = null;
         /// <summary>
         /// Nickname of this user
         /// </summary>
@@ -568,6 +582,48 @@ namespace libirc
         }
 
         /// <summary>
+        /// Reconnect a disconnected network
+        /// </summary>
+        public virtual void Reconnect()
+        {
+            if (IsDestroyed)
+            {
+                return;
+            }
+
+            _Protocol.ReconnectNetwork(this);
+        }
+
+        /// <summary>
+        /// This will issue a command to join a channel
+        /// </summary>
+        /// <param name="channel">Channel name which is supposed to be joined</param>
+        /// <returns></returns>
+        public virtual void Join(string channel)
+        {
+            Transfer("JOIN " + channel, Defs.Priority.Normal);
+        }
+
+        /// <summary>
+        /// Removes a channel from list of channels
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public virtual bool RemoveChannel(string name)
+        {
+            name = name.ToLower();
+            lock (this.Channels)
+            {
+                if (this.Channels.ContainsKey(name))
+                {
+                    this.Channels.Remove(name);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Retrieve channel
         /// </summary>
         /// <param name="name">String</param>
@@ -586,49 +642,28 @@ namespace libirc
         }
 
         /// <summary>
-        /// Reconnect a disconnected network
-        /// </summary>
-        public virtual void Reconnect()
-        {
-            if (IsDestroyed)
-            {
-                return;
-            }
-
-            _Protocol.ReconnectNetwork(this);
-        }
-
-        /// <summary>
-        /// Join
-        /// </summary>
-        /// <param name="channel">Channel name which is supposed to be joined</param>
-        /// <returns></returns>
-        public virtual void Join(string channel)
-        {
-            Transfer("JOIN " + channel, Defs.Priority.Normal);
-        }
-
-        /// <summary>
-        /// Create a new instance of channel window
+        /// Creates a new instance of channel and insert it to a channel list, do not use this to join a channel,
+        /// this function is used to create a channel object after you join some
         /// </summary>
         /// <param name="channel">Channel</param>
-        /// <param name="nf">Don't focus this new window</param>
         /// <returns>Instance of channel object</returns>
-        public virtual Channel Channel(string channel)
+        public virtual Channel MakeChannel(string channel)
         {
-            Channel previous = GetChannel(channel);
-            if (previous == null)
+            lock (this.Channels)
             {
-                Channel _channel = new Channel(this);
-                RenderedChannel = _channel;
-                _channel.Name = channel;
-                _channel.lName = channel.ToLower();
-                Channels.Add(_channel.lName, _channel);
-                return _channel;
-            }
-            else
-            {
-                return previous;
+                Channel previous = GetChannel(channel);
+                if (previous == null)
+                {
+                    Channel _channel = new Channel(this);
+                    _channel.Name = channel;
+                    _channel.lName = channel.ToLower();
+                    Channels.Add(_channel.lName, _channel);
+                    return _channel;
+                }
+                else
+                {
+                    return previous;
+                }
             }
         }
 
@@ -806,6 +841,15 @@ namespace libirc
             {
                 this.On_ChannelFinishBan(this, args);
             }
+        }
+
+        public virtual bool __evt__IncomingData(IncomingDataEventArgs args)
+        {
+            if (this.IncomingData != null)
+            {
+                this.IncomingData(this, args);
+            }
+            return args.Processed;
         }
 
         /// <summary>

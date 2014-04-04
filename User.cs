@@ -19,40 +19,41 @@ using System.Text;
 
 namespace libirc
 {
-	/// <summary>
-	/// Low level object with basic IRC user info
-	/// </summary>
-	public class UserInfo
-	{
-		public string Nick;
-		public string Ident;
-		public string Host;
-		
-		public UserInfo()
-		{
-			this.Nick = null;
-			this.Ident = null;
-			this.Host = null;
-		}
-		
-		public UserInfo(string source)
-		{
-			if (source.Contains("!"))
-			{
-				this.Nick = source.Substring(0, source.IndexOf("!", StringComparison.Ordinal));
-				this.Ident = source.Substring(source.IndexOf("!") + 1);
-				if (this.Ident.Contains("@"))
-				{
-					this.Host = this.Ident.Substring(this.Ident.IndexOf("@") + 1);
-					this.Ident = this.Ident.Substring(0, this.Ident.IndexOf("@"));
-				}
-			} else
-			{
-				this.Nick = source;
-			}
-		}
-	}
-	
+    /// <summary>
+    /// Low level object with basic IRC user info
+    /// </summary>
+    public class UserInfo
+    {
+        public string Nick;
+        public string Ident;
+        public string Host;
+
+        public UserInfo()
+        {
+            this.Nick = null;
+            this.Ident = null;
+            this.Host = null;
+        }
+
+        public UserInfo(string source)
+        {
+            if (source.Contains("!"))
+            {
+                this.Nick = source.Substring(0, source.LastIndexOf("!", StringComparison.Ordinal));
+                this.Ident = source.Substring(source.LastIndexOf("!") + 1);
+                if (this.Ident.Contains("@"))
+                {
+                    this.Host = this.Ident.Substring(this.Ident.LastIndexOf("@") + 1);
+                    this.Ident = this.Ident.Substring(0, this.Ident.LastIndexOf("@"));
+                }
+            }
+            else
+            {
+                this.Nick = source;
+            }
+        }
+    }
+
     /// <summary>
     /// User, Every user on irc has instance of this class for every channel they are in
     /// </summary>
@@ -81,46 +82,46 @@ namespace libirc
         /// </summary>
         public ChannelStatus Status = ChannelStatus.Regular;
         protected string nick = null;
-		protected string lnick = null;
+        protected string lnick = null;
         /// <summary>
         /// Nick
         /// </summary>
         public virtual string Nick
         {
-			set
-			{
-				if (this.Nick != value)
-				{
-					if (this.Channel != null)
-					{
-						// rename the key in dictionary
-						this.Channel.RemoveUser(this);
-						// store again this exactly same user
-						this.lnick = value.ToLower();
-						this.nick = value;
-						this.Channel.InsertUser(this);
-						return;
-					}
-					this.lnick = value.ToLower();
-					this.nick = value;
-				}
-			}
+            set
+            {
+                if (this.Nick != value)
+                {
+                    if (this.Channel != null)
+                    {
+                        // rename the key in dictionary
+                        this.Channel.RemoveUser(this);
+                        // store again this exactly same user
+                        this.lnick = value.ToLower();
+                        this.nick = value;
+                        this.Channel.InsertUser(this);
+                        return;
+                    }
+                    this.lnick = value.ToLower();
+                    this.nick = value;
+                }
+            }
             get
             {
                 return nick;
             }
         }
-		public virtual string LowNick
-		{
-			get
-			{
-				if (this.lnick == null)
-				{
-					this.lnick = this.Nick.ToLower();
-				}
-				return this.lnick;
-			}
-		}
+        public virtual string LowNick
+        {
+            get
+            {
+                if (this.lnick == null)
+                {
+                    this.lnick = this.Nick.ToLower();
+                }
+                return this.lnick;
+            }
+        }
         /// <summary>
         /// Name
         /// </summary>
@@ -275,13 +276,13 @@ namespace libirc
         /// <summary>
         /// This is a symbol that user has before his name in a channel (for example voiced user would have + on most networks)
         /// </summary>
-        public virtual string ChannelPrefix
+        public virtual char ChannelPrefix_Char
         {
             get
             {
                 if (ChannelSymbol != '\0')
                 {
-                    return ChannelSymbol.ToString();
+                    return ChannelSymbol;
                 }
                 if (ChannelMode._Mode.Count > 0)
                 {
@@ -304,10 +305,34 @@ namespace libirc
                     if (c != '0')
                     {
                         ChannelSymbol = _Network.UChars[i];
-                        return ChannelSymbol.ToString();
+                        return ChannelSymbol;
                     }
                 }
-                return "";
+                return '\0';
+            }
+            set
+            {
+                if (_Network.UChars.Contains(value))
+                {
+                    SymbolMode(value);
+                    this.ChannelSymbol = value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// This is a symbol that user has before his name in a channel (for example voiced user would have + on most networks)
+        /// </summary>
+        public virtual string ChannelPrefix
+        {
+            get
+            {
+                char symbol = ChannelPrefix_Char;
+                if (symbol == '\0')
+                {
+                    return "";
+                }
+                return symbol.ToString();
             }
         }
 
@@ -319,13 +344,13 @@ namespace libirc
         public User(string source, Network network)
         {
             UserInfo info = new UserInfo(source);
-			MakeUser(info.Nick, info.Host, network, info.Ident);
+            MakeUser(info.Nick, info.Host, network, info.Ident);
         }
-		
-		public User(UserInfo info, Network network)
-		{
-			MakeUser(info.Nick, info.Host, network, info.Ident);
-		}
+
+        public User(UserInfo info, Network network)
+        {
+            MakeUser(info.Nick, info.Host, network, info.Ident);
+        }
 
         /// <summary>
         /// Creates a new user
@@ -357,28 +382,29 @@ namespace libirc
             this.Channel = channel;
             MakeUser(nick, host, network, ident);
         }
-		
-		public User(string source)
-		{
-			if (source.Contains("!"))
-			{
-				this.nick = source.Substring(0, source.IndexOf("!", StringComparison.Ordinal));
-				this.Ident = source.Substring(source.IndexOf("!") + 1);
-				if (this.Ident.Contains("@"))
-				{
-					this.Host = this.Ident.Substring(this.Ident.IndexOf("@") + 1);
-					this.Ident = this.Ident.Substring(this.Ident.IndexOf("@"));
-				}
-			} else
-			{
-				this.nick = source;
-			}
-		}
+
+        public User(string source)
+        {
+            if (source.Contains("!"))
+            {
+                this.nick = source.Substring(0, source.IndexOf("!", StringComparison.Ordinal));
+                this.Ident = source.Substring(source.IndexOf("!") + 1);
+                if (this.Ident.Contains("@"))
+                {
+                    this.Host = this.Ident.Substring(this.Ident.IndexOf("@") + 1);
+                    this.Ident = this.Ident.Substring(this.Ident.IndexOf("@"));
+                }
+            }
+            else
+            {
+                this.nick = source;
+            }
+        }
 
         /// <summary>
         /// Reset the user mode back to none
         /// </summary>
-        public void ResetMode()
+        public virtual void ResetMode()
         {
             ChannelSymbol = '\0';
         }
@@ -406,7 +432,7 @@ namespace libirc
                 ResetMode();
             }
         }
-        
+
         protected virtual void MakeUser(string nick, string host, Network network, string ident)
         {
             _Network = network;
@@ -422,7 +448,7 @@ namespace libirc
             this.nick = nick;
             this.Ident = ident;
             this.Host = host;
-			this.Server = network.ServerName;
+            this.Server = network.ServerName;
         }
 
         /// <summary>
@@ -479,7 +505,7 @@ namespace libirc
         /// Channel status
         /// </summary>
         public enum ChannelStatus
-        { 
+        {
             /// <summary>
             /// Owner
             /// </summary>
