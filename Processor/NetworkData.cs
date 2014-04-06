@@ -123,17 +123,16 @@ namespace libirc
         private bool ProcessPM(string source, string parameters, string value)
         {
             string chan = null;
-			//UserInfo user = new UserInfo(source);
             chan = parameters.Replace(" ", "");
             Network.NetworkPRIVMSGEventArgs ev = new Network.NetworkPRIVMSGEventArgs(ServerLineRawText, this.Date);
             ev.Source = source;
-            string message = value;
+            ev.Message = value;
             if (!chan.Contains(_Network.ChannelPrefix))
             {
                 string uc;
-                if (message.StartsWith(_Protocol.Separator.ToString(), StringComparison.Ordinal))
+                if (ev.Message.StartsWith(_Protocol.Separator.ToString(), StringComparison.Ordinal))
                 {
-                    string trimmed = message;
+                    string trimmed = ev.Message;
                     if (trimmed.StartsWith(_Protocol.Separator.ToString(), StringComparison.Ordinal))
                     {
                         trimmed = trimmed.Substring(1);
@@ -142,20 +141,19 @@ namespace libirc
                     {
                         trimmed = trimmed.Substring(0, trimmed.Length - 1);
                     }
-                    if (message.StartsWith(_Protocol.Separator.ToString() + "ACTION", StringComparison.Ordinal))
+                    if (ev.Message.StartsWith(_Protocol.Separator.ToString() + "ACTION", StringComparison.Ordinal))
                     {
-                        message = message.Substring("xACTION".Length);
-                        if (message.Length > 1 && message.EndsWith(_Protocol.Separator.ToString(), StringComparison.Ordinal))
+                        ev.Message = ev.Message.Substring("xACTION".Length);
+                        if (ev.Message.Length > 1 && ev.Message.EndsWith(_Protocol.Separator.ToString(), StringComparison.Ordinal))
                         {
-                            message = message.Substring(0, message.Length - 1);
+                            ev.Message = ev.Message.Substring(0, ev.Message.Length - 1);
                         }
                         ev.IsAct = true;
-                        ev.Message = message;
                         _Network.__evt_PRIVMSG(ev);
                         return true;
                     }
 
-                    uc = message.Substring(1);
+                    uc = ev.Message.Substring(1);
                     if (uc.Contains(_Protocol.Separator.ToString()))
                     {
                         uc = uc.Substring(0, uc.IndexOf(_Protocol.Separator.ToString(), StringComparison.Ordinal));
@@ -167,10 +165,12 @@ namespace libirc
                     uc = uc.ToUpper();
                     Network.NetworkCTCPEventArgs ctcp = new Network.NetworkCTCPEventArgs(ServerLineRawText, this.Date);
                     ctcp.CTCP = uc;
-                    ctcp.Message = message;
+                    ctcp.Message = ev.Message;
                     _Network.__evt_CTCP(ctcp);
                     return true;
                 }
+                _Network.__evt_PRIVMSG(ev);
+                return true;
             }
             else
             {
@@ -180,21 +180,19 @@ namespace libirc
                 ev.ChannelName = chan;
                 if (channel != null)
                 {
-                    if (message.StartsWith(_Protocol.Separator.ToString() + "ACTION", StringComparison.Ordinal))
+                    if (ev.Message.StartsWith(_Protocol.Separator.ToString() + "ACTION", StringComparison.Ordinal))
                     {
-						ev.IsAct = true;
-                        message = message.Substring("xACTION".Length);
-                        if (message.Length > 1 && message.EndsWith(_Protocol.Separator.ToString(), StringComparison.Ordinal))
+			ev.IsAct = true;
+                        ev.Message = ev.Message.Substring("xACTION".Length);
+                        if (ev.Message.Length > 1 && ev.Message.EndsWith(_Protocol.Separator.ToString(), StringComparison.Ordinal))
                         {
-                            message = message.Substring(0, message.Length - 1);
+                            ev.Message = ev.Message.Substring(0, ev.Message.Length - 1);
                         }
-					}
-				}
-                ev.Message = message;
+		    }
+		}
                 _Network.__evt_PRIVMSG(ev);
                 return true;
             }
-            return false;
         }
 
         private bool Idle2(string source, string parameters, string value)
