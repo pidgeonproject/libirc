@@ -25,6 +25,7 @@ namespace libirc
     /// <summary>
     /// This class represents a simplest mode that can be present in a channel or network with optional parameter
     /// </summary>
+    [Serializable]
     public class SimpleMode
     {
         /// <summary>
