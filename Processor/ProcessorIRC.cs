@@ -175,23 +175,19 @@ namespace libirc
                         return false;
                     }
                     string channel = parameters[0];
-                    Channel c = _Network.GetChannel(channel);
-                    if (c != null)
-                    {
-                        c.ChannelWork = false;
-                        data = new Network.NetworkSelfEventArgs(ServerLineRawText, this.Date);
-                        data.Channel = c;
-                        data.Source = source;
-                        data.Message = message;
-                        data.Type = Network.EventType.Part;
-                        _Network.__evt_Self(data);
-                        return true;
-                    }
                     data = new Network.NetworkSelfEventArgs(ServerLineRawText, this.Date);
                     data.ChannelName = channel;
                     data.Source = source;
                     data.Message = message;
                     data.Type = Network.EventType.Part;
+                    Channel chan = _Network.GetChannel(channel);
+                    if (chan != null)
+                    {
+                        chan.ChannelWork = false;
+                        data.Channel = chan;
+                        _Network.__evt_Self(data);
+                        return true;
+                    }
                     _Network.__evt_Self(data);
                 }
             }
