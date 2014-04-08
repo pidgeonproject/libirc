@@ -88,6 +88,26 @@ namespace libirc.Protocols
         /// Character that represent color tags
         /// </summary>
         public static string ColorChar = ((char)003).ToString();
+        protected bool SSL = false;
+        public override bool SupportSSL
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        public override bool UsingSSL
+        {
+            get
+            {
+                return SSL;
+            }
+            set
+            {
+                SSL = value;
+            }
+        }
 
         /// <summary>
         /// Releases all resources used by this class

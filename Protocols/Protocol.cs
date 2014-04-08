@@ -13,12 +13,6 @@
 //  Free Software Foundation, Inc.,
 //  51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-// Documentation
-///////////////////////
-// This file contains a default class for protocols which all the other classes are inherited from
-// some functions are returning integer, which should be 0 on success and 2 by default
-// which means that the function was never overriden, so that a function working with that can catch it
-
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -32,7 +26,7 @@ namespace libirc
     /// This is lowest level of protocol interface
     /// 
     /// Every protocol is inherited from this class. Protocols are handling connections to various servers,
-    /// these are the lowest level object you will handle in this library.
+    /// these are the lowest level objects you will handle in this library.
     /// </summary>
     [Serializable]
     public class IProtocol
@@ -98,7 +92,7 @@ namespace libirc
         /// <summary>
         /// This is a time when this connection was open
         /// </summary>
-        protected DateTime _time;
+        protected DateTime startupTime;
         /// <summary>
         /// Password for server
         /// </summary>
@@ -123,7 +117,18 @@ namespace libirc
         /// <summary>
         /// Whether the connection is being encrypted or not
         /// </summary>
-        public bool SSL = false;
+        public virtual bool UsingSSL
+        {
+            set { }
+            get { return false; }
+        }
+        /// <summary>
+        /// Whether the protocol supports usage of SSL or not
+        /// </summary>
+        public virtual bool SupportSSL
+        {
+            get { return false; }
+        }
         /// <summary>
         /// Encoding
         /// </summary>
@@ -135,7 +140,7 @@ namespace libirc
         {
             get
             {
-                return DateTime.Now - _time;
+                return DateTime.Now - startupTime;
             }
         }
 
@@ -167,7 +172,7 @@ namespace libirc
         /// </summary>
         public IProtocol()
         {
-            _time = DateTime.Now;
+            startupTime = DateTime.Now;
         }
 
 		protected virtual void HandleException(Exception fail)
