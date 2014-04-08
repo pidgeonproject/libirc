@@ -107,6 +107,7 @@ namespace libirc
                             }
                             _user.Away = IsAway;
                             channel.InsertUser(_user);
+                            _Network.__evt_ParseUser(ev);
                             return true;
                         }
                         User user = channel.UserFromName(ui.Nick);
@@ -129,10 +130,12 @@ namespace libirc
 					{
                     	return true;
 					}
+                    return IsBacklog;
                 }
 				_Network.__evt_ParseUser(ev);
+                return IsBacklog;
             }
-            return IsBacklog;
+            return false;
         }
 
         private bool ParseInfo(List<string> parameters, string value)

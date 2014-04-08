@@ -422,18 +422,6 @@ namespace libirc.Protocols
         }
 
         /// <summary>
-        /// Request nick
-        /// </summary>
-        /// <param name="_Nick"></param>
-        /// <param name="network"></param>
-        /// <returns></returns>
-        public override Result RequestNick(string _Nick, Network network = null)
-        {
-            Transfer("NICK " + _Nick);
-            return Result.Done;
-        }
-
-        /// <summary>
         /// Reconnect network
         /// </summary>
         /// <param name="network"></param>

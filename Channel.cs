@@ -19,9 +19,10 @@ using System.Collections.Generic;
 
 namespace libirc
 {
-        /// <summary>
+    /// <summary>
     /// This is a global interface for channel modes with parameters
     /// </summary>
+    [Serializable]
     public class ChannelParameterMode
     {
         /// <summary>

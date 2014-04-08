@@ -363,18 +363,6 @@ namespace libirc
         }
 
         /// <summary>
-        /// Change nick
-        /// </summary>
-        /// <param name="_Nick"></param>
-        /// <param name="network"></param>
-        /// <returns></returns>
-        public virtual Result RequestNick(string _Nick, Network network = null)
-        {
-            this.DebugLog("requestNick(string _Nick, Network network = null) is not implemented");
-            return Result.NotImplemented;
-        }
-
-        /// <summary>
         /// Write a mode
         /// </summary>
         /// <param name="_x">Mode</param>

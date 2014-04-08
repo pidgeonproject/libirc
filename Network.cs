@@ -920,6 +920,14 @@ namespace libirc
             }
         }
 
+        public virtual void RequestNick(string nick)
+        {
+            if (!string.IsNullOrEmpty(nick))
+            {
+                Transfer("NICK " + nick);
+            }
+        }
+
         /// <summary>
         /// Disconnect you from network
         /// </summary>
