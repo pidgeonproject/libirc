@@ -331,6 +331,11 @@ namespace libirc
         private bool Quit(string source, string parameters, string value)
         {
             UserInfo user = new UserInfo(source);
+            Network.NetworkGenericDataEventArgs ev = new Network.NetworkGenericDataEventArgs(this.ServerLineRawText, this.Date);
+            ev.Message = value;
+            ev.ParameterLine = parameters;
+            ev.Source = source;
+            _Network.__evt_QUIT(ev);
             foreach (Channel item in _Network.Channels.Values)
             {
                 if (item.ChannelWork)
@@ -341,11 +346,6 @@ namespace libirc
                     }
                 }
             }
-			Network.NetworkGenericDataEventArgs ev = new Network.NetworkGenericDataEventArgs(this.ServerLineRawText, this.Date);
-			ev.Message = value;
-			ev.ParameterLine = parameters;
-			ev.Source = source;
-			_Network.__evt_QUIT(ev);
             return true;
         }
     }
