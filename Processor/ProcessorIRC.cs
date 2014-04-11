@@ -75,7 +75,7 @@ namespace libirc
                 return false;
             }
             // every IRC command that is sent from server should being with colon according to RFC
-            if (ServerLineRawText.StartsWith(":", StringComparison.Ordinal))
+            if (ServerLineRawText[0] == ':')
             {
                 List<string> parameters = new List<string>();
                 string message = "";
@@ -161,7 +161,7 @@ namespace libirc
                             _Network.IsAway = true;
                         break;
                     case "311":
-                        if (WhoisLoad(command, parameters_line))
+                        if (WhoisLoad(command, parameters_line, parameters, message))
                             return true;
                         break;
                     case "312":
@@ -254,7 +254,7 @@ namespace libirc
                     case "313":
                     case "378":
                     case "671":
-                        if (WhoisText(command, parameters_line, message))
+                        if (WhoisText(command, parameters_line, parameters, message))
                             return true;
                         break;
                     case "PING":
@@ -264,9 +264,9 @@ namespace libirc
                     case "PONG":
                         pong = DateTime.Now;
                         return true;
-                    case "INFO":
+                    //case "INFO":
                         //_Network.SystemWindow.scrollback.InsertText(text.Substring(text.IndexOf("INFO", StringComparison.Ordinal) + 5), Pidgeon.ContentLine.MessageStyle.User,                                                                     true, date, !updated_text);
-                        return true;
+                    //    return true;
                     case "NOTICE":
                         Network.NetworkNOTICEEventArgs notice = new Network.NetworkNOTICEEventArgs(ServerLineRawText, this.Date);
                         notice.Source = source;

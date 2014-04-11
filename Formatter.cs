@@ -75,9 +75,6 @@ namespace libirc
             }
         }
 
-        /// <summary>
-        /// Creates new
-        /// </summary>
         public Formatter() {}
 
         /// <summary>

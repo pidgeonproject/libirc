@@ -279,14 +279,15 @@ namespace libirc
             return true;
         }
 
-        private bool WhoisText(string source, string parameters, string value)
+        private bool WhoisText(string source, string parameter_line, List<string> parameters, string value)
         {
-            if (parameters.Contains(" "))
+            if (parameter_line.Contains(" "))
             {
                 Network.NetworkWHOISEventArgs ev = new Network.NetworkWHOISEventArgs(this.ServerLineRawText, this.Date);
                 ev.WhoisType = Network.NetworkWHOISEventArgs.Mode.Info;
+                ev.Parameters = parameters;
                 ev.Message = value;
-                ev.ParameterLine = parameters;
+                ev.ParameterLine = parameter_line;
                 _Network.__evt_WHOIS(ev);
                 return true;
             }
@@ -300,15 +301,17 @@ namespace libirc
         /// <param name="parameters"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        private bool WhoisLoad(string source, string parameters)
+        private bool WhoisLoad(string source, string parameterl, List<String> parameters, string message)
         {
-            if (!parameters.Contains(" "))
+            if (!parameterl.Contains(" "))
             {
                 return false;
             }
             Network.NetworkWHOISEventArgs ev = new Network.NetworkWHOISEventArgs(this.ServerLineRawText, this.Date);
             ev.WhoisType = Network.NetworkWHOISEventArgs.Mode.Header;
-            ev.ParameterLine = parameters;
+            ev.ParameterLine = parameterl;
+            ev.Parameters = parameters;
+            ev.Message = message;
             _Network.__evt_WHOIS(ev);
             return true;
         }
@@ -363,15 +366,15 @@ namespace libirc
         {
             if (parameters.Contains(" "))
             {
-                Network.NetworkWHOISEventArgs ev = new Network.NetworkWHOISEventArgs(this.ServerLineRawText, this.Date);
-                ev.ParameterLine = parameters;
-                ev.WhoisType = Network.NetworkWHOISEventArgs.Mode.Server;
                 string name = parameters.Substring(parameters.IndexOf(" ", StringComparison.Ordinal) + 1);
                 if (!name.Contains(" "))
                 {
                     _Protocol.DebugLog("Invalid whois record " + parameters);
                     return false;
                 }
+                Network.NetworkWHOISEventArgs ev = new Network.NetworkWHOISEventArgs(this.ServerLineRawText, this.Date);
+                ev.ParameterLine = parameters;
+                ev.WhoisType = Network.NetworkWHOISEventArgs.Mode.Server;
                 ev.WhoisLine = name.Substring(name.IndexOf(" ", StringComparison.Ordinal) + 1);
                 ev.Source = name.Substring(0, name.IndexOf(" ", StringComparison.Ordinal));
                 _Network.__evt_WHOIS(ev);
@@ -405,7 +408,6 @@ namespace libirc
 
         private bool Quit(string source, string parameters, string value)
         {
-            UserInfo user = new UserInfo(source);
             Network.NetworkGenericDataEventArgs ev = new Network.NetworkGenericDataEventArgs(this.ServerLineRawText, this.Date);
             ev.Message = value;
             ev.ParameterLine = parameters;
@@ -413,12 +415,9 @@ namespace libirc
             _Network.__evt_QUIT(ev);
             foreach (Channel item in _Network.Channels.Values)
             {
-                if (item.ChannelWork)
+                if (item.ChannelWork && !IsBacklog)
                 {
-                    if (!IsBacklog)
-                    {
-                        item.RemoveUser(user.Nick);
-                    }
+                    item.RemoveUser(ev.SourceInfo.Nick);
                 }
             }
             return true;

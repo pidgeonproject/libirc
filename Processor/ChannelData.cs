@@ -225,22 +225,20 @@ namespace libirc
 
         private bool Topic(string source, string parameters, string value)
         {
-            string chan = parameters;
-            chan = chan.Replace(" ", "");
-            Channel channel = _Network.GetChannel(chan);
             Network.NetworkTOPICEventArgs ev = new Network.NetworkTOPICEventArgs(this.ServerLineRawText, this.Date);
             ev.Source = source;
-            ev.ChannelName = chan;
+            ev.ChannelName = parameters.Trim();
+            ev.Channel = _Network.GetChannel(ev.ChannelName);
             ev.Topic = value;
-            if (channel != null)
+            if (ev.Channel != null)
             {
-                channel.Topic = value;
+                ev.Channel.Topic = value;
                 if (!IsBacklog)
                 {
                     double time = Defs.ConvertDateToUnix(DateTime.Now);
-                    channel.TopicDate = (int)time;
+                    ev.Channel.TopicDate = (int)time;
                     ev.TopicDate = time;
-                    channel.TopicUser = source;
+                    ev.Channel.TopicUser = source;
                 }
                 _Network.__evt_TOPIC(ev);
                 return true;
@@ -306,11 +304,10 @@ namespace libirc
                 ev.ChannelName = code[1];
                 ev.Parameters = code;
 
-                Channel channel = _Network.GetChannel(code[1]);
-                if (channel != null)
+                ev.Channel = _Network.GetChannel(code[1]);
+                if (ev.Channel != null)
                 {
-                    ev.Channel = channel;
-                    channel.IsParsingWhoData = false;
+                    ev.Channel.IsParsingWhoData = false;
                 }
                 _Network.__evt_FinishChannelParseUser(ev);
                 return true;
@@ -321,27 +318,25 @@ namespace libirc
         private bool Kick(string source, List<string> parameters, string parameter_line, string value)
         {
             // petan!pidgeon@petan.staff.tm-irc.org KICK #support HelpBot :Removed from the channel
-            string chan = parameters[0];
             Network.NetworkKickEventArgs ev = new Network.NetworkKickEventArgs(this.ServerLineRawText, this.Date);
             ev.Source = source;
             ev.Parameters = parameters;
-            ev.ChannelName = chan;
+            ev.ChannelName = parameters[0];
             ev.Message = value;
             ev.Target = parameters[1];
             ev.ParameterLine = parameter_line;
-            Channel channel = _Network.GetChannel(chan);
-            if (channel != null)
+            ev.Channel = _Network.GetChannel(parameters[0]);
+            if (ev.Channel != null)
             {
-                ev.Channel = channel;
                 if (!IsBacklog)
                 {
-                    User user = channel.UserFromName(parameters[1]);
+                    User user = ev.Channel.UserFromName(parameters[1]);
                     if (user != null)
                     {
-                        channel.RemoveUser(user);
+                        ev.Channel.RemoveUser(user);
                         if (user.IsPidgeon)
                         {
-                            channel.ChannelWork = false;
+                            ev.Channel.ChannelWork = false;
                         }
                     }
                 }
@@ -460,20 +455,15 @@ namespace libirc
                 }
             }
             ev.NewNick = _new;
-            lock (_Network.Channels.Values)
+            lock (_Network.Channels)
             {
                 foreach (Channel channel in _Network.Channels.Values)
                 {
                     if (channel.ChannelWork)
                     {
                         User user = channel.UserFromName(ev.SourceInfo.Nick);
-                        if (user != null)
-                        {
-                            if (!IsBacklog)
-                            {
-                                user.Nick = _new;
-                            }
-                        }
+                        if (user != null && !IsBacklog)
+                            user.Nick = _new;
                     }
                 }
             }

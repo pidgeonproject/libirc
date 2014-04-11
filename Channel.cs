@@ -372,6 +372,10 @@ namespace libirc
         /// <returns></returns>
         public virtual bool ContainsBan(string host)
         {
+            if (Bans == null)
+            {
+                return false;
+            }
             lock (Bans)
             {
                 foreach (SimpleBan name in Bans)
