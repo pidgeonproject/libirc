@@ -36,6 +36,7 @@
     <Compile Include="Network.cs" />
     <Compile Include="Mode.cs" />
     <Compile Include="Channel.cs" />
+    <Compile Include="Processor\ProcessSelf.cs" />
     <Compile Include="User.cs" />
     <Compile Include="Defs.cs" />
     <Compile Include="Protocols\ProtocolSv.cs" />

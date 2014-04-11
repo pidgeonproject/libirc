@@ -51,7 +51,6 @@ namespace libirc
                 }
                 cmodes = parameters_line.Substring(parameters_line.IndexOf("PREFIX=(", StringComparison.Ordinal) + 8);
                 cmodes = cmodes.Substring(cmodes.IndexOf(")", StringComparison.Ordinal) + 1, _Network.CUModes.Count);
-
                 _Network.UChars.Clear();
                 _Network.UChars.AddRange(cmodes.ToArray<char>());
             }
@@ -192,7 +191,8 @@ namespace libirc
                 // this is some borked server text
                 return false;
             }
-            string channel_name = parameters.Substring(0, parameters.IndexOf(" ", StringComparison.Ordinal)).Trim();
+            int index = parameters.IndexOf(" ", StringComparison.Ordinal);
+            string channel_name = parameters.Substring(0, index).Trim();
             if (channel_name.StartsWith(_Network.ChannelPrefix, StringComparison.Ordinal))
             {
                 Channel channel = _Network.GetChannel(channel_name);
@@ -208,7 +208,7 @@ namespace libirc
                         // we don't want to apply this mode here
                         return true;
                     }
-                    string change = parameters.Substring(parameters.IndexOf(" ", StringComparison.Ordinal)).Trim();
+                    string change = parameters.Substring(index).Trim();
                     Formatter formatter = new Formatter();
                     ev.SimpleMode = change;
                     // we get all the mode changes for this channel
@@ -270,7 +270,7 @@ namespace libirc
             return IsBacklog;
         }
 
-        private bool Idle2(string source, string parameters, string value)
+        private bool Idle2(string source, string parameters)
         {
             Network.NetworkWHOISEventArgs ev = new Network.NetworkWHOISEventArgs(this.ServerLineRawText, this.Date);
             ev.ParameterLine = parameters;
@@ -300,7 +300,7 @@ namespace libirc
         /// <param name="parameters"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        private bool WhoisLoad(string source, string parameters, string value)
+        private bool WhoisLoad(string source, string parameters)
         {
             if (!parameters.Contains(" "))
             {
@@ -320,7 +320,7 @@ namespace libirc
         /// <param name="parameters"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        private bool WhoisFn(string source, string parameters, string value)
+        private bool WhoisFn(string source, string parameters)
         {
             Network.NetworkWHOISEventArgs ev = new Network.NetworkWHOISEventArgs(this.ServerLineRawText, this.Date);
             ev.WhoisType = Network.NetworkWHOISEventArgs.Mode.Footer;
@@ -359,7 +359,7 @@ namespace libirc
         /// <param name="parameters"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        private bool WhoisSv(string source, string parameters, string value)
+        private bool WhoisSv(string source, string parameters)
         {
             if (parameters.Contains(" "))
             {
@@ -380,7 +380,7 @@ namespace libirc
             return false;
         }
 
-        private bool Invite(string source, string parameters, string value)
+        private bool Invite(string source, string parameters)
         {
             Network.NetworkChannelDataEventArgs ev = new Network.NetworkChannelDataEventArgs(this.ServerLineRawText, this.Date);
             ev.Source = source;

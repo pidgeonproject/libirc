@@ -54,9 +54,9 @@ namespace libirc
 
         private bool ChannelInfo(List<string> parameters, string command, string source, string _value)
         {
-			if (parameters.Count > 2)
+            if (parameters.Count > 2)
             {
-				Channel channel = _Network.GetChannel(parameters[1]);
+                Channel channel = _Network.GetChannel(parameters[1]);
                 Network.NetworkChannelDataEventArgs args = new Network.NetworkChannelDataEventArgs(this.ServerLineRawText, this.Date);
                 args.Command = command;
                 args.Message = _value;
@@ -76,157 +76,154 @@ namespace libirc
 
         private bool ParseUser(List<string> parameters, string realname)
         {
-			// :hub.tm-irc.org 352 petr #support pidgeon D3EE8257.8361F8AE.37E3A027.IP hub.tm-irc.org petr H :0 My name is hidden, dude
-            if (parameters.Count > 6)
+            // :hub.tm-irc.org 352 petr #support pidgeon D3EE8257.8361F8AE.37E3A027.IP hub.tm-irc.org petr H :0 My name is hidden, dude
+            if (parameters.Count <= 6)
             {
-                Channel channel = _Network.GetChannel(parameters[1]);
-                string server = parameters[4];
-				UserInfo ui = new UserInfo();
-				ui.Ident = parameters[2];
-				ui.Host = parameters[3];
-				ui.Nick = parameters[5];
-                if (realname != null & realname.Length > 2)
+                return false;
+            }
+            Network.NetworkParseUserEventArgs ev = new Network.NetworkParseUserEventArgs(ServerLineRawText, this.Date);
+            ev.Parameters = parameters;
+            ev.ChannelName = parameters[1];
+            ev.Channel = _Network.GetChannel(parameters[1]);
+            string server = parameters[4];
+            ev.User = new UserInfo();
+            ev.User.Ident = parameters[2];
+            ev.User.Host = parameters[3];
+            ev.User.Nick = parameters[5];
+            if (realname != null & realname.Length > 2)
+            {
+                realname = realname.Substring(2);
+            }
+            else if (realname == "0 ")
+            {
+                realname = "";
+            }
+            char mode = '\0';
+            ev.IsAway = false;
+            if (parameters[6].Length > 0)
+            {
+                // if user is away we flag him
+                if (parameters[6].StartsWith("G", StringComparison.Ordinal))
                 {
-                    realname = realname.Substring(2);
+                    ev.IsAway = true;
                 }
-                else if (realname == "0 ")
+                mode = parameters[6][parameters[6].Length - 1];
+                if (!_Network.UChars.Contains(mode))
                 {
-                    realname = "";
+                    mode = '\0';
                 }
-				Network.NetworkParseUserEventArgs ev = new Network.NetworkParseUserEventArgs(ServerLineRawText, this.Date);
-                ev.Parameters = parameters;
-				ev.Channel = channel;
-				ev.ChannelName = parameters[1];
-				ev.User = ui;
-                char mode = '\0';
-                bool IsAway = false;
-                if (parameters[6].Length > 0)
+                ev.StringMode = mode.ToString();
+            }
+            ev.RealName = realname;
+            if (ev.Channel != null)
+            {
+                if (!IsBacklog)
                 {
-                    // if user is away we flag him
-                    if (parameters[6].StartsWith("G", StringComparison.Ordinal))
+                    if (!ev.Channel.ContainsUser(ev.User.Nick))
                     {
-                        IsAway = true;
-                    }
-                    mode = parameters[6][parameters[6].Length - 1];
-                    if (!_Network.UChars.Contains(mode))
-                    {
-                        mode = '\0';
-                    }
-                    ev.StringMode = mode.ToString();
-                }
-				ev.IsAway = IsAway;
-                ev.RealName = realname;
-                if (channel != null)
-                {
-                    if (!IsBacklog)
-                    {
-                        if (!channel.ContainsUser(ui.Nick))
+                        User _user = null;
+                        if (mode != '\0')
                         {
-                            User _user = null;
-                            if (mode != '\0')
-                            {
-                                _user = new User(mode.ToString() + ui.Nick, ui.Host, ui.Ident, _Network);
-                            }
-                            else
-                            {
-                                _user = new User(ui, _Network);
-                            }
-							_user.LastAwayCheck = DateTime.Now;
-                            _user.RealName = realname;
-                            if (IsAway)
-                            {
-                                _user.AwayTime = DateTime.Now;
-                            }
-                            _user.Away = IsAway;
-                            channel.InsertUser(_user);
-                            _Network.__evt_ParseUser(ev);
-                            return true;
+                            _user = new User(mode.ToString() + ev.User.Nick, ev.User.Host, ev.User.Ident, _Network);
                         }
-                        User user = channel.UserFromName(ui.Nick);
-                        if (user != null)
+                        else
                         {
-                            user.Ident = ui.Ident;
-                            user.Host = ui.Host;
-                            user.Server = server;
-                            user.RealName = realname;
-                            user.LastAwayCheck = DateTime.Now;
-                            if (!user.Away && IsAway)
-                            {
-                                user.AwayTime = DateTime.Now;
-                            }
-                            user.Away = IsAway;
+                            _user = new User(ev.User, _Network);
                         }
+                        _user.LastAwayCheck = DateTime.Now;
+                        _user.RealName = realname;
+                        if (ev.IsAway)
+                        {
+                            _user.AwayTime = DateTime.Now;
+                        }
+                        _user.Away = ev.IsAway;
+                        ev.Channel.InsertUser(_user);
+                        _Network.__evt_ParseUser(ev);
+                        return true;
                     }
-					_Network.__evt_ParseUser(ev);
-					if (channel.IsParsingWhoData)
-					{
-                    	return true;
-					}
-                    return IsBacklog;
+                    User user = ev.Channel.UserFromName(ev.User.Nick);
+                    if (user != null)
+                    {
+                        user.Ident = ev.User.Ident;
+                        user.Host = ev.User.Host;
+                        user.Server = server;
+                        user.RealName = realname;
+                        user.LastAwayCheck = DateTime.Now;
+                        if (!user.Away && ev.IsAway)
+                        {
+                            user.AwayTime = DateTime.Now;
+                        }
+                        user.Away = ev.IsAway;
+                    }
                 }
-				_Network.__evt_ParseUser(ev);
+                _Network.__evt_ParseUser(ev);
+                if (ev.Channel.IsParsingWhoData)
+                {
+                    return true;
+                }
                 return IsBacklog;
             }
-            return false;
+            _Network.__evt_ParseUser(ev);
+            return IsBacklog;
         }
 
         private bool ParseInfo(List<string> parameters, string value)
         {
-			if (parameters.Count > 2)
+            if (parameters.Count > 2)
             {
-				// :irc-2t.tm-irc.org 353 petr = #support :petr user1227554 &OperBot Revi 
+                // :irc-2t.tm-irc.org 353 petr = #support :petr user1227554 &OperBot Revi 
                 if (IsBacklog)
                 {
                     return true;
                 }
-				Network.ChannelUserListEventArgs ev = new Network.ChannelUserListEventArgs(ServerLineRawText, this.Date);
-				ev.UserNicknames.AddRange(value.Split(' '));
-				ev.ChannelName = parameters[2];
+                Network.ChannelUserListEventArgs ev = new Network.ChannelUserListEventArgs(ServerLineRawText, this.Date);
+                ev.UserNicknames.AddRange(value.Split(' '));
+                ev.ChannelName = parameters[2];
                 Channel channel = _Network.GetChannel(parameters[2]);
-				ev.Parameters = parameters;
+                ev.Parameters = parameters;
                 if (channel != null)
                 {
-					ev.Channel = channel;
+                    ev.Channel = channel;
                     foreach (string nick in ev.UserNicknames)
                     {
-						if (String.IsNullOrEmpty(nick))
-						{
-							continue;
-						}
+                        if (String.IsNullOrEmpty(nick))
+                        {
+                            continue;
+                        }
                         User user = channel.UserFromName(nick);
-						if (user == null)
-						{
-							user = new User(nick, _Network);
+                        if (user == null)
+                        {
+                            user = new User(nick, _Network);
                             channel.InsertUser(user);
                         }
                         else
                         {
-							char UserMode_ = '\0';
-                        	if (nick.Length > 0)
-                        	{
-                            	foreach (char mode in _Network.UChars)
-                            	{
-                                	if (nick[0] == mode)
-                                	{
-                                    	UserMode_ = nick[0];
-										// there is no need to check for other modes
-										break;
-                                	}
-                            	}
+                            char UserMode_ = '\0';
+                            if (nick.Length > 0)
+                            {
+                                foreach (char mode in _Network.UChars)
+                                {
+                                    if (nick[0] == mode)
+                                    {
+                                        UserMode_ = nick[0];
+                                        // there is no need to check for other modes
+                                        break;
+                                    }
+                                }
                                 user.SymbolMode(UserMode_);
-							}
+                            }
                         }
-						ev.Users.Add(user);
+                        ev.Users.Add(user);
                     }
-					_Network.__evt_ChannelUserList(ev);
+                    _Network.__evt_ChannelUserList(ev);
                     return true;
                 }
-				_Network.__evt_ChannelUserList(ev);
+                _Network.__evt_ChannelUserList(ev);
             }
             return IsBacklog;
         }
-		
-		private bool Topic(string source, string parameters, string value)
+
+        private bool Topic(string source, string parameters, string value)
         {
             string chan = parameters;
             chan = chan.Replace(" ", "");
@@ -251,16 +248,16 @@ namespace libirc
             _Network.__evt_TOPIC(ev);
             return IsBacklog;
         }
-		
-		private bool TopicInfo(List<string> parameters)
+
+        private bool TopicInfo(List<string> parameters)
         {
-			if (parameters.Count > 3)
+            if (parameters.Count > 3)
             {
                 Network.NetworkTOPICEventArgs ev = new Network.NetworkTOPICEventArgs(this.ServerLineRawText, this.Date);
                 ev.Parameters = parameters;
                 ev.ChannelName = parameters[1];
-				string user = parameters[2];
-				string time = parameters[3];
+                string user = parameters[2];
+                string time = parameters[3];
                 double dt;
                 if (!double.TryParse(time, out dt))
                 {
@@ -282,7 +279,7 @@ namespace libirc
 
         private bool ChannelTopic(List<string> parameters, string command, string source, string message)
         {
-			if (parameters.Count > 1)
+            if (parameters.Count > 1)
             {
                 Network.NetworkTOPICEventArgs ev = new Network.NetworkTOPICEventArgs(this.ServerLineRawText, this.Date);
                 ev.Parameters = parameters;
@@ -305,17 +302,17 @@ namespace libirc
         {
             if (code.Count > 0)
             {
-				Network.NetworkChannelDataEventArgs ev = new Network.NetworkChannelDataEventArgs(this.ServerLineRawText, this.Date);
-				ev.ChannelName = code[1];
-				ev.Parameters = code;
-                
+                Network.NetworkChannelDataEventArgs ev = new Network.NetworkChannelDataEventArgs(this.ServerLineRawText, this.Date);
+                ev.ChannelName = code[1];
+                ev.Parameters = code;
+
                 Channel channel = _Network.GetChannel(code[1]);
                 if (channel != null)
                 {
-					ev.Channel = channel;
+                    ev.Channel = channel;
                     channel.IsParsingWhoData = false;
                 }
-				_Network.__evt_FinishChannelParseUser(ev);
+                _Network.__evt_FinishChannelParseUser(ev);
                 return true;
             }
             return IsBacklog;
@@ -325,61 +322,59 @@ namespace libirc
         {
             // petan!pidgeon@petan.staff.tm-irc.org KICK #support HelpBot :Removed from the channel
             string chan = parameters[0];
-			Network.NetworkKickEventArgs ev = new Network.NetworkKickEventArgs(this.ServerLineRawText, this.Date);
-			ev.Source = source;
-			ev.Parameters = parameters;
+            Network.NetworkKickEventArgs ev = new Network.NetworkKickEventArgs(this.ServerLineRawText, this.Date);
+            ev.Source = source;
+            ev.Parameters = parameters;
             ev.ChannelName = chan;
-			ev.Message = value;
+            ev.Message = value;
             ev.Target = parameters[1];
-			ev.ParameterLine = parameter_line;
+            ev.ParameterLine = parameter_line;
             Channel channel = _Network.GetChannel(chan);
             if (channel != null)
             {
-				ev.Channel = channel;
+                ev.Channel = channel;
                 if (!IsBacklog)
                 {
-                    User delete = channel.UserFromName(parameters[1]);
-                    if (delete != null)
+                    User user = channel.UserFromName(parameters[1]);
+                    if (user != null)
                     {
-						channel.RemoveUser(parameters[1]);
-						if (delete.IsPidgeon)
-						{
-	                    	channel.ChannelWork = false;
-						}
+                        channel.RemoveUser(user);
+                        if (user.IsPidgeon)
+                        {
+                            channel.ChannelWork = false;
+                        }
                     }
-				}
-				_Network.__evt_KICK(ev);
+                }
+                _Network.__evt_KICK(ev);
                 return true;
             }
-			_Network.__evt_KICK(ev);
+            _Network.__evt_KICK(ev);
             return IsBacklog;
         }
 
         private bool Join(string source, string parameters, string value)
         {
-            string chan = parameters;
-            chan = chan.Replace(" ", "");
-            if (string.IsNullOrEmpty(chan))
+            string channel_name = parameters.Trim();
+            if (string.IsNullOrEmpty(channel_name))
             {
-                chan = value;
+                channel_name = value;
             }
-            UserInfo user = new UserInfo(source);
-            Channel channel = _Network.GetChannel(chan);
-			Network.NetworkChannelEventArgs ed = new Network.NetworkChannelEventArgs(ServerLineRawText, this.Date);
-			ed.ChannelName = chan;
-			ed.Source = source;
-			ed.ParameterLine = parameters;
+            Channel channel = _Network.GetChannel(channel_name);
+            Network.NetworkChannelEventArgs ed = new Network.NetworkChannelEventArgs(ServerLineRawText, this.Date);
+            ed.ChannelName = channel_name;
+            ed.Source = source;
+            ed.Channel = channel;
+            ed.ParameterLine = parameters;
             if (channel != null)
             {
-				ed.Channel = channel;
                 if (!IsBacklog)
                 {
-                    channel.InsertUser(new User(user, _Network));
+                    channel.InsertUser(new User(ed.SourceInfo, _Network));
                 }
-				_Network.__evt_JOIN(ed);
+                _Network.__evt_JOIN(ed);
                 return true;
             }
-			_Network.__evt_JOIN(ed);
+            _Network.__evt_JOIN(ed);
             return IsBacklog;
         }
 
@@ -389,45 +384,42 @@ namespace libirc
             {
                 Network.NetworkChannelEventArgs ev = new Network.NetworkChannelEventArgs(this.ServerLineRawText, this.Date);
                 ev.ChannelName = parameters[1];
-                Channel channel = _Network.GetChannel(parameters[1]);
                 ev.Parameters = parameters;
-                ev.Channel = channel;
-                if (channel != null)
+                ev.Channel = _Network.GetChannel(parameters[1]);
+                if (ev.Channel != null)
                 {
-                    if (channel.IsParsingBanData)
+                    if (ev.Channel.IsParsingBanData)
                     {
-                        channel.IsParsingBanData = false;
+                        ev.Channel.IsParsingBanData = false;
                         _Network.__evt_ChannelFinishBan(ev);
                         return true;
                     }
                 }
                 _Network.__evt_ChannelFinishBan(ev);
+                return IsBacklog;
             }
-            return IsBacklog;
+            return false;
         }
 
         private bool ChannelBans(List<string> parameters)
         {
-			if (parameters.Count > 3)
+            if (parameters.Count > 4)
             {
                 Channel channel = _Network.GetChannel(parameters[1]);
                 if (channel != null)
                 {
-                    if (channel.Bans == null)
-                    {
-                        channel.Bans = new List<SimpleBan>();
-                    }
                     if (!channel.ContainsBan(parameters[2]))
                     {
-                        channel.Bans.Add(new SimpleBan(parameters[3], parameters[2], parameters[4]));
+                        channel.InsertBan(parameters[2], parameters[3], parameters[4]);
                     }
                     if (channel.IsParsingBanData)
                     {
                         return true;
                     }
                 }
+                return IsBacklog;
             }
-            return IsBacklog;
+            return false;
         }
 
         private bool Part(string source, string parameters, string value)
@@ -435,27 +427,27 @@ namespace libirc
             string chan = parameters.Trim();
             Channel channel = _Network.GetChannel(chan);
             Network.NetworkChannelDataEventArgs ev = new Network.NetworkChannelDataEventArgs(this.ServerLineRawText, this.Date);
-			ev.ChannelName = chan;
-			ev.Source = source;
+            ev.ChannelName = chan;
+            ev.Source = source;
             ev.Message = value;
-			ev.ParameterLine = parameters;
+            ev.ParameterLine = parameters;
             if (channel != null)
             {
                 if (!IsBacklog)
                 {
                     channel.RemoveUser(ev.SourceInfo.Nick);
-				}
-				_Network.__evt_PART(ev);
+                }
+                _Network.__evt_PART(ev);
                 return true;
             }
-			_Network.__evt_PART(ev);
+            _Network.__evt_PART(ev);
             return IsBacklog;
         }
 
         private bool ProcessNick(string source, string parameters, string value)
         {
             string _new = value;
-			Network.NetworkNICKEventArgs ev = new Network.NetworkNICKEventArgs(this.ServerLineRawText, this.Date);
+            Network.NetworkNICKEventArgs ev = new Network.NetworkNICKEventArgs(this.ServerLineRawText, this.Date);
             ev.Source = source;
             if (string.IsNullOrEmpty(value) && !string.IsNullOrEmpty(parameters))
             {
@@ -467,14 +459,14 @@ namespace libirc
                     _new = _new.Substring(0, _new.IndexOf(" ", StringComparison.Ordinal));
                 }
             }
-			ev.NewNick = _new;
+            ev.NewNick = _new;
             lock (_Network.Channels.Values)
             {
                 foreach (Channel channel in _Network.Channels.Values)
                 {
                     if (channel.ChannelWork)
                     {
-                        User user = channel.UserFromName (ev.SourceInfo.Nick);
+                        User user = channel.UserFromName(ev.SourceInfo.Nick);
                         if (user != null)
                         {
                             if (!IsBacklog)
@@ -486,8 +478,8 @@ namespace libirc
                 }
             }
             ev.OldNick = ev.SourceInfo.Nick;
-			ev.Source = source;
-			_Network.__evt_NICK(ev);
+            ev.Source = source;
+            _Network.__evt_NICK(ev);
             return true;
         }
     }
