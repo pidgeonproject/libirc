@@ -206,6 +206,7 @@ namespace libirc
         public class NetworkCTCPEventArgs : NetworkPRIVMSGEventArgs
         {
             public string CTCP = null;
+            public string Args = null;
 
             public NetworkCTCPEventArgs(string line, long date) : base(line, date) { }
         }
@@ -443,6 +444,17 @@ namespace libirc
         /// provided you the current situation. PART and JOIN events and such will be propagated but not reflected.
         /// </summary>
         public bool IsDownloadingBouncerBacklog = false;
+        /// <summary>
+        /// This is a performance optimization, this return true in case that there is something subcribet to
+        /// IncomingData event so that we don't need to call expensive functions unless we have to
+        /// </summary>
+        public bool __evt_SubscribedNetworkRawData
+        {
+            get
+            {
+                return IncomingData != null;
+            }
+        }
         /// <summary>
         /// Specifies if you are connected to network
         /// </summary>

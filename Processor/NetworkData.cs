@@ -78,37 +78,39 @@ namespace libirc
 
         private bool ChannelData(string command, string parameters, string value)
         {
+            if (!parameters.Contains(" "))
+            {
+                return false;
+            }
             string channel_name = parameters.Substring(parameters.IndexOf(" ", StringComparison.Ordinal) + 1);
             uint user_count = 0;
             if (channel_name.Contains(" "))
             {
-                if (!uint.TryParse(channel_name.Substring(channel_name.IndexOf(" ", StringComparison.Ordinal) + 1), out user_count))
+                int index = channel_name.IndexOf(" ", StringComparison.Ordinal);
+                if (!uint.TryParse(channel_name.Substring(index + 1), out user_count))
                 {
                     user_count = 0;
                 }
-
-                channel_name = channel_name.Substring(0, channel_name.IndexOf(" ", StringComparison.Ordinal));
+                channel_name = channel_name.Substring(0, index);
             }
-
             _Network.DownloadingList = true;
-
-            lock (_Network.ChannelList)
+            Network.ChannelData channel = _Network.ContainsChannel(channel_name);
+            if (channel == null)
             {
-                Network.ChannelData channel = _Network.ContainsChannel(channel_name);
-                if (channel == null)
+                channel = new Network.ChannelData(user_count, channel_name, value);
+                lock (_Network.ChannelList)
                 {
-                    channel = new Network.ChannelData(user_count, channel_name, value);
                     _Network.ChannelList.Add(channel);
                 }
-                else
-                {
-                    channel.UserCount = user_count;
-                    channel.ChannelTopic = value;
-                }
-                if (_Network.SuppressData)
-                {
-                    return true;
-                }
+            }
+            else
+            {
+                channel.UserCount = user_count;
+                channel.ChannelTopic = value;
+            }
+            if (_Network.SuppressData)
+            {
+                return true;
             }
             return false;
         }
@@ -122,77 +124,150 @@ namespace libirc
         /// <returns></returns>
         private bool ProcessPM(string source, string parameters, string value)
         {
-            string chan = null;
-            chan = parameters.Replace(" ", "");
+            string message_target = null;
+            message_target = parameters.Trim();
             Network.NetworkPRIVMSGEventArgs ev = new Network.NetworkPRIVMSGEventArgs(ServerLineRawText, this.Date);
             ev.Source = source;
             ev.Message = value;
-            if (!chan.Contains(_Network.ChannelPrefix))
+            if (!message_target.StartsWith(_Network.ChannelPrefix))
             {
-                string uc;
+                // target is not a channel
                 if (ev.Message.StartsWith(_Protocol.Separator.ToString(), StringComparison.Ordinal))
                 {
-                    string trimmed = ev.Message;
-                    if (trimmed.StartsWith(_Protocol.Separator.ToString(), StringComparison.Ordinal))
-                    {
-                        trimmed = trimmed.Substring(1);
-                    }
-                    if (trimmed.Length > 1 && trimmed[trimmed.Length - 1] == _Protocol.Separator)
-                    {
-                        trimmed = trimmed.Substring(0, trimmed.Length - 1);
-                    }
+                    // this seems to be a CTCP message
+                    string trimmed = ev.Message.Trim(_Protocol.Separator);
                     if (ev.Message.StartsWith(_Protocol.Separator.ToString() + "ACTION", StringComparison.Ordinal))
                     {
-                        ev.Message = ev.Message.Substring("xACTION".Length);
-                        if (ev.Message.Length > 1 && ev.Message.EndsWith(_Protocol.Separator.ToString(), StringComparison.Ordinal))
-                        {
-                            ev.Message = ev.Message.Substring(0, ev.Message.Length - 1);
-                        }
+                        // it's an ACT type
+                        ev.Message = ev.Message.Substring(7).TrimEnd(_Protocol.Separator);
                         ev.IsAct = true;
                         _Network.__evt_PRIVMSG(ev);
                         return true;
                     }
-
-                    uc = ev.Message.Substring(1);
-                    if (uc.Contains(_Protocol.Separator.ToString()))
+                    string message_ctcp = trimmed;
+                    string text = "";
+                    if (message_ctcp.Contains(" "))
                     {
-                        uc = uc.Substring(0, uc.IndexOf(_Protocol.Separator.ToString(), StringComparison.Ordinal));
+                        // remove all CTCP parameters so that we have only the CTCP command as it is
+                        // like PING etc
+                        int index = message_ctcp.IndexOf(" ", StringComparison.Ordinal);
+                        text = message_ctcp.Substring(index + 1);
+                        message_ctcp = message_ctcp.Substring(0, index);
                     }
-                    if (uc.Contains(" "))
-                    {
-                        uc = uc.Substring(0, uc.IndexOf(" ", StringComparison.Ordinal));
-                    }
-                    uc = uc.ToUpper();
+                    message_ctcp = message_ctcp.ToUpper();
                     Network.NetworkCTCPEventArgs ctcp = new Network.NetworkCTCPEventArgs(ServerLineRawText, this.Date);
-                    ctcp.CTCP = uc;
+                    ctcp.CTCP = message_ctcp;
+                    ctcp.Args = text;
                     ctcp.Message = ev.Message;
                     _Network.__evt_CTCP(ctcp);
                     return true;
                 }
+                // it's a private message
                 _Network.__evt_PRIVMSG(ev);
                 return true;
             }
             else
             {
                 Channel channel = null;
-                channel = _Network.GetChannel(chan);
+                channel = _Network.GetChannel(message_target);
                 ev.Channel = channel;
-                ev.ChannelName = chan;
+                ev.ChannelName = message_target;
                 if (channel != null)
                 {
                     if (ev.Message.StartsWith(_Protocol.Separator.ToString() + "ACTION", StringComparison.Ordinal))
                     {
-			ev.IsAct = true;
-                        ev.Message = ev.Message.Substring("xACTION".Length);
-                        if (ev.Message.Length > 1 && ev.Message.EndsWith(_Protocol.Separator.ToString(), StringComparison.Ordinal))
-                        {
-                            ev.Message = ev.Message.Substring(0, ev.Message.Length - 1);
-                        }
-		    }
-		}
+                        ev.IsAct = true;
+                        ev.Message = ev.Message.Substring(7).Trim(_Protocol.Separator);
+                    }
+                }
                 _Network.__evt_PRIVMSG(ev);
                 return true;
             }
+        }
+
+        private bool Mode(string source, string parameters)
+        {
+            if (parameters.Contains(" "))
+            {
+                // this is some borked server text
+                return false;
+            }
+            string channel_name = parameters.Substring(0, parameters.IndexOf(" ", StringComparison.Ordinal)).Trim();
+            if (channel_name.StartsWith(_Network.ChannelPrefix, StringComparison.Ordinal))
+            {
+                Channel channel = _Network.GetChannel(channel_name);
+                Network.NetworkMODEEventArgs ev = new Network.NetworkMODEEventArgs(this.ServerLineRawText, this.Date);
+                ev.ChannelName = channel_name;
+                ev.Channel = channel;
+                ev.Source = source;
+                ev.ParameterLine = parameters;
+                if (channel != null)
+                {
+                    if (IsBacklog)
+                    {
+                        // we don't want to apply this mode here
+                        return true;
+                    }
+                    string change = parameters.Substring(parameters.IndexOf(" ", StringComparison.Ordinal)).Trim();
+                    Formatter formatter = new Formatter();
+                    ev.SimpleMode = change;
+                    // we get all the mode changes for this channel
+                    formatter.RewriteBuffer(change, _Network);
+                    ev.FormattedMode = formatter;
+                    channel.ChannelMode.ChangeMode("+" + formatter.channelModes);
+                    foreach (SimpleMode m in formatter.getMode)
+                    {
+                        if (_Network.CUModes.Contains(m.Mode) && m.ContainsParameter)
+                        {
+                            User flagged_user = channel.UserFromName(m.Parameter);
+                            if (flagged_user != null)
+                            {
+                                flagged_user.ChannelMode.ChangeMode("+" + m.Mode);
+                                flagged_user.ResetMode();
+                            }
+                        }
+                        if (m.ContainsParameter)
+                        {
+                            switch (m.Mode.ToString())
+                            {
+                                case "b":
+                                    channel.InsertBan(m.Parameter, source);
+                                    break;
+                            }
+                        }
+                    }
+                    foreach (SimpleMode m in formatter.getRemovingMode)
+                    {
+                        if (_Network.CUModes.Contains(m.Mode) && m.ContainsParameter)
+                        {
+                            User flagged_user = channel.UserFromName(m.Parameter);
+                            if (flagged_user != null)
+                            {
+                                flagged_user.ChannelMode.ChangeMode("-" + m.Mode);
+                                flagged_user.ResetMode();
+                            }
+                        }
+                        if (m.ContainsParameter)
+                        {
+                            switch (m.Mode.ToString())
+                            {
+                                case "b":
+                                    channel.RemoveBan(m.Parameter);
+                                    break;
+                            }
+                        }
+                    }
+                    // we know the channel and we changed its mode, no need to diplay this line
+                    _Network.__evt_MODE(ev);
+                    return true;
+                }
+            }
+            else
+            {
+                // this is a change of user mode, let's display it in system window
+                return false;
+            }
+            return IsBacklog;
         }
 
         private bool Idle2(string source, string parameters, string value)

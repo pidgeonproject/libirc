@@ -470,6 +470,10 @@ namespace libirc
         /// <param name="time">Time when it was set</param>
         public virtual void InsertBan(string ban, string user, string time = "0")
         {
+            if (Bans == null)
+            {
+                Bans = new List<SimpleBan>();
+            }
             SimpleBan br = new SimpleBan(user, ban, time);
             lock (Bans)
             {
@@ -484,6 +488,10 @@ namespace libirc
         /// <returns></returns>
         public virtual bool RemoveBan(string ban)
         {
+            if (this.Bans == null)
+            {
+                return false;
+            }
             SimpleBan br = null;
             lock (Bans)
             {
@@ -495,7 +503,6 @@ namespace libirc
                         break;
                     }
                 }
-
                 if (br != null)
                 {
                     Bans.Remove(br);

@@ -44,15 +44,9 @@ namespace libirc
         public DateTime pong;
         private long Date;
 
-        private void Ping()
-        {
-            pong = DateTime.Now;
-            return;
-        }
-
         private bool Pong(string source, string parameters, string _value)
         {
-            _Network.Transfer("PONG :" + _value, Defs.Priority.Low);
+            _Network.Transfer("PONG :" + _value);
             return true;
         }
 
@@ -60,8 +54,9 @@ namespace libirc
         /// Process a data that affect the current user
         /// </summary>
         /// <param name="source"></param>
-        /// <param name="_data2"></param>
-        /// <param name="_value"></param>
+        /// <param name="command"></param>
+        /// <param name="parameters"></param>
+        /// <param name="message"></param>
         /// <returns></returns>
         private bool ProcessSelf(string source, string command, List<string> parameters, string message)
         {
@@ -257,25 +252,25 @@ namespace libirc
                     // commands are meant to be uppercase but for compatibility reasons we ensure it is
                     command = command.ToUpper();
                 }
-
-                Network.IncomingDataEventArgs info = new Network.IncomingDataEventArgs();
-                info.Message = message;
-                info.Date = this.Date;
-                info.ParameterLine = parameters_line;
-                info.Source = source;
-                info.ServerLine = ServerLineRawText;
-                info.Command = command;
-                info.Parameters = parameters;
-                if (_Network.__evt__IncomingData(info))
+                if (_Network.__evt_SubscribedNetworkRawData)
                 {
-                    return true;
+                    Network.IncomingDataEventArgs info = new Network.IncomingDataEventArgs();
+                    info.Message = message;
+                    info.Date = this.Date;
+                    info.ParameterLine = parameters_line;
+                    info.Source = source;
+                    info.ServerLine = ServerLineRawText;
+                    info.Command = command;
+                    info.Parameters = parameters;
+                    if (_Network.__evt__IncomingData(info))
+                    {
+                        return true;
+                    }
                 }
-
                 if (ProcessSelf(source, command, parameters, message))
                 {
                     OK = true;
                 }
-
                 switch (command)
                 {
                     case "001":
@@ -444,7 +439,7 @@ namespace libirc
                         }
                         break;
                     case "PONG":
-                        Ping();
+                        pong = DateTime.Now;
                         return true;
                     case "INFO":
                         //_Network.SystemWindow.scrollback.InsertText(text.Substring(text.IndexOf("INFO", StringComparison.Ordinal) + 5), Pidgeon.ContentLine.MessageStyle.User,                                                                     true, date, !updated_text);
@@ -481,7 +476,7 @@ namespace libirc
                         }
                         break;
                     case "MODE":
-                        if (Mode(source, parameters_line, message))
+                        if (Mode(source, parameters_line))
                         {
                             return true;
                         }
