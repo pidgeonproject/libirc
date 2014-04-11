@@ -112,7 +112,7 @@ namespace libirc
             {
                 return true;
             }
-            return false;
+            return IsBacklog;
         }
 
         /// <summary>
