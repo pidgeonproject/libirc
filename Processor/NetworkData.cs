@@ -187,7 +187,7 @@ namespace libirc
 
         private bool Mode(string source, string parameters)
         {
-            if (parameters.Contains(" "))
+            if (!parameters.Contains(" "))
             {
                 // this is some borked server text
                 return false;

@@ -289,7 +289,7 @@ namespace libirc
         public delegate void NetworkPRIVMSGEventHandler(object sender, NetworkPRIVMSGEventArgs e);
 		public delegate void NetworkJOINEventHandler(object sender, NetworkChannelEventArgs e);
 		public delegate void NetworkParseUserEventHandler(object sender, NetworkParseUserEventArgs e);
-		public delegate void NetworkPARTEventHandler(object sender, NetworkChannelEventArgs e);
+        public delegate void NetworkPARTEventHandler(object sender, NetworkChannelDataEventArgs e);
 		public delegate void NetworkKICKEventHandler(object sender, NetworkKickEventArgs e);
 		public delegate void NetworkNICKEventHandler(object sender, NetworkNICKEventArgs e);
         public delegate void NetworkTopicInfoEventHandler(object sender, NetworkTOPICEventArgs e);
@@ -743,7 +743,7 @@ namespace libirc
 			}
 		}
 
-		public virtual void __evt_PART(NetworkChannelEventArgs args)
+        public virtual void __evt_PART(NetworkChannelDataEventArgs args)
 		{
 			if (this.On_PART != null)
 			{

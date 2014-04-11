@@ -20,6 +20,38 @@ namespace libirc
 {
     public partial class ProcessorIRC
     {
+        private bool CreationDatetime(List<string> parameters)
+        {
+            if (parameters.Count > 2)
+            {
+                Channel channel = _Network.GetChannel(parameters[1]);
+                if (channel != null)
+                {
+                    double time;
+                    if (double.TryParse(parameters[2], out time))
+                    {
+                        channel.CreationTime = Defs.ConvertFromUNIX(time);
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private bool Website(List<string> parameters, string message)
+        {
+            if (parameters.Count > 1)
+            {
+                Channel channel = _Network.GetChannel(parameters[1]);
+                if (channel != null)
+                {
+                    channel.Website = message;
+                    return true;
+                }
+            }
+            return false;
+        }
+
         private bool ChannelInfo(List<string> parameters, string command, string source, string _value)
         {
 			if (parameters.Count > 2)
@@ -400,19 +432,18 @@ namespace libirc
 
         private bool Part(string source, string parameters, string value)
         {
-            string chan = parameters;
-            chan = chan.Replace(" ", "");
-            UserInfo ui = new UserInfo(source);
+            string chan = parameters.Trim();
             Channel channel = _Network.GetChannel(chan);
-			Network.NetworkChannelEventArgs ev = new Network.NetworkChannelEventArgs(this.ServerLineRawText, this.Date);
+            Network.NetworkChannelDataEventArgs ev = new Network.NetworkChannelDataEventArgs(this.ServerLineRawText, this.Date);
 			ev.ChannelName = chan;
 			ev.Source = source;
+            ev.Message = value;
 			ev.ParameterLine = parameters;
             if (channel != null)
             {
                 if (!IsBacklog)
                 {
-                    channel.RemoveUser(ui.Nick);
+                    channel.RemoveUser(ev.SourceInfo.Nick);
 				}
 				_Network.__evt_PART(ev);
                 return true;

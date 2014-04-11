@@ -163,6 +163,8 @@ namespace libirc
         /// Exception list 
         /// </summary>
         public List<ChannelBanException> Exceptions = null;
+        public DateTime CreationTime;
+        public string Website = null;
         /// <summary>
         /// If channel output is temporarily hidden
         /// </summary>
