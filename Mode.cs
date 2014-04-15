@@ -13,9 +13,6 @@
 //  Free Software Foundation, Inc.,
 //  51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-
-// Mode
-
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -61,7 +58,7 @@ namespace libirc
         {
             get
             {
-                return !(_parameter == null);
+                return _parameter != null;
             }
         }
 

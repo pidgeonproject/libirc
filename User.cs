@@ -111,6 +111,10 @@ namespace libirc
                 return nick;
             }
         }
+        /// <summary>
+        /// Return a lowercase nickname of this user, this function is likely faster than string.ToLower() because it uses caching so if you need to get lowercase
+        /// nick very often, you should use this
+        /// </summary>
         public virtual string LowNick
         {
             get

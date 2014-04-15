@@ -20,6 +20,7 @@ namespace libirc
 {
     public class Defs
     {
+        public static readonly Version Version = new Version(1, 0, 0);
         /// <summary>
         /// The default nick
         /// 
@@ -28,7 +29,7 @@ namespace libirc
         /// </summary>
         public static string DefaultNick =      "user";
         public static string DefaultQuit =      "Libirc - http://github.com/pidgeonproject/libirc";
-        public static string DefaultVersion =   "Libirc v. 1.0.0, see http://pidgeonclient.org/ for more information about this library. ";
+        public static string DefaultVersion =   "Libirc v. " + Version + ", see http://pidgeonclient.org/ for more information about this library. ";
         public static bool UsingProfiler =      false;
         public const int DefaultIRCPort =       6667;
         public const int DefaultSSLIRCPort =    6697;

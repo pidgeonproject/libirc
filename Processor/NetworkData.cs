@@ -32,31 +32,27 @@ namespace libirc
         /// <param name="parameters">Parameters</param>
         /// <param name="value">Text</param>
         /// <returns></returns>
-        private bool Info(string command, List<string> parameters_, string parameters_line, string value)
+        private bool Info(Network.IncomingDataEventArgs info)
         {
-            Network.NetworkGenericDataEventArgs args004 = new Network.NetworkGenericDataEventArgs(this.ServerLineRawText, this.Date);
-            args004.Parameters = parameters_;
-            args004.Command = command;
-            args004.ParameterLine = parameters_line;
-            args004.Message = value;
+            Network.NetworkGenericDataEventArgs args004 = new Network.NetworkGenericDataEventArgs(info);
             _Network.__evt_INFO(args004);
-            if (parameters_line.Contains("PREFIX=("))
+            if (info.ParameterLine.Contains("PREFIX=("))
             {
-                string cmodes = parameters_line.Substring(parameters_line.IndexOf("PREFIX=(", StringComparison.Ordinal) + 8);
+                string cmodes = info.ParameterLine.Substring(info.ParameterLine.IndexOf("PREFIX=(", StringComparison.Ordinal) + 8);
                 cmodes = cmodes.Substring(0, cmodes.IndexOf(")", StringComparison.Ordinal));
                 lock (_Network.CUModes)
                 {
                     _Network.CUModes.Clear();
                     _Network.CUModes.AddRange(cmodes.ToArray<char>());
                 }
-                cmodes = parameters_line.Substring(parameters_line.IndexOf("PREFIX=(", StringComparison.Ordinal) + 8);
+                cmodes = info.ParameterLine.Substring(info.ParameterLine.IndexOf("PREFIX=(", StringComparison.Ordinal) + 8);
                 cmodes = cmodes.Substring(cmodes.IndexOf(")", StringComparison.Ordinal) + 1, _Network.CUModes.Count);
                 _Network.UChars.Clear();
                 _Network.UChars.AddRange(cmodes.ToArray<char>());
             }
-            if (parameters_line.Contains("CHANMODES="))
+            if (info.ParameterLine.Contains("CHANMODES="))
             {
-                string xmodes = parameters_line.Substring(parameters_line.IndexOf("CHANMODES=", StringComparison.Ordinal) + 11);
+                string xmodes = info.ParameterLine.Substring(info.ParameterLine.IndexOf("CHANMODES=", StringComparison.Ordinal) + 11);
                 xmodes = xmodes.Substring(0, xmodes.IndexOf(" ", StringComparison.Ordinal));
                 string[] _mode = xmodes.Split(',');
                 _Network.ParsedInfo = true;

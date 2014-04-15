@@ -28,7 +28,7 @@ namespace libirc.Protocols
     /// <summary>
     /// Protocol
     /// </summary>
-    public partial class ProtocolIrc : Protocol, IDisposable
+    public partial class ProtocolIrc : Protocol
     {
         /// <summary>
         /// Thread in which the connection to server is handled
@@ -75,7 +75,6 @@ namespace libirc.Protocols
         /// Logging in using sasl
         /// </summary>
         public bool UsingSasl = false;
-        private bool disposed = false;
         /// <summary>
         /// Character that represent underline tags
         /// </summary>
@@ -107,45 +106,6 @@ namespace libirc.Protocols
             {
                 SSL = value;
             }
-        }
-
-        /// <summary>
-        /// Releases all resources used by this class
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Releases all resources used by this class
-        /// </summary>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposed)
-            {
-                if (disposing)
-                {
-                    if (streamReader != null)
-                    {
-                        streamReader.Dispose();
-                    }
-                    if (networkSsl != null)
-                    {
-                        networkSsl.Dispose();
-                    }
-                    if (streamWriter != null)
-                    {
-                        streamWriter.Dispose();
-                    }
-                    if (!IsDestroyed)
-                    {
-                        Exit();
-                    }
-                }
-            }
-            disposed = true;
         }
 
         /// <summary>
@@ -492,9 +452,7 @@ namespace libirc.Protocols
             {
                 IRCNetwork.Disconnect();
             }
-            IRCNetwork.Destroy();
             Connected = false;
-            Destroyed = true;
             base.Exit();
         }
 

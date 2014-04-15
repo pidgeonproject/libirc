@@ -27,7 +27,7 @@ namespace libirc.Protocols
     /// <summary>
     /// Protocol
     /// </summary>
-    public partial class ProtocolIrc : Protocol, IDisposable
+    public partial class ProtocolIrc : Protocol
     {
         class MessagesClass
         {

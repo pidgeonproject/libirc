@@ -23,7 +23,7 @@ namespace libirc
     /// <summary>
     /// Instance of irc network, this class is typically handled by protocols
     /// </summary>
-    public class Network : IDisposable
+    public class Network
     {
 		public enum EventType
 		{
@@ -79,11 +79,11 @@ namespace libirc
 
         public class IncomingDataEventArgs : EventArgs
         {
-            public string Source;
-            public string Command;
-            public string ParameterLine;
-            public List<string> Parameters;
-            public string Message;
+            public string Source = "";
+            public string Command = "";
+            public string ParameterLine = "";
+            public List<string> Parameters = new List<string>();
+            public string Message = "";
             public string ServerLine;
             public long Date = 0;
             public bool Processed = false;
@@ -132,6 +132,14 @@ namespace libirc
 			public string Message = null;
 			
 			public NetworkGenericDataEventArgs(string line, long date) : base(line, date) {}
+            public NetworkGenericDataEventArgs(Network.IncomingDataEventArgs info) : base(info.ServerLine, info.Date)
+            {
+                this.Command = info.Command;
+                this.Message = info.Message;
+                this.ParameterLine = info.ParameterLine;
+                this.Parameters = info.Parameters;
+                this.Source = info.Source;
+            }
 		}
 
 		public class NetworkChannelEventArgs : NetworkGenericEventArgs
@@ -445,17 +453,6 @@ namespace libirc
         /// </summary>
         public bool IsDownloadingBouncerBacklog = false;
         /// <summary>
-        /// This is a performance optimization, this return true in case that there is something subcribet to
-        /// IncomingData event so that we don't need to call expensive functions unless we have to
-        /// </summary>
-        public bool __evt_SubscribedNetworkRawData
-        {
-            get
-            {
-                return IncomingData != null;
-            }
-        }
-        /// <summary>
         /// Specifies if you are connected to network
         /// </summary>
         public virtual bool IsConnected
@@ -467,18 +464,6 @@ namespace libirc
             set
             {
                 this.connected = value;
-            }
-        }
-        private bool isDestroyed = false;
-        /// <summary>
-        /// This will return true in case object was requested to be disposed
-        /// you should never work with objects that return true here
-        /// </summary>
-        public virtual bool IsDestroyed
-        {
-            get
-            {
-                return isDestroyed;
             }
         }
 
@@ -495,35 +480,6 @@ namespace libirc
             Nickname = Defs.DefaultNick;
             UserName = Defs.DefaultNick;
             Ident = "libirc";
-        }
-
-        /// <summary>
-        /// Destructor
-        /// </summary>
-        ~Network()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Releases all resources used by this class
-        /// </summary>
-        public virtual void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Releases all resources used by this class
-        /// </summary>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!IsDestroyed)
-            {
-                Destroy();
-            }
         }
 
         public virtual void HandleUnknownData(Network.UnknownDataEventArgs args)
@@ -598,11 +554,6 @@ namespace libirc
         /// </summary>
         public virtual void Reconnect()
         {
-            if (IsDestroyed)
-            {
-                return;
-            }
-
             _Protocol.ReconnectNetwork(this);
         }
 
@@ -886,37 +837,6 @@ namespace libirc
         public virtual void Act(string text, string to, Defs.Priority _priority = Defs.Priority.Normal)
         {
             _Protocol.Act(text, to, this, _priority);
-        }
-        
-        /// <summary>
-        /// Destroy this class, be careful, it can't be used in any way after you
-        /// call this
-        /// </summary>
-        public virtual void Destroy()
-        {
-            if (IsDestroyed)
-            {
-                // avoid calling this function multiple times, otherwise it could crash
-                return;
-            }
-
-            isDestroyed = true;
-
-            lock (ChannelList)
-            {
-                ChannelList.Clear();
-            }
-
-            lock (Channels)
-            {
-                foreach (Channel xx in Channels.Values)
-                {
-                    xx.Destroy();
-                }
-                Channels.Clear();
-            }
-
-            _Protocol = null;
         }
 
         /// <summary>

@@ -77,79 +77,67 @@ namespace libirc
             // every IRC command that is sent from server should being with colon according to RFC
             if (ServerLineRawText[0] == ':')
             {
-                List<string> parameters = new List<string>();
-                string message = "";
-                string source = ServerLineRawText.Substring(1);
+                Network.IncomingDataEventArgs info = new Network.IncomingDataEventArgs();
+                info.Date = this.Date;
+                info.ServerLine = ServerLineRawText;
+                info.Source = ServerLineRawText.Substring(1);
                 // some functions prefer parameters not to be converted to list so this is them
-                string parameters_line = "";
-                string command = "";
-                if (source.Contains(" "))
+                if (info.Source.Contains(" "))
                 {
                     // we store the value of indexof so that we don't need to call this CPU expensive
                     // method too often
-                    int index = source.IndexOf(" ", StringComparison.Ordinal);
-                    command = source.Substring(index + 1);
-                    source = source.Substring(0, index);
-                    if (command.Contains(" :"))
+                    int index = info.Source.IndexOf(" ", StringComparison.Ordinal);
+                    info.Command = info.Source.Substring(index + 1);
+                    info.Source = info.Source.Substring(0, index);
+                    if (info.Command.Contains(" :"))
                     {
-                        index = command.IndexOf(" :", StringComparison.Ordinal);
+                        index = info.Command.IndexOf(" :", StringComparison.Ordinal);
                         if (index < 0)
                         {
                             _Protocol.DebugLog("Malformed text, probably hacker: " + ServerLineRawText);
                             return false;
                         }
-                        message = command.Substring(index + 2);
-                        command = command.Substring(0, index);
+                        info.Message = info.Command.Substring(index + 2);
+                        info.Command = info.Command.Substring(0, index);
                     }
                     // check if there aren't some extra parameters for this command
-                    if (command.Contains(" "))
+                    if (info.Command.Contains(" "))
                     {
                         // we remove the command name and split all the parameters by space
-                        index = command.IndexOf(" ", StringComparison.Ordinal);
-                        parameters_line = command.Substring(index + 1);
-                        parameters.AddRange(parameters_line.Split(' '));
-                        command = command.Substring(0, index);
+                        index = info.Command.IndexOf(" ", StringComparison.Ordinal);
+                        info.ParameterLine = info.Command.Substring(index + 1);
+                        info.Parameters.AddRange(info.ParameterLine.Split(' '));
+                        info.Command = info.Command.Substring(0, index);
                     }
                     // commands are meant to be uppercase but for compatibility reasons we ensure it is
-                    command = command.ToUpper();
+                    info.Command = info.Command.ToUpper();
                 }
-                if (_Network.__evt_SubscribedNetworkRawData)
+                if (_Network.__evt__IncomingData(info))
                 {
-                    Network.IncomingDataEventArgs info = new Network.IncomingDataEventArgs();
-                    info.Message = message;
-                    info.Date = this.Date;
-                    info.ParameterLine = parameters_line;
-                    info.Source = source;
-                    info.ServerLine = ServerLineRawText;
-                    info.Command = command;
-                    info.Parameters = parameters;
-                    if (_Network.__evt__IncomingData(info))
-                    {
-                        return true;
-                    }
+                    return true;
                 }
-                if (ProcessSelf(source, command, parameters, message))
+                if (ProcessSelf(info.Source, info.Command, info.Parameters, info.Message))
                 {
                     OK = true;
                 }
-                switch (command)
+                switch (info.Command)
                 {
                     case "001":
                     case "002":
                     case "003":
                     case "004":
                         Network.NetworkGenericDataEventArgs args004 = new Network.NetworkGenericDataEventArgs(this.ServerLineRawText, this.Date);
-                        args004.Command = command;
-                        args004.ParameterLine = parameters_line;
-                        args004.Parameters = parameters;
-                        args004.Message = message;
+                        args004.Command = info.Command;
+                        args004.ParameterLine = info.ParameterLine;
+                        args004.Parameters = info.Parameters;
+                        args004.Message = info.Message;
                         _Network.__evt_INFO(args004);
                         break;
                     case "005":
-                        Info(command, parameters, parameters_line, message);
+                        Info(info);
                         break;
                     case "301":
-                        if (Idle2(command, parameters_line))
+                        if (Idle2(info.Command, info.ParameterLine))
                             return true;
                         break;
                     case "305":
@@ -161,27 +149,27 @@ namespace libirc
                             _Network.IsAway = true;
                         break;
                     case "311":
-                        if (WhoisLoad(command, parameters_line, parameters, message))
+                        if (WhoisLoad(info.Command, info.ParameterLine, info.Parameters, info.Message))
                             return true;
                         break;
                     case "312":
-                        if (WhoisSv(command, parameters_line))
+                        if (WhoisSv(info.Command, info.ParameterLine))
                             return true;
                         break;
                     case "315":
-                        if (FinishChan(parameters))
+                        if (FinishChan(info.Parameters))
                             return true;
                         break;
                     case "317":
-                        if (IdleTime(command, parameters_line))
+                        if (IdleTime(info.Command, info.ParameterLine))
                             return true;
                         break;
                     case "318":
-                        if (WhoisFn(command, parameters_line))
+                        if (WhoisFn(info.Command, info.ParameterLine))
                             return true;
                         break;
                     case "319":
-                        if (WhoisCh(command, parameters_line, message))
+                        if (WhoisCh(info.Command, info.ParameterLine, info.Message))
                             return true;
                         break;
                     case "321":
@@ -189,7 +177,7 @@ namespace libirc
                             return true;
                         break;
                     case "322":
-                        if (ChannelData(command, parameters_line, message))
+                        if (ChannelData(info.Command, info.ParameterLine, info.Message))
                             return true;
                         break;
                     case "323":
@@ -203,41 +191,41 @@ namespace libirc
                         _Network.DownloadingList = false;
                         break;
                     case "324":
-                        if (ChannelInfo(parameters, command, source, message))
+                        if (ChannelInfo(info.Parameters, info.Command, info.Source, info.Message))
                             return true;
                         break;
                     case "328":
-                        if (Website(parameters, message))
+                        if (Website(info.Parameters, info.Message))
                             return true;
                         break;
                     case "329":
-                        if (CreationDatetime(parameters))
+                        if (CreationDatetime(info.Parameters))
                             return true;
                         break;
                     case "332":
-                        if (ChannelTopic(parameters, command, source, message))
+                        if (ChannelTopic(info.Parameters, info.Command, info.Source, info.Message))
                             return true;
                         break;
                     case "333":
-                        if (TopicInfo(parameters))
+                        if (TopicInfo(info.Parameters))
                             return true;
                         break;
                     case "352":
-                        if (ParseUser(parameters, message))
+                        if (ParseUser(info.Parameters, info.Message))
                             return true;
                         break;
                     case "353":
-                        if (ParseInfo(parameters, message))
+                        if (ParseInfo(info.Parameters, info.Message))
                             return true;
                         break;
                     case "366":
                         return true;
                     case "367":
-                        if (ChannelBans(parameters))
+                        if (ChannelBans(info.Parameters))
                             return true;
                         break;
                     case "368":
-                        if (ChannelBans2(parameters))
+                        if (ChannelBans2(info.Parameters))
                             return true;
                         break;
                     case "433":
@@ -254,60 +242,60 @@ namespace libirc
                     case "313":
                     case "378":
                     case "671":
-                        if (WhoisText(command, parameters_line, parameters, message))
+                        if (WhoisText(info.Command, info.ParameterLine, info.Parameters, info.Message))
                             return true;
                         break;
                     case "PING":
-                        if (Pong(command, parameters_line, message))
+                        if (Pong(info.Command, info.ParameterLine, info.Message))
                             return true;
                         break;
                     case "PONG":
                         pong = DateTime.Now;
                         return true;
                     //case "INFO":
-                        //_Network.SystemWindow.scrollback.InsertText(text.Substring(text.IndexOf("INFO", StringComparison.Ordinal) + 5), Pidgeon.ContentLine.MessageStyle.User,                                                                     true, date, !updated_text);
+                    //_Network.SystemWindow.scrollback.InsertText(text.Substring(text.IndexOf("INFO", StringComparison.Ordinal) + 5), Pidgeon.ContentLine.MessageStyle.User,                                                                     true, date, !updated_text);
                     //    return true;
                     case "NOTICE":
                         Network.NetworkNOTICEEventArgs notice = new Network.NetworkNOTICEEventArgs(ServerLineRawText, this.Date);
-                        notice.Source = source;
-                        notice.Message = message;
-                        notice.ParameterLine = parameters_line;
+                        notice.Source = info.Source;
+                        notice.Message = info.Message;
+                        notice.ParameterLine = info.ParameterLine;
                         _Network.__evt_NOTICE(notice);
                         return true;
                     case "NICK":
-                        if (ProcessNick(source, parameters_line, message))
+                        if (ProcessNick(info.Source, info.ParameterLine, info.Message))
                             return true;
                         break;
                     case "INVITE":
-                        if (Invite(source, parameters_line))
+                        if (Invite(info.Source, info.ParameterLine))
                             return true;
                         break;
                     case "PRIVMSG":
-                        if (ProcessPM(source, parameters_line, message))
+                        if (ProcessPM(info.Source, info.ParameterLine, info.Message))
                             return true;
                         break;
                     case "TOPIC":
-                        if (Topic(source, parameters_line, message))
+                        if (Topic(info.Source, info.ParameterLine, info.Message))
                             return true;
                         break;
                     case "MODE":
-                        if (Mode(source, parameters_line))
+                        if (Mode(info.Source, info.ParameterLine))
                             return true;
                         break;
                     case "PART":
-                        if (Part(source, parameters_line, message))
+                        if (Part(info.Source, info.ParameterLine, info.Message))
                             return true;
                         break;
                     case "QUIT":
-                        if (Quit(source, parameters_line, message))
+                        if (Quit(info.Source, info.ParameterLine, info.Message))
                             return true;
                         break;
                     case "JOIN":
-                        if (Join(source, parameters_line, message))
+                        if (Join(info.Source, info.ParameterLine, info.Message))
                             return true;
                         break;
                     case "KICK":
-                        if (Kick(source, parameters, parameters_line, message))
+                        if (Kick(info.Source, info.Parameters, info.ParameterLine, info.Message))
                             return true;
                         break;
                 }

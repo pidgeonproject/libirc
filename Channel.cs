@@ -43,12 +43,12 @@ namespace libirc
     /// Invite
     /// </summary>
     [Serializable]
-    public class Invite : ChannelParameterMode
+    public class ChannelInvite : ChannelParameterMode
     {
         /// <summary>
         /// Creates a new instance of invite
         /// </summary>
-        public Invite()
+        public ChannelInvite()
         {
             // This empty constructor is here so that we can serialize this
         }
@@ -59,7 +59,7 @@ namespace libirc
         /// <param name="user">User</param>
         /// <param name="target">Target</param>
         /// <param name="time">Time</param>
-        public Invite(string user, string target, string time)
+        public ChannelInvite(string user, string target, string time)
         {
             User = user;
             Target = target;
@@ -86,12 +86,12 @@ namespace libirc
     /// Simplest ban
     /// </summary>
     [Serializable]
-    public class SimpleBan : ChannelParameterMode
+    public class ChannelBan : ChannelParameterMode
     {
         /// <summary>
         /// Creates a new instance of simple ban (xml constructor only)
         /// </summary>
-        public SimpleBan()
+        public ChannelBan()
         {
             // This empty constructor is here so that we can serialize this
         }
@@ -102,7 +102,7 @@ namespace libirc
         /// <param name="user">Person who set a ban</param>
         /// <param name="target">Who is target</param>
         /// <param name="time">Unix date when it was set</param>
-        public SimpleBan(string user, string target, string time)
+        public ChannelBan(string user, string target, string time)
         {
             Target = target;
             User = user;
@@ -154,11 +154,11 @@ namespace libirc
         /// <summary>
         /// Invites
         /// </summary>
-        public List<Invite> Invites = null;
+        public List<ChannelInvite> Invites = null;
         /// <summary>
         /// List of bans set
         /// </summary>
-        public List<SimpleBan> Bans = null;
+        public List<ChannelBan> Bans = null;
         /// <summary>
         /// Exception list 
         /// </summary>
@@ -213,10 +213,6 @@ namespace libirc
                 {
                     return false;
                 }
-                if (IsDestroyed)
-                {
-                    return false;
-                }
                 if (_Network != null)
                 {
                     return _Network.IsConnected;
@@ -232,19 +228,6 @@ namespace libirc
 				return this.UserList.Count;
 			}
 		}
-		
-        private bool destroyed = false;
-        /// <summary>
-        /// This will return true in case object was requested to be disposed
-        /// you should never work with objects that return true here
-        /// </summary>
-        public virtual bool IsDestroyed
-        {
-            get
-            {
-                return destroyed;
-            }
-        }
 
         /// <summary>
         /// Constructor (simple)
@@ -270,17 +253,6 @@ namespace libirc
         }
 
         /// <summary>
-        /// Destructor
-        /// </summary>
-        ~Channel()
-        {
-            if (!destroyed)
-            {
-                Destroy();
-            }
-        }
-
-        /// <summary>
         /// Renew bans
         /// </summary>
         public void ReloadBans()
@@ -288,7 +260,7 @@ namespace libirc
             IsParsingBanData = true;
             if (Bans == null)
             {
-                Bans = new List<SimpleBan>();
+                Bans = new List<ChannelBan>();
             }
             else
             {
@@ -305,7 +277,7 @@ namespace libirc
             IsParsingExceptionData = true;
             if (Invites == null)
             {
-                Invites = new List<Invite>();
+                Invites = new List<ChannelInvite>();
             }
             else
             {
@@ -378,7 +350,7 @@ namespace libirc
             }
             lock (Bans)
             {
-                foreach (SimpleBan name in Bans)
+                foreach (ChannelBan name in Bans)
                 {
                     if (name.Target == host)
                     {
@@ -396,53 +368,6 @@ namespace libirc
 				return new Dictionary<string, User>(this.UserList);
 			}
 		}
-		
-        /// <summary>
-        /// Destroy this class, be careful, it can't be used in any way after you
-        /// call this
-        /// </summary>
-        public virtual void Destroy()
-        {
-            if (IsDestroyed)
-            {
-                // prevent this from being called multiple times
-                return;
-            }
-
-            destroyed = true;
-
-            lock (UserList)
-            {
-                UserList.Clear();
-            }
-
-            ChannelWork = false;
-            _Network = null;
-
-            if (Invites != null)
-            {
-                lock (Invites)
-                {
-                    Invites.Clear();
-                }
-            }
-
-            if (Exceptions != null)
-            {
-                lock (Exceptions)
-                {
-                    Exceptions.Clear();
-                }
-            }
-
-            if (Bans != null)
-            {
-                lock (Bans)
-                {
-                    Bans.Clear();
-                }
-            }
-        }
 
         /// <summary>
         /// This function returns a special user mode for a user that should be in user list (for example % for halfop or @ for operator)
@@ -478,9 +403,9 @@ namespace libirc
         {
             if (Bans == null)
             {
-                Bans = new List<SimpleBan>();
+                Bans = new List<ChannelBan>();
             }
-            SimpleBan br = new SimpleBan(user, ban, time);
+            ChannelBan br = new ChannelBan(user, ban, time);
             lock (Bans)
             {
                 Bans.Add(br);
@@ -498,10 +423,10 @@ namespace libirc
             {
                 return false;
             }
-            SimpleBan br = null;
+            ChannelBan br = null;
             lock (Bans)
             {
-                foreach (SimpleBan xx in Bans)
+                foreach (ChannelBan xx in Bans)
                 {
                     if (xx.Target == ban)
                     {
