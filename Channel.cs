@@ -220,14 +220,14 @@ namespace libirc
                 return false;
             }
         }
-		
-		public virtual int UserCount
-		{
-			get
-			{
-				return this.UserList.Count;
-			}
-		}
+        
+        public virtual int UserCount
+        {
+            get
+            {
+                return this.UserList.Count;
+            }
+        }
 
         /// <summary>
         /// Constructor (simple)
@@ -332,11 +332,11 @@ namespace libirc
             }
         }
 
-		public virtual void ClearUsers()
-		{
-			this.UserList.Clear();
-		}
-		
+        public virtual void ClearUsers()
+        {
+            this.UserList.Clear();
+        }
+        
         /// <summary>
         /// Return true if a channel is matching ban (exact, not a mask)
         /// </summary>
@@ -361,13 +361,13 @@ namespace libirc
             return false;
         }
 
-		public virtual Dictionary<string, User> RetrieveUL()
-		{
-			lock (this.UserList)
-			{
-				return new Dictionary<string, User>(this.UserList);
-			}
-		}
+        public virtual Dictionary<string, User> RetrieveUL()
+        {
+            lock (this.UserList)
+            {
+                return new Dictionary<string, User>(this.UserList);
+            }
+        }
 
         /// <summary>
         /// This function returns a special user mode for a user that should be in user list (for example % for halfop or @ for operator)
@@ -378,21 +378,21 @@ namespace libirc
         {
             return nick.ChannelPrefix;
         }
-		
-		public virtual void InsertUser(User user)
-		{
-			lock (this.UserList)
-			{
-				// don't use LowNick directly it can change between these 2 instructions
-				string ln = user.LowNick;
-				user.Channel = this;
-				if (!this.UserList.ContainsKey(ln))
-				{
-					this.UserList.Add(ln, user);
-				}
-			}
-		}
-		
+        
+        public virtual void InsertUser(User user)
+        {
+            lock (this.UserList)
+            {
+                // don't use LowNick directly it can change between these 2 instructions
+                string ln = user.LowNick;
+                user.Channel = this;
+                if (!this.UserList.ContainsKey(ln))
+                {
+                    this.UserList.Add(ln, user);
+                }
+            }
+        }
+        
         /// <summary>
         /// Insert ban to a ban list, this will not set a ban to channel, this will only set it into memory of pidgeon
         /// </summary>
@@ -454,18 +454,18 @@ namespace libirc
                 }
             }
         }
-		
-		public virtual void RemoveUser(string nick)
-		{
-			nick = nick.ToLower();
-			lock (this.UserList)
-			{
-				if (this.UserList.ContainsKey(nick))
-				{
-					this.UserList.Remove(nick);
-				}
-			}
-		}
+        
+        public virtual void RemoveUser(string nick)
+        {
+            nick = nick.ToLower();
+            lock (this.UserList)
+            {
+                if (this.UserList.ContainsKey(nick))
+                {
+                    this.UserList.Remove(nick);
+                }
+            }
+        }
 
         public virtual User GetSelf()
         {
@@ -475,7 +475,7 @@ namespace libirc
             }
             return null;
         }
-		
+        
         /// <summary>
         /// Return user object if specified user exist
         /// </summary>

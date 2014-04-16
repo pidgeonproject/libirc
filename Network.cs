@@ -25,57 +25,57 @@ namespace libirc
     /// </summary>
     public class Network
     {
-		public enum EventType
-		{
-			Quit,
-			Join,
-			Part,
-			Kick,
-			Nick,
-			Message,
-			Notice,
-			Generic
-		}
+        public enum EventType
+        {
+            Quit,
+            Join,
+            Part,
+            Kick,
+            Nick,
+            Message,
+            Notice,
+            Generic
+        }
 
-		/// <summary>
-		/// Information about the channel for list
-		/// 
-		/// This is not a class for channels, only the list
-		/// </summary>
-		[Serializable]
-		public class ChannelData
-		{
-			/// <summary>
-			/// Name
-			/// </summary>
-			public string ChannelName = null;
-			/// <summary>
-			/// Number of users
-			/// </summary>
-			public uint UserCount = 0;
-			/// <summary>
-			/// Topic of a channel
-			/// </summary>
-			public string ChannelTopic = null;
+        /// <summary>
+        /// Information about the channel for list
+        /// 
+        /// This is not a class for channels, only the list
+        /// </summary>
+        [Serializable]
+        public class ChannelData
+        {
+            /// <summary>
+            /// Name
+            /// </summary>
+            public string ChannelName = null;
+            /// <summary>
+            /// Number of users
+            /// </summary>
+            public uint UserCount = 0;
+            /// <summary>
+            /// Topic of a channel
+            /// </summary>
+            public string ChannelTopic = null;
 
-			/// <summary>
-			/// Creates a new instance
-			/// </summary>
-			/// <param name="Users">Number of users</param>
-			/// <param name="Name"></param>
-			/// <param name="Topic"></param>
-			public ChannelData(uint Users, string Name, string Topic)
-			{
-				ChannelTopic = Topic;
-				UserCount = Users;
-				ChannelName = Name;
-			}
+            /// <summary>
+            /// Creates a new instance
+            /// </summary>
+            /// <param name="Users">Number of users</param>
+            /// <param name="Name"></param>
+            /// <param name="Topic"></param>
+            public ChannelData(uint Users, string Name, string Topic)
+            {
+                ChannelTopic = Topic;
+                UserCount = Users;
+                ChannelName = Name;
+            }
 
-			/// <summary>
-			/// This constructor needs to exist for xml deserialization don't remove it
-			/// </summary>
-			public ChannelData() {}
-		}
+            /// <summary>
+            /// This constructor needs to exist for xml deserialization don't remove it
+            /// </summary>
+            public ChannelData() {}
+        }
 
         public class IncomingDataEventArgs : EventArgs
         {
@@ -91,47 +91,47 @@ namespace libirc
 
         public class NetworkGenericEventArgs : Protocol.ProtocolGenericEventArgs
         {
-			/// <summary>
-			/// user!ident@host
-			/// </summary>
+            /// <summary>
+            /// user!ident@host
+            /// </summary>
             public string Source = null;
-			/// <summary>
-			/// If user object had to be fetch during the processing (which is CPU expensive) it's provided
-			/// here as well so that you don't need to fetch it again in case you need to use it.
-			/// 
-			/// This is NULL most of time, don't rely on it
-			/// </summary>
-			public User SourceUser = null;
-			private UserInfo sourceInfo = null;
-			public UserInfo SourceInfo
-			{
-				get
-				{
-					if (this.Source == null) return null;
-					if (this.sourceInfo == null) sourceInfo = new UserInfo(this.Source);
-					return sourceInfo;
-				}
-			}
+            /// <summary>
+            /// If user object had to be fetch during the processing (which is CPU expensive) it's provided
+            /// here as well so that you don't need to fetch it again in case you need to use it.
+            /// 
+            /// This is NULL most of time, don't rely on it
+            /// </summary>
+            public User SourceUser = null;
+            private UserInfo sourceInfo = null;
+            public UserInfo SourceInfo
+            {
+                get
+                {
+                    if (this.Source == null) return null;
+                    if (this.sourceInfo == null) sourceInfo = new UserInfo(this.Source);
+                    return sourceInfo;
+                }
+            }
             public string ParameterLine = null;
-			public List<string> Parameters = null;
-			/// <summary>
-			/// Text of this event as sent by server, for example :user!xx@bla NOTICE kokos :hello
-			/// </summary>
-			public string ServerLine;
-			
-			public NetworkGenericEventArgs(string line, long date)
-			{
+            public List<string> Parameters = null;
+            /// <summary>
+            /// Text of this event as sent by server, for example :user!xx@bla NOTICE kokos :hello
+            /// </summary>
+            public string ServerLine;
+            
+            public NetworkGenericEventArgs(string line, long date)
+            {
                 this.Date = date;
-				this.ServerLine = line;
-			}
+                this.ServerLine = line;
+            }
         }
 
-		public class NetworkGenericDataEventArgs : NetworkGenericEventArgs
-		{
-			public string Command = null;
-			public string Message = null;
-			
-			public NetworkGenericDataEventArgs(string line, long date) : base(line, date) {}
+        public class NetworkGenericDataEventArgs : NetworkGenericEventArgs
+        {
+            public string Command = null;
+            public string Message = null;
+            
+            public NetworkGenericDataEventArgs(string line, long date) : base(line, date) {}
             public NetworkGenericDataEventArgs(Network.IncomingDataEventArgs info) : base(info.ServerLine, info.Date)
             {
                 this.Command = info.Command;
@@ -140,15 +140,15 @@ namespace libirc
                 this.Parameters = info.Parameters;
                 this.Source = info.Source;
             }
-		}
+        }
 
-		public class NetworkChannelEventArgs : NetworkGenericEventArgs
-		{
-			public string ChannelName = null;
-			public Channel Channel = null;
-			
-			public NetworkChannelEventArgs(string line, long date) : base(line, date) {}
-		}
+        public class NetworkChannelEventArgs : NetworkGenericEventArgs
+        {
+            public string ChannelName = null;
+            public Channel Channel = null;
+            
+            public NetworkChannelEventArgs(string line, long date) : base(line, date) {}
+        }
 
         public class NetworkChannelDataEventArgs : NetworkGenericDataEventArgs
         {
@@ -157,59 +157,59 @@ namespace libirc
 
             public NetworkChannelDataEventArgs(string line, long date) : base(line, date) { }
         }
-		
-		public class NetworkParseUserEventArgs : NetworkChannelEventArgs
-		{
-			public bool IsAway = true;
-			public string Server = null;
-			public UserInfo User = null;
+        
+        public class NetworkParseUserEventArgs : NetworkChannelEventArgs
+        {
+            public bool IsAway = true;
+            public string Server = null;
+            public UserInfo User = null;
             public string StringMode = null;
-			public string RealName;
+            public string RealName;
 
             public NetworkParseUserEventArgs(string line, long date) : base(line, date) { }
-		}
-		
-		public class NetworkKickEventArgs : NetworkChannelEventArgs
-		{
-			public string Target;
-			public string Message;
+        }
+        
+        public class NetworkKickEventArgs : NetworkChannelEventArgs
+        {
+            public string Target;
+            public string Message;
 
             public NetworkKickEventArgs(string line, long date) : base(line, date) { }
-		}
-		
-		public class ChannelUserListEventArgs : NetworkChannelEventArgs
-		{
-			public List<string> UserNicknames = new List<string>();
-			public List<User> Users = new List<User>();
+        }
+        
+        public class ChannelUserListEventArgs : NetworkChannelEventArgs
+        {
+            public List<string> UserNicknames = new List<string>();
+            public List<User> Users = new List<User>();
 
             public ChannelUserListEventArgs(string line, long date) : base(line, date) { }
-		}
-		
+        }
+        
         public class NetworkPRIVMSGEventArgs : NetworkGenericEventArgs
         {
             public string Message = null;
             public bool IsAct = false;
             public Channel Channel = null;
-			public string ChannelName = null;
+            public string ChannelName = null;
 
             public NetworkPRIVMSGEventArgs(string line, long date) : base(line, date) { }
         }
-		
-		public class NetworkMODEEventArgs : NetworkChannelDataEventArgs
-		{
-			public Formatter FormattedMode = null;
+        
+        public class NetworkMODEEventArgs : NetworkChannelDataEventArgs
+        {
+            public Formatter FormattedMode = null;
             public string SimpleMode = null;
 
             public NetworkMODEEventArgs(string line, long date) : base(line, date) { }
-		}
-		
-		public class NetworkNICKEventArgs : NetworkChannelDataEventArgs
-		{
-			public string NewNick = null;
-			public string OldNick = null;
+        }
+        
+        public class NetworkNICKEventArgs : NetworkChannelDataEventArgs
+        {
+            public string NewNick = null;
+            public string OldNick = null;
 
             public NetworkNICKEventArgs(string line, long date) : base(line, date) { }
-		}
+        }
 
         public class NetworkCTCPEventArgs : NetworkPRIVMSGEventArgs
         {
@@ -237,12 +237,12 @@ namespace libirc
             }
         }
 
-		public class NetworkNOTICEEventArgs : NetworkGenericEventArgs
-		{
-			public string Message = null;
+        public class NetworkNOTICEEventArgs : NetworkGenericEventArgs
+        {
+            public string Message = null;
 
             public NetworkNOTICEEventArgs(string line, long date) : base(line, date) { }
-		}
+        }
 
         public class NetworkTOPICEventArgs : NetworkChannelDataEventArgs
         {
@@ -252,26 +252,26 @@ namespace libirc
             public NetworkTOPICEventArgs(string line, long date) : base(line, date) {}
         }
 
-		public class NetworkSelfEventArgs : NetworkGenericEventArgs
-		{
-			public string Message = null;
-			public Channel Channel = null;
-			/// <summary>
-			/// Name of the channel in case it wasn't recognized or known
-			/// </summary>
-			public string ChannelName = null;
-			/// <summary>
-			/// This is a new nick in case the event type was NICK
-			/// </summary>
-			public string NewNick = null;
-			/// <summary>
-			/// This is an old nickname in case the event type was NICK
-			/// </summary>
-			public string OldNick = null;
-			public EventType Type = EventType.Generic;
+        public class NetworkSelfEventArgs : NetworkGenericEventArgs
+        {
+            public string Message = null;
+            public Channel Channel = null;
+            /// <summary>
+            /// Name of the channel in case it wasn't recognized or known
+            /// </summary>
+            public string ChannelName = null;
+            /// <summary>
+            /// This is a new nick in case the event type was NICK
+            /// </summary>
+            public string NewNick = null;
+            /// <summary>
+            /// This is an old nickname in case the event type was NICK
+            /// </summary>
+            public string OldNick = null;
+            public EventType Type = EventType.Generic;
 
             public NetworkSelfEventArgs(string line, long date) : base(line, date) { }
-		}
+        }
 
         public class UnknownDataEventArgs : EventArgs
         {
@@ -291,49 +291,49 @@ namespace libirc
         public delegate void NetworkWHOISEventHandler(object sender, NetworkWHOISEventArgs e);
         public delegate void NetworkINVITEEventHandler(object sender, NetworkChannelDataEventArgs e);
         public delegate void NetworkTopicDataEventHandler(object sender, NetworkTOPICEventArgs e);
-		public delegate void NetworkInfoEventHandler(object sender,NetworkGenericDataEventArgs e);
-		public delegate void NetworkSelfEventHandler(object sender, NetworkSelfEventArgs e);
-		public delegate void NetworkNOTICEEventHandler(object sender, NetworkNOTICEEventArgs e);
+        public delegate void NetworkInfoEventHandler(object sender,NetworkGenericDataEventArgs e);
+        public delegate void NetworkSelfEventHandler(object sender, NetworkSelfEventArgs e);
+        public delegate void NetworkNOTICEEventHandler(object sender, NetworkNOTICEEventArgs e);
         public delegate void NetworkPRIVMSGEventHandler(object sender, NetworkPRIVMSGEventArgs e);
-		public delegate void NetworkJOINEventHandler(object sender, NetworkChannelEventArgs e);
-		public delegate void NetworkParseUserEventHandler(object sender, NetworkParseUserEventArgs e);
+        public delegate void NetworkJOINEventHandler(object sender, NetworkChannelEventArgs e);
+        public delegate void NetworkParseUserEventHandler(object sender, NetworkParseUserEventArgs e);
         public delegate void NetworkPARTEventHandler(object sender, NetworkChannelDataEventArgs e);
-		public delegate void NetworkKICKEventHandler(object sender, NetworkKickEventArgs e);
-		public delegate void NetworkNICKEventHandler(object sender, NetworkNICKEventArgs e);
+        public delegate void NetworkKICKEventHandler(object sender, NetworkKickEventArgs e);
+        public delegate void NetworkNICKEventHandler(object sender, NetworkNICKEventArgs e);
         public delegate void NetworkTopicInfoEventHandler(object sender, NetworkTOPICEventArgs e);
-		public delegate void NetworkQUITEventHandler(object sender, NetworkGenericEventArgs e);
+        public delegate void NetworkQUITEventHandler(object sender, NetworkGenericEventArgs e);
         public delegate void NetworkChannelInfoEventHandler(object sender, NetworkChannelDataEventArgs e);
         public delegate void NetworkCTCPEventHandler(object sender, NetworkCTCPEventArgs e);
-		public delegate void NetworkChannelUserListHandler(object sender, ChannelUserListEventArgs e);
-		public delegate void FinishParseUserEventHandler(object sender, NetworkChannelDataEventArgs e);
-		public delegate void NetworkMODEEventHandler(object sender, NetworkMODEEventArgs e);
+        public delegate void NetworkChannelUserListHandler(object sender, ChannelUserListEventArgs e);
+        public delegate void FinishParseUserEventHandler(object sender, NetworkChannelDataEventArgs e);
+        public delegate void NetworkMODEEventHandler(object sender, NetworkMODEEventArgs e);
         public delegate void UnknownDataEventHandler(object sender, UnknownDataEventArgs args);
         public delegate void NetworkTOPICEventHandler(object sender, NetworkTOPICEventArgs e);
         public delegate void NetworkFinishBanEventHandler(object sender, NetworkChannelEventArgs e);
         public event IncomingDataEventHandler IncomingData;
-		/// <summary>
-		/// Occurs when some network action that is related to current user happens (for example
-		/// when this user join or change nick)
-		/// </summary>
-		public event NetworkSelfEventHandler On_Self;
-		public event NetworkNOTICEEventHandler On_NOTICE;
-		public event NetworkParseUserEventHandler On_ParseUser;
+        /// <summary>
+        /// Occurs when some network action that is related to current user happens (for example
+        /// when this user join or change nick)
+        /// </summary>
+        public event NetworkSelfEventHandler On_Self;
+        public event NetworkNOTICEEventHandler On_NOTICE;
+        public event NetworkParseUserEventHandler On_ParseUser;
         public event NetworkPRIVMSGEventHandler On_PRIVMSG;
-		public event NetworkPARTEventHandler On_PART;
+        public event NetworkPARTEventHandler On_PART;
         /// <summary>
         /// Occurs when unknown data are retrieved from server
         /// </summary>
         public event UnknownDataEventHandler UnknownDataRetrievedEvent;
-		public event NetworkJOINEventHandler On_JOIN;
-		public event NetworkInfoEventHandler On_Info;
-		public event NetworkKICKEventHandler On_KICK;
-		public event NetworkNICKEventHandler On_NICK;
-		public event NetworkQUITEventHandler On_QUIT;
+        public event NetworkJOINEventHandler On_JOIN;
+        public event NetworkInfoEventHandler On_Info;
+        public event NetworkKICKEventHandler On_KICK;
+        public event NetworkNICKEventHandler On_NICK;
+        public event NetworkQUITEventHandler On_QUIT;
         public event NetworkChannelInfoEventHandler On_ChannelInfo;
         public event NetworkCTCPEventHandler On_CTCP;
-		public event NetworkChannelUserListHandler On_ChannelUserList;
-		public event FinishParseUserEventHandler On_FinishChannelParseUser;
-		public event NetworkMODEEventHandler On_MODE;
+        public event NetworkChannelUserListHandler On_ChannelUserList;
+        public event FinishParseUserEventHandler On_FinishChannelParseUser;
+        public event NetworkMODEEventHandler On_MODE;
         public event NetworkTOPICEventHandler On_TOPIC;
         public event NetworkTopicDataEventHandler On_TopicData;
         public event NetworkTopicInfoEventHandler On_TopicInfo;
@@ -650,65 +650,65 @@ namespace libirc
         {
             if (this.On_NOTICE != null)
             {
-				this.On_NOTICE(this, args);
+                this.On_NOTICE(this, args);
             }
         }
 
-		public virtual void __evt_Self(NetworkSelfEventArgs args)
-		{
-			if (this.On_Self != null)
-			{
-				this.On_Self(this, args);
-			}
-		}
+        public virtual void __evt_Self(NetworkSelfEventArgs args)
+        {
+            if (this.On_Self != null)
+            {
+                this.On_Self(this, args);
+            }
+        }
 
-		public virtual void __evt_PRIVMSG(NetworkPRIVMSGEventArgs args)
-		{
-			if (this.On_PRIVMSG != null)
-			{
-				this.On_PRIVMSG(this, args);
-			}
-		}
+        public virtual void __evt_PRIVMSG(NetworkPRIVMSGEventArgs args)
+        {
+            if (this.On_PRIVMSG != null)
+            {
+                this.On_PRIVMSG(this, args);
+            }
+        }
 
-		public virtual void __evt_INFO(NetworkGenericDataEventArgs args)
-		{
-			if (this.On_Info != null)
-			{
-				this.On_Info(this, args);
-			}
-		}
-		
-		public virtual void __evt_ParseUser(NetworkParseUserEventArgs args)
-		{
-			if (this.On_ParseUser != null)
-			{
-				this.On_ParseUser(this, args);
-			}
-		}
+        public virtual void __evt_INFO(NetworkGenericDataEventArgs args)
+        {
+            if (this.On_Info != null)
+            {
+                this.On_Info(this, args);
+            }
+        }
+        
+        public virtual void __evt_ParseUser(NetworkParseUserEventArgs args)
+        {
+            if (this.On_ParseUser != null)
+            {
+                this.On_ParseUser(this, args);
+            }
+        }
 
-		public virtual void __evt_JOIN(NetworkChannelEventArgs args)
-		{
-			if (this.On_JOIN != null)
-			{
-				this.On_JOIN(this, args);
-			}
-		}
+        public virtual void __evt_JOIN(NetworkChannelEventArgs args)
+        {
+            if (this.On_JOIN != null)
+            {
+                this.On_JOIN(this, args);
+            }
+        }
 
         public virtual void __evt_PART(NetworkChannelDataEventArgs args)
-		{
-			if (this.On_PART != null)
-			{
-				this.On_PART(this, args);
-			}
-		}
+        {
+            if (this.On_PART != null)
+            {
+                this.On_PART(this, args);
+            }
+        }
 
-		public virtual void __evt_KICK(NetworkKickEventArgs args)
-		{
-			if (this.On_KICK != null)
-			{
-				this.On_KICK(this, args);
-			}
-		}
+        public virtual void __evt_KICK(NetworkKickEventArgs args)
+        {
+            if (this.On_KICK != null)
+            {
+                this.On_KICK(this, args);
+            }
+        }
 
         public virtual void __evt_CTCP(NetworkCTCPEventArgs args)
         {
@@ -766,37 +766,37 @@ namespace libirc
             }
         }
 
-		public virtual void __evt_ChannelUserList(ChannelUserListEventArgs args)
-		{
-			if (this.On_ChannelUserList != null)
-			{
-				this.On_ChannelUserList(this, args);
-			}
-		}
-		
-		public virtual void __evt_FinishChannelParseUser(NetworkChannelDataEventArgs args)
-		{
-			if (this.On_FinishChannelParseUser != null)
-			{
-				this.On_FinishChannelParseUser(this, args);
-			}
-		}
-		
-		public virtual void __evt_NICK(NetworkNICKEventArgs args)
-		{
-			if (this.On_NICK != null)
-			{
-				this.On_NICK(this, args);
-			}
-		}
-		
-		public virtual void __evt_MODE(NetworkMODEEventArgs args)
-		{
-			if (this.On_MODE != null)
-			{
-				this.On_MODE(this, args);
-			}
-		}
+        public virtual void __evt_ChannelUserList(ChannelUserListEventArgs args)
+        {
+            if (this.On_ChannelUserList != null)
+            {
+                this.On_ChannelUserList(this, args);
+            }
+        }
+        
+        public virtual void __evt_FinishChannelParseUser(NetworkChannelDataEventArgs args)
+        {
+            if (this.On_FinishChannelParseUser != null)
+            {
+                this.On_FinishChannelParseUser(this, args);
+            }
+        }
+        
+        public virtual void __evt_NICK(NetworkNICKEventArgs args)
+        {
+            if (this.On_NICK != null)
+            {
+                this.On_NICK(this, args);
+            }
+        }
+        
+        public virtual void __evt_MODE(NetworkMODEEventArgs args)
+        {
+            if (this.On_MODE != null)
+            {
+                this.On_MODE(this, args);
+            }
+        }
 
         public virtual void __evt_ChannelFinishBan(NetworkChannelEventArgs args)
         {

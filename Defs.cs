@@ -46,27 +46,27 @@ namespace libirc
             return span.TotalSeconds;
         }
 
-		/// <summary>
-		/// Convert a unix timestamp to human readable time
-		/// </summary>
-		/// <param name="time"></param>
-		/// <returns></returns>
-		public static string ConvertFromUNIXToStringSafe(string time)
-		{
-			try
-			{
-				if (time == null)
-				{
-					return "Unable to read: null";
-				}
-				double unixtimestmp = double.Parse(time);
-				return (new DateTime(1970, 1, 1, 0, 0, 0)).AddSeconds(unixtimestmp).ToString();
-			}
-			catch (Exception)
-			{
-				return "Unable to read: " + time;
-			}
-		}
+        /// <summary>
+        /// Convert a unix timestamp to human readable time
+        /// </summary>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public static string ConvertFromUNIXToStringSafe(string time)
+        {
+            try
+            {
+                if (time == null)
+                {
+                    return "Unable to read: null";
+                }
+                double unixtimestmp = double.Parse(time);
+                return (new DateTime(1970, 1, 1, 0, 0, 0)).AddSeconds(unixtimestmp).ToString();
+            }
+            catch (Exception)
+            {
+                return "Unable to read: " + time;
+            }
+        }
 
         /// <summary>
         /// Convert a unix timestamp to human readable time

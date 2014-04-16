@@ -210,12 +210,12 @@ namespace libirc
                             this._Mode.Add(_x.ToString());
                         }
                         continue;
-					case '-':
-						if (_Mode.Contains(_x.ToString()))
-						{
-							this._Mode.Remove(_x.ToString());
-						}
-						continue;
+                    case '-':
+                        if (_Mode.Contains(_x.ToString()))
+                        {
+                            this._Mode.Remove(_x.ToString());
+                        }
+                        continue;
                 } continue;
             }
             return false;

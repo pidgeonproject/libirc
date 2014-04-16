@@ -149,113 +149,113 @@ namespace libirc.Protocols
                 return;
             } catch (System.Net.Sockets.SocketException fail)
             {
-				if (!this.IsConnected)
-				{
-					return;
-				}
-				HandleException(fail);
+                if (!this.IsConnected)
+                {
+                    return;
+                }
+                HandleException(fail);
             } catch (Exception fail)
-			{
-				HandleException(fail);
-			}
+            {
+                HandleException(fail);
+            }
         }
 
         public void Start()
         {
-			try
-			{
-	            if (this.IRCNetwork == null)
-	            {
-	                IRCNetwork = new Network(this.Server, this);
-	            }
-	            Messages.protocol = this;
-				try
-				{
-		            if (!SSL)
-		            {
-		                networkStream = new System.Net.Sockets.TcpClient(Server, Port).GetStream();
-		                streamWriter = new System.IO.StreamWriter(networkStream);
-		                streamReader = new System.IO.StreamReader(networkStream, NetworkEncoding);
-		            }
-		            if (SSL)
-		            {
-		                System.Net.Sockets.TcpClient client = new System.Net.Sockets.TcpClient(Server, Port);
-		                networkSsl = new System.Net.Security.SslStream(client.GetStream(), true,
-		                                                                new System.Net.Security.RemoteCertificateValidationCallback(Protocol.ValidateServerCertificate), null);
-		                networkSsl.AuthenticateAsClient(Server);
-		                streamWriter = new System.IO.StreamWriter(networkSsl);
-		                streamReader = new System.IO.StreamReader(networkSsl, NetworkEncoding);
-		            }
-				} catch (SocketException fail)
-				{
-					DebugLog(fail.ToString());
-					SafeDc();
-					this.DisconnectExec(fail.Message);
-					return;
-				}
+            try
+            {
+                if (this.IRCNetwork == null)
+                {
+                    IRCNetwork = new Network(this.Server, this);
+                }
+                Messages.protocol = this;
+                try
+                {
+                    if (!SSL)
+                    {
+                        networkStream = new System.Net.Sockets.TcpClient(Server, Port).GetStream();
+                        streamWriter = new System.IO.StreamWriter(networkStream);
+                        streamReader = new System.IO.StreamReader(networkStream, NetworkEncoding);
+                    }
+                    if (SSL)
+                    {
+                        System.Net.Sockets.TcpClient client = new System.Net.Sockets.TcpClient(Server, Port);
+                        networkSsl = new System.Net.Security.SslStream(client.GetStream(), true,
+                                                                        new System.Net.Security.RemoteCertificateValidationCallback(Protocol.ValidateServerCertificate), null);
+                        networkSsl.AuthenticateAsClient(Server);
+                        streamWriter = new System.IO.StreamWriter(networkSsl);
+                        streamReader = new System.IO.StreamReader(networkSsl, NetworkEncoding);
+                    }
+                } catch (SocketException fail)
+                {
+                    DebugLog(fail.ToString());
+                    SafeDc();
+                    this.DisconnectExec(fail.Message);
+                    return;
+                }
 
-	            Connected = true;
-	            if (!string.IsNullOrEmpty(Password))
-	            {
-	                Send("PASS " + Password);
-	            }
-	            Send("USER " + IRCNetwork.Ident + " 8 * :" + IRCNetwork.UserName);
-	            Send("NICK " + IRCNetwork.Nickname);
-	            if (!this.ManualThreads)
-	            {
-	                TKeep = new Thread(_Ping);
-	                TKeep.Name = "libirc:" + this.Server + "/pinger";
-	                ThreadManager.RegisterThread(TKeep);
-	                TKeep.Start();
-	            }
+                Connected = true;
+                if (!string.IsNullOrEmpty(Password))
+                {
+                    Send("PASS " + Password);
+                }
+                Send("USER " + IRCNetwork.Ident + " 8 * :" + IRCNetwork.UserName);
+                Send("NICK " + IRCNetwork.Nickname);
+                if (!this.ManualThreads)
+                {
+                    TKeep = new Thread(_Ping);
+                    TKeep.Name = "libirc:" + this.Server + "/pinger";
+                    ThreadManager.RegisterThread(TKeep);
+                    TKeep.Start();
+                }
 
-	            try
-	            {
-	                if (!this.ManualThreads)
-	                {
-	                    TDeliveryQueue = new System.Threading.Thread(Messages.Run);
-	                    TDeliveryQueue.Start();
-	                }
+                try
+                {
+                    if (!this.ManualThreads)
+                    {
+                        TDeliveryQueue = new System.Threading.Thread(Messages.Run);
+                        TDeliveryQueue.Start();
+                    }
 
-	                while (!streamReader.EndOfStream && IsConnected)
-	                {
+                    while (!streamReader.EndOfStream && IsConnected)
+                    {
                         // this check here is to avoid calling IsConnected = true multiple time, which isn't just assigning bool somewhere
                         // but actually call expensive functions, so call it just once
-	                    if (!IRCNetwork.IsConnected)
-	                    {
+                        if (!IRCNetwork.IsConnected)
+                        {
                             IRCNetwork.IsConnected = true;
-	                    }
-	                    string text = streamReader.ReadLine();
-	                    text = this.RawTraffic(text);
-	                    this.TrafficLog(text, true);
-	                    ProcessorIRC processor = new ProcessorIRC(IRCNetwork, text, ref LastPing);
-	                    processor.ProfiledResult();
-	                    LastPing = processor.pong;
-	                }
-	            }catch (ThreadAbortException)
-	            {
-	                this.Connected = false;
-					this.DisconnectExec("Thread aborted");
-	                return;
-	            }catch (System.Net.Sockets.SocketException ex)
-	            {
-	                this.SafeDc();
-					this.DisconnectExec(ex.Message);
-	            }catch (System.IO.IOException ex)
-	            {
-	                this.SafeDc();
-					this.DisconnectExec(ex.Message);
-				}catch (Exception ex)
-				{
-					this.SafeDc();
-					this.DisconnectExec(ex.Message, ex);
-				}
-	            ThreadManager.KillThread(System.Threading.Thread.CurrentThread);
-	            return;
-			} catch (Exception fail)
-			{
-				HandleException(fail);
-			}
+                        }
+                        string text = streamReader.ReadLine();
+                        text = this.RawTraffic(text);
+                        this.TrafficLog(text, true);
+                        ProcessorIRC processor = new ProcessorIRC(IRCNetwork, text, ref LastPing);
+                        processor.ProfiledResult();
+                        LastPing = processor.pong;
+                    }
+                }catch (ThreadAbortException)
+                {
+                    this.Connected = false;
+                    this.DisconnectExec("Thread aborted");
+                    return;
+                }catch (System.Net.Sockets.SocketException ex)
+                {
+                    this.SafeDc();
+                    this.DisconnectExec(ex.Message);
+                }catch (System.IO.IOException ex)
+                {
+                    this.SafeDc();
+                    this.DisconnectExec(ex.Message);
+                }catch (Exception ex)
+                {
+                    this.SafeDc();
+                    this.DisconnectExec(ex.Message, ex);
+                }
+                ThreadManager.KillThread(System.Threading.Thread.CurrentThread);
+                return;
+            } catch (Exception fail)
+            {
+                HandleException(fail);
+            }
         }
 
         private void SafeDc()

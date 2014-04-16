@@ -30,34 +30,34 @@ namespace libirc
     /// </summary>
     [Serializable]
     public class IProtocol
-    {	
+    {   
         public class DebugLogEventArgs : EventArgs
         {
             public string Message = null;
             public int Verbosity = 0;
         }
 
-		public class UnhandledExeption : EventArgs
-		{
-			public Exception exception = null;
+        public class UnhandledExeption : EventArgs
+        {
+            public Exception exception = null;
             public UnhandledExeption(Exception ex)
             {
                 this.exception = ex;
             }
-		}
-		
-		public class ServerDcEventArgs : EventArgs
-		{
-			public Exception Exception = null;
-			public string Reason = null;
-		}
-		
-		public class TrafficLogEventArgs : EventArgs
+        }
+        
+        public class ServerDcEventArgs : EventArgs
+        {
+            public Exception Exception = null;
+            public string Reason = null;
+        }
+        
+        public class TrafficLogEventArgs : EventArgs
         {
             public string Message = null;
             public bool Incoming = false;
         }
-		
+        
         public class RawTrafficEventArgs : EventArgs
         {
             public string Data;
@@ -66,15 +66,15 @@ namespace libirc
                 this.Data = data;
             }
         }
-		
-		public delegate void ServerDisconnectEventHandler(object sender, ServerDcEventArgs e);
+        
+        public delegate void ServerDisconnectEventHandler(object sender, ServerDcEventArgs e);
         public delegate void RawTrafficEventHandler(object sender, RawTrafficEventArgs e);
         public delegate void DebugLogEventHandler(object sender, DebugLogEventArgs e);
-		public delegate void TrafficLogEventHandler(object sender,TrafficLogEventArgs e);
-		public delegate void UnhandledExceptionEventHandler(object sender,UnhandledExeption e);
-		public event UnhandledExceptionEventHandler UnhandledExceptionFailEvent;
+        public delegate void TrafficLogEventHandler(object sender,TrafficLogEventArgs e);
+        public delegate void UnhandledExceptionEventHandler(object sender,UnhandledExeption e);
+        public event UnhandledExceptionEventHandler UnhandledExceptionFailEvent;
         public event TrafficLogEventHandler TrafficLogEvent;
-		public event ServerDisconnectEventHandler DisconnectEvent;
+        public event ServerDisconnectEventHandler DisconnectEvent;
         public event DebugLogEventHandler DebugLogEvent;
         /// <summary>
         /// Occurs when raw traffic is incoming to protocol, you can alter this raw traffic as well by changing the Data
@@ -175,14 +175,14 @@ namespace libirc
             startupTime = DateTime.Now;
         }
 
-		protected virtual void HandleException(Exception fail)
-		{
-			if (UnhandledExceptionFailEvent != null)
-			{
-				UnhandledExeption ex = new UnhandledExeption(fail);
-				UnhandledExceptionFailEvent(this, ex);
-			}
-		}
+        protected virtual void HandleException(Exception fail)
+        {
+            if (UnhandledExceptionFailEvent != null)
+            {
+                UnhandledExeption ex = new UnhandledExeption(fail);
+                UnhandledExceptionFailEvent(this, ex);
+            }
+        }
 
         protected virtual string RawTraffic(string text)
         {
@@ -194,17 +194,17 @@ namespace libirc
             }
             return text;
         }
-		
-		protected virtual void DisconnectExec(string reason, Exception ex = null)
-		{
-			if (DisconnectEvent != null)
-			{
-				ServerDcEventArgs e = new ServerDcEventArgs();
-				e.Exception = ex;
-				e.Reason = reason;
-				DisconnectEvent(this, e);
-			}
-		}
+        
+        protected virtual void DisconnectExec(string reason, Exception ex = null)
+        {
+            if (DisconnectEvent != null)
+            {
+                ServerDcEventArgs e = new ServerDcEventArgs();
+                e.Exception = ex;
+                e.Reason = reason;
+                DisconnectEvent(this, e);
+            }
+        }
 
         /// <summary>
         /// This is used to permanently release this object
@@ -242,8 +242,8 @@ namespace libirc
             this.DebugLog("Disconnect() is not implemented");
             return Result.NotImplemented;
         }
-		
-		public virtual void TrafficLog(string text, bool incoming)
+        
+        public virtual void TrafficLog(string text, bool incoming)
         {
             TrafficLogEventArgs args = new TrafficLogEventArgs();
             args.Message = text;
@@ -253,7 +253,7 @@ namespace libirc
                 this.TrafficLogEvent(this, args);
             }
         }
-		
+        
         /// <summary>
         /// Reconnect
         /// </summary>
@@ -310,12 +310,12 @@ namespace libirc
         /// If changes to windows should be suppressed (no color changes on new messages)
         /// </summary>
         public bool SuppressChanges = false;
-		
-		public class ProtocolGenericEventArgs : EventArgs
-		{
-			public long Date = 0;
-		}
-		
+        
+        public class ProtocolGenericEventArgs : EventArgs
+        {
+            public long Date = 0;
+        }
+        
         /// <summary>
         /// Reconnect
         /// </summary>
