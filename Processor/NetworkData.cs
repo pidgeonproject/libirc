@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace libirc
@@ -43,12 +42,12 @@ namespace libirc
                 lock (_Network.CUModes)
                 {
                     _Network.CUModes.Clear();
-                    _Network.CUModes.AddRange(cmodes.ToArray<char>());
+                    _Network.CUModes.AddRange(cmodes.ToCharArray());
                 }
                 cmodes = info.ParameterLine.Substring(info.ParameterLine.IndexOf("PREFIX=(", StringComparison.Ordinal) + 8);
                 cmodes = cmodes.Substring(cmodes.IndexOf(")", StringComparison.Ordinal) + 1, _Network.CUModes.Count);
                 _Network.UChars.Clear();
-                _Network.UChars.AddRange(cmodes.ToArray<char>());
+                _Network.UChars.AddRange(cmodes.ToCharArray());
             }
             if (info.ParameterLine.Contains("CHANMODES="))
             {
@@ -62,10 +61,10 @@ namespace libirc
                     _Network.CModes.Clear();
                     _Network.XModes.Clear();
                     _Network.SModes.Clear();
-                    _Network.PModes.AddRange(_mode[0].ToArray<char>());
-                    _Network.XModes.AddRange(_mode[1].ToArray<char>());
-                    _Network.SModes.AddRange(_mode[2].ToArray<char>());
-                    _Network.CModes.AddRange(_mode[3].ToArray<char>());
+                    _Network.PModes.AddRange(_mode[0].ToCharArray());
+                    _Network.XModes.AddRange(_mode[1].ToCharArray());
+                    _Network.SModes.AddRange(_mode[2].ToCharArray());
+                    _Network.CModes.AddRange(_mode[3].ToCharArray());
                 }
             }
             return true;
