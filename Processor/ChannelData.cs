@@ -52,20 +52,20 @@ namespace libirc
             return false;
         }
 
-        private bool ChannelInfo(List<string> parameters, string command, string source, string _value)
+        private bool ChannelInfo(Network.IncomingDataEventArgs info)
         {
-            if (parameters.Count > 2)
+            if (info.Parameters.Count > 2)
             {
-                Channel channel = _Network.GetChannel(parameters[1]);
+                Channel channel = _Network.GetChannel(info.Parameters[1]);
                 Network.NetworkChannelDataEventArgs args = new Network.NetworkChannelDataEventArgs(this.ServerLineRawText, this.Date);
-                args.Command = command;
-                args.Message = _value;
-                args.Parameters = parameters;
+                args.Command = info.Command;
+                args.Message = info.Message;
+                args.Parameters = info.Parameters;
                 args.Channel = channel;
-                args.ChannelName = parameters[1];
+                args.ChannelName = info.Parameters[1];
                 if (channel != null)
                 {
-                    channel.ChannelMode.ChangeMode(parameters[2]);
+                    channel.ChannelMode.ChangeMode(info.Parameters[2]);
                     _Network.__evt_ChannelInfo(args);
                     return true;
                 }
@@ -74,22 +74,23 @@ namespace libirc
             return IsBacklog;
         }
 
-        private bool ParseUser(List<string> parameters, string realname)
+        private bool ParseUser(Network.IncomingDataEventArgs info)
         {
             // :hub.tm-irc.org 352 petr #support pidgeon D3EE8257.8361F8AE.37E3A027.IP hub.tm-irc.org petr H :0 My name is hidden, dude
-            if (parameters.Count <= 6)
+            if (info.Parameters.Count <= 6)
             {
                 return false;
             }
             Network.NetworkParseUserEventArgs ev = new Network.NetworkParseUserEventArgs(ServerLineRawText, this.Date);
-            ev.Parameters = parameters;
-            ev.ChannelName = parameters[1];
-            ev.Channel = _Network.GetChannel(parameters[1]);
-            string server = parameters[4];
+            ev.Parameters = info.Parameters;
+            ev.ChannelName = info.Parameters[1];
+            ev.Channel = _Network.GetChannel(info.Parameters[1]);
+            string server = info.Parameters[4];
             ev.User = new UserInfo();
-            ev.User.Ident = parameters[2];
-            ev.User.Host = parameters[3];
-            ev.User.Nick = parameters[5];
+            ev.User.Ident = info.Parameters[2];
+            ev.User.Host = info.Parameters[3];
+            ev.User.Nick = info.Parameters[5];
+            string realname = info.Message;
             if (realname != null & realname.Length > 2)
             {
                 realname = realname.Substring(2);
@@ -100,14 +101,14 @@ namespace libirc
             }
             char mode = '\0';
             ev.IsAway = false;
-            if (parameters[6].Length > 0)
+            if (info.Parameters[6].Length > 0)
             {
                 // if user is away we flag him
-                if (parameters[6].StartsWith("G", StringComparison.Ordinal))
+                if (info.Parameters[6].StartsWith("G", StringComparison.Ordinal))
                 {
                     ev.IsAway = true;
                 }
-                mode = parameters[6][parameters[6].Length - 1];
+                mode = info.Parameters[6][info.Parameters[6].Length - 1];
                 if (!_Network.UChars.Contains(mode))
                 {
                     mode = '\0';

@@ -118,6 +118,7 @@ namespace libirc
                 }
                 if (ProcessSelf(info.Source, info.Command, info.Parameters, info.Message))
                 {
+                    // purposefuly change OK to true only, we don't want to change it to false in case it was already true, so don't touch this
                     OK = true;
                 }
                 switch (info.Command)
@@ -137,7 +138,7 @@ namespace libirc
                         Info(info);
                         break;
                     case "301":
-                        if (Idle2(info.Command, info.ParameterLine))
+                        if (Idle2(info))
                             return true;
                         break;
                     case "305":
@@ -149,11 +150,11 @@ namespace libirc
                             _Network.IsAway = true;
                         break;
                     case "311":
-                        if (WhoisLoad(info.Command, info.ParameterLine, info.Parameters, info.Message))
+                        if (WhoisLoad(info))
                             return true;
                         break;
                     case "312":
-                        if (WhoisSv(info.Command, info.ParameterLine))
+                        if (WhoisSv(info))
                             return true;
                         break;
                     case "315":
@@ -161,7 +162,7 @@ namespace libirc
                             return true;
                         break;
                     case "317":
-                        if (IdleTime(info.Command, info.ParameterLine))
+                        if (IdleTime(info))
                             return true;
                         break;
                     case "318":
@@ -173,7 +174,7 @@ namespace libirc
                             return true;
                         break;
                     case "321":
-                        if (_Network.SuppressData)
+                        if (_Network.SuppressData || IsBacklog)
                             return true;
                         break;
                     case "322":
@@ -191,7 +192,7 @@ namespace libirc
                         _Network.DownloadingList = false;
                         break;
                     case "324":
-                        if (ChannelInfo(info.Parameters, info.Command, info.Source, info.Message))
+                        if (ChannelInfo(info))
                             return true;
                         break;
                     case "328":
@@ -211,7 +212,7 @@ namespace libirc
                             return true;
                         break;
                     case "352":
-                        if (ParseUser(info.Parameters, info.Message))
+                        if (ParseUser(info))
                             return true;
                         break;
                     case "353":
@@ -228,6 +229,18 @@ namespace libirc
                         if (ChannelBans2(info.Parameters))
                             return true;
                         break;
+                    case "372":
+                        Network.NetworkGenericDataEventArgs ev372 = new Network.NetworkGenericDataEventArgs(info);
+                        _Network.__evt_OnMOTD(ev372);
+                        return true;
+                    case "375":
+                        Network.NetworkGenericDataEventArgs ev375 = new Network.NetworkGenericDataEventArgs(info);
+                        _Network.__evt_StartMOTD(ev375);
+                        return true;
+                    case "376":
+                        Network.NetworkGenericDataEventArgs ev376 = new Network.NetworkGenericDataEventArgs(info);
+                        _Network.__evt_CloseMOTD(ev376);
+                        return true;
                     case "433":
                         if (!IsBacklog && !_Network.UsingNick2)
                         {
@@ -242,7 +255,7 @@ namespace libirc
                     case "313":
                     case "378":
                     case "671":
-                        if (WhoisText(info.Command, info.ParameterLine, info.Parameters, info.Message))
+                        if (WhoisText(info))
                             return true;
                         break;
                     case "PING":
