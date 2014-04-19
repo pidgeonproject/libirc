@@ -20,41 +20,6 @@ using System.Text;
 namespace libirc
 {
     /// <summary>
-    /// Low level object with basic IRC user info
-    /// </summary>
-    public class UserInfo
-    {
-        public string Nick;
-        public string Ident;
-        public string Host;
-
-        public UserInfo()
-        {
-            this.Nick = null;
-            this.Ident = null;
-            this.Host = null;
-        }
-
-        public UserInfo(string source)
-        {
-            if (source.Contains("!"))
-            {
-                this.Nick = source.Substring(0, source.LastIndexOf("!", StringComparison.Ordinal));
-                this.Ident = source.Substring(source.LastIndexOf("!") + 1);
-                if (this.Ident.Contains("@"))
-                {
-                    this.Host = this.Ident.Substring(this.Ident.LastIndexOf("@") + 1);
-                    this.Ident = this.Ident.Substring(0, this.Ident.LastIndexOf("@"));
-                }
-            }
-            else
-            {
-                this.Nick = source;
-            }
-        }
-    }
-
-    /// <summary>
     /// User, Every user on irc has instance of this class for every channel they are in
     /// </summary>
     [Serializable]
