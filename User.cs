@@ -456,6 +456,15 @@ namespace libirc
             return ToString();
         }
 
+		/// <summary>
+		/// Returns a new instance of UserInfo that is filled up
+		/// </summary>
+		/// <returns>The user info.</returns>
+		public virtual UserInfo ToUserInfo()
+		{
+			return new UserInfo(this.Nick, this.Ident, this.Host);
+		}
+
         /// <summary>
         /// Internal function
         /// </summary>
