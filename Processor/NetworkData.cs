@@ -152,6 +152,7 @@ namespace libirc
                     Network.NetworkCTCPEventArgs ctcp = new Network.NetworkCTCPEventArgs(ServerLineRawText, this.Date);
                     ctcp.CTCP = message_ctcp;
                     ctcp.Args = text;
+					ctcp.Source = source;
                     ctcp.Message = ev.Message;
                     _Network.__evt_CTCP(ctcp);
                     return true;
