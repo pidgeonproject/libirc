@@ -158,7 +158,7 @@ namespace libirc
                             return true;
                         break;
                     case "315":
-                        if (FinishChan(info.Parameters))
+                        if (FinishChan(info))
                             return true;
                         break;
                     case "317":
@@ -204,11 +204,11 @@ namespace libirc
                             return true;
                         break;
                     case "332":
-                        if (ChannelTopic(info.Parameters, info.Command, info.Source, info.Message))
+                        if (ChannelTopic(info))
                             return true;
                         break;
                     case "333":
-                        if (TopicInfo(info.Parameters))
+                        if (TopicInfo(info))
                             return true;
                         break;
                     case "352":
@@ -216,17 +216,17 @@ namespace libirc
                             return true;
                         break;
                     case "353":
-                        if (ParseInfo(info.Parameters, info.Message))
+                        if (ParseInfo(info))
                             return true;
                         break;
                     case "366":
                         return true;
                     case "367":
-                        if (ChannelBans(info.Parameters))
+                        if (ChannelBans(info))
                             return true;
                         break;
                     case "368":
-                        if (ChannelBans2(info.Parameters))
+                        if (ChannelBans2(info))
                             return true;
                         break;
                     case "372":
@@ -276,7 +276,7 @@ namespace libirc
                         _Network.__evt_NOTICE(notice);
                         return true;
                     case "NICK":
-                        if (ProcessNick(info.Source, info.ParameterLine, info.Message))
+                        if (ProcessNick(info))
                             return true;
                         break;
                     case "INVITE":
@@ -288,7 +288,7 @@ namespace libirc
                             return true;
                         break;
                     case "TOPIC":
-                        if (Topic(info.Source, info.ParameterLine, info.Message))
+                        if (Topic(info))
                             return true;
                         break;
                     case "MODE":
@@ -296,7 +296,7 @@ namespace libirc
                             return true;
                         break;
                     case "PART":
-                        if (Part(info.Source, info.ParameterLine, info.Message))
+                        if (Part(info))
                             return true;
                         break;
                     case "QUIT":
@@ -304,11 +304,11 @@ namespace libirc
                             return true;
                         break;
                     case "JOIN":
-                        if (Join(info.Source, info.ParameterLine, info.Message))
+                        if (Join(info))
                             return true;
                         break;
                     case "KICK":
-                        if (Kick(info.Source, info.Parameters, info.ParameterLine, info.Message))
+                        if (Kick(info))
                             return true;
                         break;
                 }
