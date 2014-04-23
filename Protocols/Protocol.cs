@@ -86,10 +86,6 @@ namespace libirc
         /// </summary>
         protected bool Connected = false;
         /// <summary>
-        /// Whether is destroyed
-        /// </summary>
-        protected bool Destroyed = false;
-        /// <summary>
         /// This is a time when this connection was open
         /// </summary>
         protected DateTime startupTime;
@@ -152,18 +148,6 @@ namespace libirc
             get
             {
                 return Connected;
-            }
-        }
-
-        /// <summary>
-        /// This will return true in case object was requested to be disposed
-        /// you should never work with objects that return true here
-        /// </summary>
-        public bool IsDestroyed
-        {
-            get
-            {
-                return Destroyed;
             }
         }
 

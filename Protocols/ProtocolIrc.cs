@@ -433,17 +433,10 @@ namespace libirc.Protocols
         /// </summary>
         public override void Exit()
         {
-            if (IsDestroyed)
-            {
-                this.DebugLog("This object is already destroyed " + Server);
-                return;
-            }
-
             if (IsConnected)
             {
                 Disconnect();
             }
-
             if (!this.ManualThreads)
             {
                 ThreadManager.KillThread(TMain);
@@ -452,7 +445,6 @@ namespace libirc.Protocols
             {
                 IRCNetwork.Disconnect();
             }
-            Connected = false;
             base.Exit();
         }
 

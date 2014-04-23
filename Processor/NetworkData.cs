@@ -130,10 +130,10 @@ namespace libirc
                 {
                     // this seems to be a CTCP message
                     string trimmed = ev.Message.Trim(_Protocol.Separator);
-                    if (ev.Message.StartsWith(_Protocol.Separator.ToString() + "ACTION", StringComparison.Ordinal))
+                    if (ev.Message.StartsWith(_Protocol.Separator.ToString() + "ACTION ", StringComparison.Ordinal))
                     {
                         // it's an ACT type
-                        ev.Message = ev.Message.Substring(7).TrimEnd(_Protocol.Separator);
+                        ev.Message = ev.Message.Substring(8).TrimEnd(_Protocol.Separator);
                         ev.IsAct = true;
                         _Network.__evt_PRIVMSG(ev);
                         return true;
@@ -169,10 +169,10 @@ namespace libirc
                 ev.ChannelName = message_target;
                 if (channel != null)
                 {
-                    if (ev.Message.StartsWith(_Protocol.Separator.ToString() + "ACTION", StringComparison.Ordinal))
+                    if (ev.Message.StartsWith(_Protocol.Separator.ToString() + "ACTION ", StringComparison.Ordinal))
                     {
                         ev.IsAct = true;
-                        ev.Message = ev.Message.Substring(7).Trim(_Protocol.Separator);
+                        ev.Message = ev.Message.Substring(8).Trim(_Protocol.Separator);
                     }
                 }
                 _Network.__evt_PRIVMSG(ev);

@@ -116,6 +116,7 @@ namespace libirc
                 ev.StringMode = mode.ToString();
             }
             ev.RealName = realname;
+            _Network.__evt_ParseUser(ev);
             if (ev.Channel != null)
             {
                 if (!IsBacklog)
@@ -139,8 +140,7 @@ namespace libirc
                         }
                         _user.Away = ev.IsAway;
                         ev.Channel.InsertUser(_user);
-                        _Network.__evt_ParseUser(ev);
-                        return true;
+                        return ev.Channel.IsParsingWhoData;
                     }
                     User user = ev.Channel.UserFromName(ev.User.Nick);
                     if (user != null)
@@ -157,14 +157,11 @@ namespace libirc
                         user.Away = ev.IsAway;
                     }
                 }
-                _Network.__evt_ParseUser(ev);
                 if (ev.Channel.IsParsingWhoData)
                 {
                     return true;
                 }
-                return IsBacklog;
             }
-            _Network.__evt_ParseUser(ev);
             return IsBacklog;
         }
 
@@ -390,16 +387,19 @@ namespace libirc
             ev.ParameterLine = info.ParameterLine;
             ev.Parameters = info.Parameters;
             ev.Channel = _Network.GetChannel(ev.Parameters[1]);
+            if (ev.Channel.Bans == null)
+            {
+                ev.Channel.Bans = new List<ChannelBan>();
+            }
+            _Network.__evt_ChannelFinishBan(ev);
             if (ev.Channel != null)
             {
                 if (ev.Channel.IsParsingBanData)
                 {
                     ev.Channel.IsParsingBanData = false;
-                    _Network.__evt_ChannelFinishBan(ev);
                     return true;
                 }
             }
-            _Network.__evt_ChannelFinishBan(ev);
             return IsBacklog;
         }
 
@@ -430,19 +430,19 @@ namespace libirc
             Channel channel = _Network.GetChannel(chan);
             Network.NetworkChannelDataEventArgs ev = new Network.NetworkChannelDataEventArgs(this.ServerLineRawText, this.Date);
             ev.ChannelName = chan;
+            ev.Channel = channel;
             ev.Source = info.Source;
             ev.Message = info.Message;
             ev.ParameterLine = info.ParameterLine;
+            _Network.__evt_PART(ev);
             if (channel != null)
             {
                 if (!IsBacklog)
                 {
                     channel.RemoveUser(ev.SourceInfo.Nick);
                 }
-                _Network.__evt_PART(ev);
                 return true;
             }
-            _Network.__evt_PART(ev);
             return IsBacklog;
         }
 
