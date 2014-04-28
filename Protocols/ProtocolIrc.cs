@@ -53,7 +53,7 @@ namespace libirc.Protocols
         /// <summary>
         /// SSL
         /// </summary>
-        private SslStream networkSsl = null;
+        protected SslStream networkSsl = null;
         /// <summary>
         /// Stream reader for server
         /// </summary>
@@ -131,7 +131,10 @@ namespace libirc.Protocols
             return Result.Done;
         }
 
-        private void _Ping()
+		/// <summary>
+		/// This is a thread body of pinger thread
+		/// </summary>
+        protected virtual void _Ping()
         {
             try
             {
@@ -193,7 +196,6 @@ namespace libirc.Protocols
                     this.DisconnectExec(fail.Message);
                     return;
                 }
-
                 Connected = true;
                 if (!string.IsNullOrEmpty(Password))
                 {
@@ -208,7 +210,6 @@ namespace libirc.Protocols
                     ThreadManager.RegisterThread(TKeep);
                     TKeep.Start();
                 }
-
                 try
                 {
                     if (!this.ManualThreads)
@@ -250,7 +251,7 @@ namespace libirc.Protocols
                     this.SafeDc();
                     this.DisconnectExec(ex.Message, ex);
                 }
-                ThreadManager.KillThread(System.Threading.Thread.CurrentThread);
+                ThreadManager.RemoveThread(System.Threading.Thread.CurrentThread);
                 return;
             } catch (Exception fail)
             {
@@ -258,7 +259,7 @@ namespace libirc.Protocols
             }
         }
 
-        private void SafeDc()
+        protected virtual void SafeDc()
         {
             if (IRCNetwork != null)
             {
@@ -277,6 +278,8 @@ namespace libirc.Protocols
                     networkStream.Close();
                 }
             }
+			ThreadManager.KillThread(this.TDeliveryQueue);
+			ThreadManager.KillThread(this.TKeep);
             Connected = false;
         }
 
@@ -300,7 +303,7 @@ namespace libirc.Protocols
             return Result.Done;
         }
 
-        private void Send(string ms)
+        protected virtual void Send(string ms)
         {
             if (!IsConnected)
             {

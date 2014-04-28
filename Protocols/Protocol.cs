@@ -143,7 +143,7 @@ namespace libirc
         /// <summary>
         /// Whether it is working
         /// </summary>
-        public bool IsConnected
+        public virtual bool IsConnected
         {
             get
             {
