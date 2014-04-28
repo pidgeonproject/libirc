@@ -51,9 +51,7 @@
     <Compile Include="Buffer.cs" />
     <Compile Include="Processor\NetworkData.cs" />
     <Compile Include="ThreadManager.cs" />
-    <Compile Include="Protocols\Protocol.cs">
-      <DependentUpon>ProtocolIrc.cs</DependentUpon>
-    </Compile>
+    <Compile Include="Protocols\Protocol.cs" />
     <Compile Include="UserInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

@@ -29,7 +29,7 @@ namespace libirc.Protocols
     /// </summary>
     public partial class ProtocolIrc : Protocol
     {
-        class MessagesClass
+        public class MessagesClass
         {
             /// <summary>
             /// Message

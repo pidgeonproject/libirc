@@ -49,7 +49,7 @@ namespace libirc.Protocols
         /// <summary>
         /// Network stream
         /// </summary>
-        private NetworkStream networkStream = null;
+        protected NetworkStream networkStream = null;
         /// <summary>
         /// SSL
         /// </summary>
@@ -57,8 +57,8 @@ namespace libirc.Protocols
         /// <summary>
         /// Stream reader for server
         /// </summary>
-        private System.IO.StreamReader streamReader = null;
-        private object streamLock = new object();
+        protected System.IO.StreamReader streamReader = null;
+        protected object streamLock = new object();
         /// <summary>
         /// Network associated with this connection (we have only 1 network in direct connection)
         /// </summary>
@@ -66,11 +66,11 @@ namespace libirc.Protocols
         /// <summary>
         /// Stream writer for server
         /// </summary>
-        private System.IO.StreamWriter streamWriter = null;
+        protected System.IO.StreamWriter streamWriter = null;
         /// <summary>
         /// Messages
         /// </summary>
-        private MessagesClass Messages = new MessagesClass();
+        protected MessagesClass Messages = new MessagesClass();
         /// <summary>
         /// Logging in using sasl
         /// </summary>
