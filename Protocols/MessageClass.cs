@@ -58,6 +58,11 @@ namespace libirc.Protocols
             /// </summary>
             public ProtocolIrc protocol = null;
 
+            public int Size()
+            {
+                return newmessages.Count + messages.Count;
+            }
+
             /// <summary>
             /// Send a message to server
             /// </summary>

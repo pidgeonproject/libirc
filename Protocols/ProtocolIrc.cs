@@ -95,6 +95,13 @@ namespace libirc.Protocols
                 return true;
             }
         }
+        public virtual int QueueSize
+        {
+            get
+            {
+                return Messages.Size();
+            }
+        }
 
         public override bool UsingSSL
         {
