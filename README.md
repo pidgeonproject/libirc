@@ -1,7 +1,7 @@
-irc-sharp
+libirc
 =========
 
-Open source irc library for use with c# based on pidgeon irc system
+Open source irc library for c#, based on pidgeon irc system
 
 This library is used in projects that require very low level control of the irc
 protocol. It supports the latest IRC features and allows you to alter hook or
