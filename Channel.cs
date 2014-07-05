@@ -407,7 +407,7 @@ namespace libirc
             lock (this.UserList)
             {
                 // don't use LowNick directly it can change between these 2 instructions
-                string ln = user.LowNick;
+                string ln = user.LowerNick;
                 user.Channel = this;
                 if (!this.UserList.ContainsKey(ln))
                 {
