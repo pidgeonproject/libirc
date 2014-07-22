@@ -251,9 +251,7 @@ namespace libirc
         private bool TopicInfo(Network.IncomingDataEventArgs info)
         {
             if (info.Parameters.Count < 4)
-            {
                 return false;
-            }
             Network.NetworkTOPICEventArgs ev = new Network.NetworkTOPICEventArgs(this.ServerLineRawText, this.Date);
             ev.Source = info.Source;
             ev.Parameters = info.Parameters;
@@ -263,9 +261,7 @@ namespace libirc
             string time = info.Parameters[3];
             double dt;
             if (!double.TryParse(time, out dt))
-            {
                 dt = 0;
-            }
             ev.TopicDate = dt;
             ev.Source = user;
             ev.Channel = _Network.GetChannel(info.Parameters[1]);
@@ -293,27 +289,22 @@ namespace libirc
             ev.Channel = channel;
             _Network.__evt_TopicData(ev);
             if (channel != null)
-            {
                 channel.Topic = topic;
-            }
             return true;
         }
 
         private bool FinishChan(Network.IncomingDataEventArgs info)
         {
             if (info.Parameters.Count == 0)
-            {
                 return false;
-            }
             Network.NetworkChannelDataEventArgs ev = new Network.NetworkChannelDataEventArgs(this.ServerLineRawText, this.Date);
             ev.ChannelName = info.Parameters[1];
             ev.ParameterLine = info.ParameterLine;
             ev.Parameters = info.Parameters;
             ev.Channel = _Network.GetChannel(info.Parameters[1]);
             if (ev.Channel != null)
-            {
                 ev.Channel.IsParsingWhoData = false;
-            }
+
             _Network.__evt_FinishChannelParseUser(ev);
             return true;
         }
@@ -338,9 +329,8 @@ namespace libirc
                     {
                         ev.Channel.RemoveUser(user);
                         if (user.IsPidgeon)
-                        {
                             ev.Channel.ChannelWork = false;
-                        }
+ 
                     }
                 }
                 _Network.__evt_KICK(ev);
@@ -366,9 +356,8 @@ namespace libirc
             if (channel != null)
             {
                 if (!IsBacklog)
-                {
                     channel.InsertUser(new User(ed.SourceInfo, _Network));
-                }
+
                 _Network.__evt_JOIN(ed);
                 return true;
             }
@@ -379,18 +368,14 @@ namespace libirc
         private bool ChannelBans2(Network.IncomingDataEventArgs info)
         {
             if (info.Parameters.Count == 0)
-            {
                 return false;
-            }
             Network.NetworkChannelEventArgs ev = new Network.NetworkChannelEventArgs(this.ServerLineRawText, this.Date);
             ev.ChannelName = info.Parameters[1];
             ev.ParameterLine = info.ParameterLine;
             ev.Parameters = info.Parameters;
             ev.Channel = _Network.GetChannel(ev.Parameters[1]);
             if (ev.Channel.Bans == null)
-            {
                 ev.Channel.Bans = new List<ChannelBan>();
-            }
             _Network.__evt_ChannelFinishBan(ev);
             if (ev.Channel != null)
             {
@@ -411,13 +396,9 @@ namespace libirc
                 if (channel != null)
                 {
                     if (!channel.ContainsBan(info.Parameters[2]))
-                    {
                         channel.InsertBan(info.Parameters[2], info.Parameters[3], info.Parameters[4]);
-                    }
                     if (channel.IsParsingBanData)
-                    {
                         return true;
-                    }
                 }
                 return IsBacklog;
             }
@@ -438,9 +419,7 @@ namespace libirc
             if (channel != null)
             {
                 if (!IsBacklog)
-                {
                     channel.RemoveUser(ev.SourceInfo.Nick);
-                }
                 return true;
             }
             return IsBacklog;
