@@ -451,7 +451,7 @@ namespace libirc
             string _new = info.Message;
             Network.NetworkNICKEventArgs ev = new Network.NetworkNICKEventArgs(this.ServerLineRawText, this.Date);
             ev.Source = info.Source;
-	        ev.OldNick = ev.SourceInfo.Nick;
+            ev.OldNick = ev.SourceInfo.Nick;
             if (string.IsNullOrEmpty(info.Message) && !string.IsNullOrEmpty(info.ParameterLine))
             {
                 // server is fucked

@@ -138,9 +138,9 @@ namespace libirc.Protocols
             return Result.Done;
         }
 
-		/// <summary>
-		/// This is a thread body of pinger thread
-		/// </summary>
+        /// <summary>
+        /// This is a thread body of pinger thread
+        /// </summary>
         protected virtual void _Ping()
         {
             try
@@ -285,8 +285,8 @@ namespace libirc.Protocols
                     networkStream.Close();
                 }
             }
-			ThreadManager.KillThread(this.TDeliveryQueue);
-			ThreadManager.KillThread(this.TKeep);
+            ThreadManager.KillThread(this.TDeliveryQueue);
+            ThreadManager.KillThread(this.TKeep);
             Connected = false;
         }
 

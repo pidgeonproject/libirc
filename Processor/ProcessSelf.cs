@@ -134,6 +134,11 @@ namespace libirc
 
                 if (command == "PART")
                 {
+                    if (IsBacklog)
+                    {
+                        // skip
+                        return true;
+                    }
                     // we parted the channel
                     if (parameters.Count == 0)
                     {

@@ -625,8 +625,9 @@ namespace libirc
                 {
                     Channel _channel = new Channel(this);
                     _channel.Name = channel;
+                    // this is here for compatibility purpose only, you can ignore warnings
                     _channel.lName = channel.ToLower();
-                    Channels.Add(_channel.lName, _channel);
+                    Channels.Add(_channel.LowerName, _channel);
                     return _channel;
                 }
                 else

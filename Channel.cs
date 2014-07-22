@@ -119,12 +119,37 @@ namespace libirc
         /// <summary>
         /// Name of a channel including the special prefix, if it's unknown this variable is null
         /// </summary>
-        public string Name = null;
+        public string Name
+        {
+            set
+            {
+                this.lname = null;
+                this.name = value;
+            }
+            get
+            {
+                return this.name;
+            }
+        }
+        private string name = null;
         /// <summary>
         /// Lower case of this channel that is used frequently, we cache it here so that we
         /// don't need to use expensive string functions to make it so often
         /// </summary>
+        [Obsolete ("Use LowerName instead of this")]
         public string lName = null;
+        private string lname = null;
+        public string LowerName
+        {
+            get
+            {
+                if (this.Name == null)
+                    return null;
+                if (this.lname == null)
+                    lname = this.Name.ToLower();
+                return lname;
+            }
+        }
         /// <summary>
         /// Network the channel belongs to
         /// </summary>
@@ -139,10 +164,6 @@ namespace libirc
         /// Topic, if it's unknown this variable is null
         /// </summary>
         public string Topic = null;
-        /// <summary>
-        /// Whether channel is in proccess of dispose
-        /// </summary>
-        public bool dispose = false;
         /// <summary>
         /// User who set a topic
         /// </summary>
@@ -202,6 +223,8 @@ namespace libirc
         /// Whether part from this channel was requested, this is used to detect if part was forced or not
         /// </summary>
         public bool PartRequested = false;
+        [Obsolete ("no longer used")]
+        public bool dispose = false;
         /// <summary>
         /// If this is false the channel is not being used / you aren't in it or you can't access it
         /// </summary>
@@ -384,7 +407,7 @@ namespace libirc
             lock (this.UserList)
             {
                 // don't use LowNick directly it can change between these 2 instructions
-                string ln = user.LowNick;
+                string ln = user.LowerNick;
                 user.Channel = this;
                 if (!this.UserList.ContainsKey(ln))
                 {
