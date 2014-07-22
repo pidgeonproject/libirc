@@ -636,79 +636,79 @@ namespace libirc
             }
         }
 
-        public virtual void __evt_INVITE(NetworkChannelDataEventArgs args)
+        protected internal virtual void __evt_INVITE(NetworkChannelDataEventArgs args)
         {
             if (this.On_INVITE != null)
                 this.On_INVITE(this, args);
         }
 
-        public virtual void __evt_WHOIS(NetworkWHOISEventArgs args)
+        protected internal virtual void __evt_WHOIS(NetworkWHOISEventArgs args)
         {
             if (this.On_WHOIS != null)
                 this.On_WHOIS(this, args);
         }
 
-        public virtual void __evt_NOTICE(NetworkNOTICEEventArgs args)
+        protected internal virtual void __evt_NOTICE(NetworkNOTICEEventArgs args)
         {
             if (this.On_NOTICE != null)
                 this.On_NOTICE(this, args);
         }
 
-        public virtual void __evt_Self(NetworkSelfEventArgs args)
+        protected internal virtual void __evt_Self(NetworkSelfEventArgs args)
         {
             if (this.On_Self != null)
                 this.On_Self(this, args);
         }
 
-        public virtual void __evt_PRIVMSG(NetworkPRIVMSGEventArgs args)
+        protected internal virtual void __evt_PRIVMSG(NetworkPRIVMSGEventArgs args)
         {
             if (this.On_PRIVMSG != null)
                 this.On_PRIVMSG(this, args);
         }
 
-        public virtual void __evt_INFO(NetworkGenericDataEventArgs args)
+        protected internal virtual void __evt_INFO(NetworkGenericDataEventArgs args)
         {
             if (this.On_Info != null)
                 this.On_Info(this, args);
         }
-        
-        public virtual void __evt_ParseUser(NetworkParseUserEventArgs args)
+
+        protected internal virtual void __evt_ParseUser(NetworkParseUserEventArgs args)
         {
             if (this.On_ParseUser != null)
                 this.On_ParseUser(this, args);
         }
 
-        public virtual void __evt_JOIN(NetworkChannelEventArgs args)
+        protected internal virtual void __evt_JOIN(NetworkChannelEventArgs args)
         {
             if (this.On_JOIN != null)
                 this.On_JOIN(this, args);
         }
 
-        public virtual void __evt_PART(NetworkChannelDataEventArgs args)
+        protected internal virtual void __evt_PART(NetworkChannelDataEventArgs args)
         {
             if (this.On_PART != null)
                 this.On_PART(this, args);
         }
 
-        public virtual void __evt_KICK(NetworkKickEventArgs args)
+        protected internal virtual void __evt_KICK(NetworkKickEventArgs args)
         {
             if (this.On_KICK != null)
                 this.On_KICK(this, args);
         }
 
-        public virtual void __evt_CTCP(NetworkCTCPEventArgs args)
+        protected internal virtual void __evt_CTCP(NetworkCTCPEventArgs args)
         {
             if (this.On_CTCP != null)
                 this.On_CTCP(this, args);
         }
 
-        public virtual void __evt_QUIT(NetworkGenericDataEventArgs args)
+        protected internal virtual void __evt_QUIT(NetworkGenericDataEventArgs args)
         {
             if (this.On_QUIT != null)
                 this.On_QUIT(this, args);
         }
 
-        public virtual void __evt_ChannelInfo(NetworkChannelDataEventArgs args)
+        protected internal virtual void __evt_ChannelInfo(NetworkChannelDataEventArgs args)
         {
             if (this.On_ChannelInfo != null)
                 this.On_ChannelInfo(this, args);
@@ -718,7 +718,7 @@ namespace libirc
         /// Command 333 is handled by this
         /// </summary>
         /// <param name="args"></param>
-        public virtual void __evt_TopicInfo(NetworkTOPICEventArgs args)
+        protected internal virtual void __evt_TopicInfo(NetworkTOPICEventArgs args)
         {
             if (On_TopicInfo != null)
                 this.On_TopicInfo(this, args);
@@ -728,49 +728,49 @@ namespace libirc
         /// Called when server send us 332 command with some topic information
         /// </summary>
         /// <param name="args"></param>
-        public virtual void __evt_TopicData(NetworkTOPICEventArgs args)
+        protected internal virtual void __evt_TopicData(NetworkTOPICEventArgs args)
         {
             if (On_TopicData != null)
                 this.On_TopicData(this, args);
         }
 
-        public virtual void __evt_TOPIC(NetworkTOPICEventArgs args)
+        protected internal virtual void __evt_TOPIC(NetworkTOPICEventArgs args)
         {
             if (this.On_TOPIC != null)
                 this.On_TOPIC(this, args);
         }
 
-        public virtual void __evt_ChannelUserList(ChannelUserListEventArgs args)
+        protected internal virtual void __evt_ChannelUserList(ChannelUserListEventArgs args)
         {
             if (this.On_ChannelUserList != null)
                 this.On_ChannelUserList(this, args);
         }
-        
-        public virtual void __evt_FinishChannelParseUser(NetworkChannelDataEventArgs args)
+
+        protected internal virtual void __evt_FinishChannelParseUser(NetworkChannelDataEventArgs args)
         {
             if (this.On_FinishChannelParseUser != null)
                 this.On_FinishChannelParseUser(this, args);
         }
-        
-        public virtual void __evt_NICK(NetworkNICKEventArgs args)
+
+        protected internal virtual void __evt_NICK(NetworkNICKEventArgs args)
         {
             if (this.On_NICK != null)
                 this.On_NICK(this, args);
         }
-        
-        public virtual void __evt_MODE(NetworkMODEEventArgs args)
+
+        protected internal virtual void __evt_MODE(NetworkMODEEventArgs args)
         {
             if (this.On_MODE != null)
                 this.On_MODE(this, args);
         }
 
-        public virtual void __evt_ChannelFinishBan(NetworkChannelEventArgs args)
+        protected internal virtual void __evt_ChannelFinishBan(NetworkChannelEventArgs args)
         {
             if (this.On_ChannelFinishBan != null)
                 this.On_ChannelFinishBan(this, args);
         }
 
-        public virtual bool __evt__IncomingData(IncomingDataEventArgs args)
+        protected internal virtual bool __evt__IncomingData(IncomingDataEventArgs args)
         {
             if (this.IncomingData != null)
                 this.IncomingData(this, args);
@@ -778,19 +778,19 @@ namespace libirc
             return args.Processed;
         }
 
-        public virtual void __evt_OnMOTD(NetworkGenericDataEventArgs args)
+        protected internal virtual void __evt_OnMOTD(NetworkGenericDataEventArgs args)
         {
             if (this.On_MOTD != null)
                 this.On_MOTD(this, args);
         }
 
-        public virtual void __evt_StartMOTD(NetworkGenericDataEventArgs args)
+        protected internal virtual void __evt_StartMOTD(NetworkGenericDataEventArgs args)
         {
             if (this.OnStartMOTD != null)
                 this.OnStartMOTD(this, args);
         }
 
-        public virtual void __evt_CloseMOTD(NetworkGenericDataEventArgs args)
+        protected internal virtual void __evt_CloseMOTD(NetworkGenericDataEventArgs args)
         {
             if (this.On_CloseMOTD != null)
                 this.On_CloseMOTD(this, args);
