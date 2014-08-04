@@ -225,11 +225,11 @@ namespace libirc
                     case "366":
                         return true;
                     case "367":
-                        if (ChannelBans(info))
+                        if (ChannelBans(info) && !this._Network.Config.ForwardModes)
                             return true;
                         break;
                     case "368":
-                        if (ChannelBans2(info))
+                        if (ChannelBans2(info) && !this._Network.Config.ForwardModes)
                             return true;
                         break;
                     case "372":
@@ -295,7 +295,7 @@ namespace libirc
                             return true;
                         break;
                     case "MODE":
-                        if (Mode(info.Source, info.ParameterLine))
+                        if (Mode(info.Source, info.ParameterLine) && !this._Network.Config.ForwardModes)
                             return true;
                         break;
                     case "PART":
