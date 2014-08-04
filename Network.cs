@@ -458,6 +458,7 @@ namespace libirc
         /// provided you the current situation. PART and JOIN events and such will be propagated but not reflected.
         /// </summary>
         public bool IsDownloadingBouncerBacklog = false;
+        private List<string> ChannelsToJoin = new List<string>();
         /// <summary>
         /// Specifies if you are connected to network
         /// </summary>
@@ -570,7 +571,23 @@ namespace libirc
         /// <returns></returns>
         public virtual void Join(string channel)
         {
+            if (!this.IsLoaded && !this.ChannelsToJoin.Contains(channel))
+            {
+                this.ChannelsToJoin.Add(channel);
+                return;
+            }
             Transfer("JOIN " + channel, Defs.Priority.Normal);
+        }
+
+        protected internal virtual void JoinChannelsInQueue()
+        {
+            if (!this.IsLoaded) return;
+
+            foreach (string channel in this.ChannelsToJoin)
+                Transfer("JOIN " + channel, Defs.Priority.Normal);
+
+            // wheeeeeeeeeeeeee
+            this.ChannelsToJoin.Clear();
         }
 
         /// <summary>

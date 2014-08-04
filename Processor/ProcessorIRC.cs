@@ -136,6 +136,9 @@ namespace libirc
                         break;
                     case "005":
                         Info(info);
+                        // this is usually a last datagram we get during load and that implies we are done logging on to IRC
+                        this._Network.IsLoaded = true;
+                        this._Network.JoinChannelsInQueue();
                         break;
                     case "301":
                         if (Idle2(info))
