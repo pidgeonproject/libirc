@@ -114,7 +114,7 @@ namespace libirc
     /// Channel object
     /// </summary>
     [Serializable]
-    public class Channel
+    public class Channel : Target
     {
         /// <summary>
         /// Name of a channel including the special prefix, if it's unknown this variable is null
@@ -132,6 +132,13 @@ namespace libirc
             }
         }
         private string name = null;
+        public override string TargetName
+        {
+            get
+            {
+                return this.Name;
+            }
+        }
         /// <summary>
         /// Lower case of this channel that is used frequently, we cache it here so that we
         /// don't need to use expensive string functions to make it so often

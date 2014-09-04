@@ -20,11 +20,18 @@ namespace libirc
     /// <summary>
     /// Low level object with basic IRC user info
     /// </summary>
-    public class UserInfo
+    public class UserInfo : Target
     {
         public string Nick;
         public string Ident;
         public string Host;
+        public override string TargetName
+        {
+            get
+            {
+                return this.Nick;
+            }
+        }
 
         public UserInfo()
         {

@@ -23,7 +23,7 @@ namespace libirc
     /// User, Every user on irc has instance of this class for every channel they are in
     /// </summary>
     [Serializable]
-    public class User : IComparable
+    public class User : Target, IComparable
     {
         /// <summary>
         /// Host name
@@ -48,6 +48,14 @@ namespace libirc
         public ChannelStatus Status = ChannelStatus.Regular;
         protected string nick = null;
         protected string lnick = null;
+        public override string TargetName
+        {
+            get
+            {
+                return this.nick;
+            }
+        }
+
         /// <summary>
         /// Nick
         /// </summary>
