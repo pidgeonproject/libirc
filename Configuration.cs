@@ -24,6 +24,7 @@ namespace libirc
         public bool AggressiveBans = true;
         public bool AggressiveInvites = false;
         public bool AggressiveUsers = true;
+        public int TrafficInterval = 1000;
         /// <summary>
         /// You can change this in case you want all mode data to be forwarded as raw IRC text after parsing,
         /// this is needed when you are using libirc for bouncers

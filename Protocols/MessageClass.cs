@@ -140,7 +140,7 @@ namespace libirc.Protocols
                                         {
                                             Processed.Add(message);
                                             protocol.Send(message.message);
-                                            System.Threading.Thread.Sleep(1000);
+                                            System.Threading.Thread.Sleep(protocol.IRCNetwork.Config.TrafficInterval);
                                             if (highest != Defs.Priority.High)
                                             {
                                                 break;
@@ -157,7 +157,7 @@ namespace libirc.Protocols
                                 }
                             }
                             newmessages.Clear();
-                            Thread.Sleep(200);
+                            Thread.Sleep(20);
                         }
                         catch (ThreadAbortException)
                         {
