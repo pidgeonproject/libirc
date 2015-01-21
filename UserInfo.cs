@@ -64,6 +64,11 @@ namespace libirc
                 this.Nick = source;
             }
         }
+
+        public override string ToString()
+        {
+            return Nick + "!" + Ident + "@" + Host;
+        }
     }
 }
 
