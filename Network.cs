@@ -176,6 +176,35 @@ namespace libirc
 
             public NetworkKickEventArgs(string line, long date) : base(line, date) { }
         }
+
+        public class NetworkJoinErrorEventArgs : NetworkGenericDataEventArgs
+        {
+            public enum ErrorType
+            {
+                InviteOnly,
+                Banned,
+                OperOnly,
+                Unknown
+            }
+
+            public ErrorType Error;
+
+            public NetworkJoinErrorEventArgs(IncomingDataEventArgs info, int et) : base(info)
+            {
+                switch (et)
+                {
+                    case 473:
+                        this.Error = ErrorType.InviteOnly;
+                        break;
+                    case 474:
+                        this.Error = ErrorType.Banned;
+                        break;
+                    default:
+                        this.Error = ErrorType.Unknown;
+                        break;
+                }
+            }
+        }
         
         public class ChannelUserListEventArgs : NetworkChannelEventArgs
         {
@@ -313,6 +342,7 @@ namespace libirc
         public delegate void GlobalMotdEventHandler(object sender, NetworkGenericDataEventArgs e);
         public delegate void CloseMotdEventHandler(object sender, NetworkGenericDataEventArgs e);
         public delegate void StartMotdEventHandler(object sender, NetworkGenericDataEventArgs e);
+        public delegate void JoinErrorEventHandler(object sender, NetworkJoinErrorEventArgs e);
         public event IncomingDataEventHandler IncomingData;
         /// <summary>
         /// Occurs when some network action that is related to current user happens (for example
@@ -334,11 +364,12 @@ namespace libirc
         public event NetworkQUITEventHandler On_QUIT;
         public event GlobalMotdEventHandler On_MOTD;
         public event CloseMotdEventHandler On_CloseMOTD;
-        public event StartMotdEventHandler OnStartMOTD;
+        public event StartMotdEventHandler On_StartMOTD;
         public event NetworkChannelInfoEventHandler On_ChannelInfo;
         public event NetworkCTCPEventHandler On_CTCP;
         public event NetworkChannelUserListHandler On_ChannelUserList;
         public event FinishParseUserEventHandler On_FinishChannelParseUser;
+        public event JoinErrorEventHandler On_JOINError;
         public event NetworkMODEEventHandler On_MODE;
         public event NetworkTOPICEventHandler On_TOPIC;
         public event NetworkTopicDataEventHandler On_TopicData;
@@ -758,6 +789,12 @@ namespace libirc
                 this.On_TOPIC(this, args);
         }
 
+        protected internal virtual void __evt_JOINERROR(NetworkJoinErrorEventArgs args)
+        {
+            if (this.On_JOINError != null)
+                this.On_JOINError(this, args);
+        }
+
         protected internal virtual void __evt_ChannelUserList(ChannelUserListEventArgs args)
         {
             if (this.On_ChannelUserList != null)
@@ -804,8 +841,8 @@ namespace libirc
 
         protected internal virtual void __evt_StartMOTD(NetworkGenericDataEventArgs args)
         {
-            if (this.OnStartMOTD != null)
-                this.OnStartMOTD(this, args);
+            if (this.On_StartMOTD != null)
+                this.On_StartMOTD(this, args);
         }
 
         protected internal virtual void __evt_CloseMOTD(NetworkGenericDataEventArgs args)

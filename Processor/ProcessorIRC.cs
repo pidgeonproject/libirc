@@ -253,6 +253,16 @@ namespace libirc
                             _Network.Nickname = nick;
                         }
                         break;
+                    case "473":
+                        // invite needed
+                        Network.NetworkJoinErrorEventArgs ev473 = new Network.NetworkJoinErrorEventArgs(info, 473);
+                        _Network.__evt_JOINERROR(ev473);
+                        break;
+                    case "474":
+                        // banned from channel
+                        Network.NetworkJoinErrorEventArgs ev474 = new Network.NetworkJoinErrorEventArgs(info, 474);
+                        _Network.__evt_JOINERROR(ev474);
+                        break;
                     case "307":
                     case "310":
                     case "313":
@@ -342,7 +352,7 @@ namespace libirc
             }
             if (!OK)
             {
-                // we have no idea what we just were to parse so flag is as unknown data and let client parse that
+                // we have no idea what we just were to parse so flag it as unknown data and let client parse that
                 Network.UnknownDataEventArgs ev = new Network.UnknownDataEventArgs(this.ServerLineRawText);
                 ev.Date = this.Date;
                 _Network.HandleUnknownData(ev);
@@ -353,8 +363,8 @@ namespace libirc
         /// <summary>
         /// Initializes a new instance of the <see cref="libirc.ProcessorIRC"/> class.
         /// </summary>
-        /// <param name="_network">_network.</param>
-        /// <param name="_text">_text.</param>
+        /// <param name="_network">Network we parse this raw IRC data on</param>
+        /// <param name="_text">Raw text data as received from ircd</param>
         /// <param name="_pong">_pong.</param>
         /// <param name="_date">Date of this message, if you specify 0 the current time will be used</param>
         /// <param name="updated">If true this text will be considered as newly obtained information</param>
