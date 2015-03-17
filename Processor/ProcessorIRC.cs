@@ -253,15 +253,17 @@ namespace libirc
                             _Network.Nickname = nick;
                         }
                         break;
+                    case "435":
+                        // failed to change nick (banned)
+                        _Network.__evt_NICKERROR(new Network.NetworkGenericErrEventArgs(info, 435));
+                        break;
                     case "473":
                         // invite needed
-                        Network.NetworkJoinErrorEventArgs ev473 = new Network.NetworkJoinErrorEventArgs(info, 473);
-                        _Network.__evt_JOINERROR(ev473);
+                        _Network.__evt_JOINERROR(new Network.NetworkJoinErrorEventArgs(info, 473));
                         break;
                     case "474":
                         // banned from channel
-                        Network.NetworkJoinErrorEventArgs ev474 = new Network.NetworkJoinErrorEventArgs(info, 474);
-                        _Network.__evt_JOINERROR(ev474);
+                        _Network.__evt_JOINERROR(new Network.NetworkJoinErrorEventArgs(info, 474));
                         break;
                     case "307":
                     case "310":

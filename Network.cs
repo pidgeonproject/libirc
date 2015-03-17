@@ -177,6 +177,17 @@ namespace libirc
             public NetworkKickEventArgs(string line, long date) : base(line, date) { }
         }
 
+        public class NetworkGenericErrEventArgs : NetworkGenericDataEventArgs
+        {
+            public string Error;
+            public int ErrorId;
+            public NetworkGenericErrEventArgs(IncomingDataEventArgs info, int id) : base(info)
+            {
+                this.ErrorId = id;
+                this.Error = info.Message;
+            }
+        }
+
         public class NetworkJoinErrorEventArgs : NetworkGenericDataEventArgs
         {
             public enum ErrorType
@@ -326,6 +337,7 @@ namespace libirc
         public delegate void NetworkPRIVMSGEventHandler(object sender, NetworkPRIVMSGEventArgs e);
         public delegate void NetworkJOINEventHandler(object sender, NetworkChannelEventArgs e);
         public delegate void NetworkParseUserEventHandler(object sender, NetworkParseUserEventArgs e);
+        public delegate void NetworkGenericErrorEventHandler(object sender, NetworkGenericErrEventArgs e);
         public delegate void NetworkPARTEventHandler(object sender, NetworkChannelDataEventArgs e);
         public delegate void NetworkKICKEventHandler(object sender, NetworkKickEventArgs e);
         public delegate void NetworkNICKEventHandler(object sender, NetworkNICKEventArgs e);
@@ -370,6 +382,7 @@ namespace libirc
         public event NetworkChannelUserListHandler On_ChannelUserList;
         public event FinishParseUserEventHandler On_FinishChannelParseUser;
         public event JoinErrorEventHandler On_JOINError;
+        public event NetworkGenericErrorEventHandler On_NICKError;
         public event NetworkMODEEventHandler On_MODE;
         public event NetworkTOPICEventHandler On_TOPIC;
         public event NetworkTopicDataEventHandler On_TopicData;
@@ -787,6 +800,12 @@ namespace libirc
         {
             if (this.On_TOPIC != null)
                 this.On_TOPIC(this, args);
+        }
+
+        protected internal virtual void __evt_NICKERROR(NetworkGenericErrEventArgs args)
+        {
+            if (this.On_NICKError != null)
+                this.On_NICKError(this, args);
         }
 
         protected internal virtual void __evt_JOINERROR(NetworkJoinErrorEventArgs args)
