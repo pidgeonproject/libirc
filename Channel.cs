@@ -179,6 +179,7 @@ namespace libirc
         /// Date when a topic was set
         /// </summary>
         public int TopicDate = 0;
+        public string Password = null;
         /// <summary>
         /// Invites
         /// </summary>

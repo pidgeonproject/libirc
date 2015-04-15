@@ -327,6 +327,18 @@ namespace libirc
             public long Date;
         }
 
+        public class ChannelToJoinInfo
+        {
+            public string Name;
+            public string Password;
+
+            public ChannelToJoinInfo(string name, string password = null)
+            {
+                this.Name = name;
+                this.Password = password;
+            }
+        }
+
         public delegate void IncomingDataEventHandler(object sender, IncomingDataEventArgs e);
         public delegate void NetworkWHOISEventHandler(object sender, NetworkWHOISEventArgs e);
         public delegate void NetworkINVITEEventHandler(object sender, NetworkChannelDataEventArgs e);
@@ -502,7 +514,7 @@ namespace libirc
         /// provided you the current situation. PART and JOIN events and such will be propagated but not reflected.
         /// </summary>
         public bool IsDownloadingBouncerBacklog = false;
-        private List<string> ChannelsToJoin = new List<string>();
+        private List<ChannelToJoinInfo> ChannelsToJoin = new List<ChannelToJoinInfo>();
         /// <summary>
         /// Specifies if you are connected to network
         /// </summary>
@@ -562,6 +574,22 @@ namespace libirc
             return username;
         }
 
+        protected bool ContainsChannelToJoin(string name)
+        {
+            name = name.ToLower();
+            lock (this.ChannelsToJoin)
+            {
+                foreach (ChannelToJoinInfo info in this.ChannelsToJoin)
+                {
+                    if (info.Name.ToLower() == name)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         /// <summary>
         /// Retrieve information about given channel from cache of channel list
         /// </summary>
@@ -613,24 +641,39 @@ namespace libirc
         /// </summary>
         /// <param name="channel">Channel name which is supposed to be joined</param>
         /// <returns></returns>
-        public virtual void Join(string channel)
+        public virtual void Join(string channel, string password = null)
         {
-            if (!this.IsLoaded && !this.ChannelsToJoin.Contains(channel))
+            if (!this.IsLoaded && !this.ContainsChannelToJoin(channel))
             {
-                this.ChannelsToJoin.Add(channel);
+                this.ChannelsToJoin.Add(new ChannelToJoinInfo(channel, password));
                 return;
             }
-            Transfer("JOIN " + channel, Defs.Priority.Normal);
+
+            if (!string.IsNullOrEmpty(password))
+            {
+                this.Transfer("JOIN " + channel + " " + password, Defs.Priority.Normal);
+            }
+            else
+            {
+                this.Transfer("JOIN " + channel, Defs.Priority.Normal);
+            }
         }
 
         protected internal virtual void JoinChannelsInQueue()
         {
             if (!this.IsLoaded) return;
 
-            foreach (string channel in this.ChannelsToJoin)
-                Transfer("JOIN " + channel, Defs.Priority.Normal);
+            foreach (ChannelToJoinInfo channel in this.ChannelsToJoin)
+            {
+                if (!string.IsNullOrEmpty(channel.Password))
+                {
+                    this.Transfer("JOIN " + channel.Name + " " + channel.Password, Defs.Priority.Normal);
+                } else
+                {
+                    this.Transfer("JOIN " + channel.Name, Defs.Priority.Normal);
+                }
+            }
 
-            // wheeeeeeeeeeeeee
             this.ChannelsToJoin.Clear();
         }
 

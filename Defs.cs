@@ -19,7 +19,7 @@ namespace libirc
 {
     public class Defs
     {
-        public static readonly Version Version = new Version(1, 0, 2);
+        public static readonly Version Version = new Version(1, 0, 3);
         /// <summary>
         /// The default nick
         /// 
